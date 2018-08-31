@@ -6,3 +6,4 @@ verity-validation-node.db
 
 env/
 .env
+.idea/
