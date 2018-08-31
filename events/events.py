@@ -10,7 +10,6 @@ import statistics
 
 import config
 import common
-import mail
 from database import events, tokens
 from database import users as usrs
 import scheduler as sch
