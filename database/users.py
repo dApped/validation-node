@@ -755,64 +755,6 @@ def get_all_users_data_2():
         if cnx:
             cnx.close()
 
-def get_all_users_kyc_data():
-
-    cnx = cur = None
-    users = []
-
-    try:
-        ''' Connect to DB with connection info saved in connection.py '''
-        cnx = sqlite3.connect(connection.connection_info())
-        cur = cnx.cursor()
-
-        select_query = '''SELECT id, name, surname, email, ref_code, kyc_open, kyc_position FROM users WHERE email_verified = 1 ORDER BY kyc_position'''
-
-
-        ''' Execute INSERT statement '''
-        cur.execute(select_query)
-
-        for id, name, surname, email, ref_code, kyc_open, kyc_position in cur:
-            user = {
-                "id": id,
-                "email": email,
-                "name": name,
-                "surname": surname,
-                "ref_code": ref_code,
-                "kyc_open": kyc_open,
-                "kyc_position": kyc_position
-            }
-            users.append(user)
-
-    except sqlite3.Error as err:
-
-        err_message = ["db_error","Unknown DB error"]
-
-        ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
-        else:
-            err_message = ["db_error",err.msg]
-
-        return err_message
-
-    else:
-
-        succ_message = ["success","DB operation was successful",users]
-        return succ_message
-
-
-
-    finally:
-
-        ''' Close connection and cursor no matter what happens '''
-        if cur:
-            cur.close()
-        if cnx:
-            cnx.close()
 
 def update_user_eth_addres(email, eth_address):
     cnx = cur = None
