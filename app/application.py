@@ -3,13 +3,13 @@ import logging
 import os
 from datetime import datetime
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from flask import Flask, abort, request
 from pytz import utc
 
+import common
 import scheduler as sch
-
-from apscheduler.schedulers.background import BackgroundScheduler
 from events import events
-from flask import Flask, abort, request
 
 logging.basicConfig()
 
@@ -77,21 +77,6 @@ def hello():
     scheduler.print_jobs()
     print("Now: ", datetime.utcnow())
     return "Nothing to see here 523", 200
-
-
-@application.route('/reset', methods=['POST'])
-def reset():
-    json_data = request.get_json()
-
-    result = account.recover_password(json_data)
-
-    if "data" in result:
-        return json.dumps(result), result["data"]["code"]
-    else:
-        return json.dumps(result), result["error"]["code"]
-
-
-
 
 
 @application.route('/events', methods=['GET'])
