@@ -1,0 +1,536 @@
+{
+  "contract_name": "Event",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getBalance",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getState",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "markRewardsSet",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getReward",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "dataFeedHash",
+      "outputs": [
+        {
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "hash",
+          "type": "string"
+        }
+      ],
+      "name": "setDataFeedHash",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "applicationEndTime",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "claimReward",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "applicationStartTime",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "isParticipating",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "addresses",
+          "type": "address[]"
+        },
+        {
+          "name": "_rewards",
+          "type": "uint256[]"
+        },
+        {
+          "name": "_web3fix",
+          "type": "bool"
+        }
+      ],
+      "name": "setRewards",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "joinEvent",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_applicationStartTime",
+          "type": "uint256"
+        },
+        {
+          "name": "_applicationEndTime",
+          "type": "uint256"
+        }
+      ],
+      "payable": true,
+      "type": "constructor"
+    },
+    {
+      "payable": true,
+      "type": "fallback"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "newState",
+          "type": "uint8"
+        }
+      ],
+      "name": "StateTransition",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "wallet",
+          "type": "address"
+        }
+      ],
+      "name": "JoinEvent",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "recipient",
+          "type": "address"
+        }
+      ],
+      "name": "ClaimReward",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "description",
+          "type": "string"
+        }
+      ],
+      "name": "Error",
+      "type": "event"
+    }
+  ],
+  "unlinked_binary": "0x6060604052600680546000919060ff19166001835b0217905550604051604080610d2f83398101604052808051919060200180519150505b80821061004357600080fd5b6003829055600481905560008054600160a060020a03191633600160a060020a03161790555b50505b610cb48061007b6000396000f300606060405236156100c25763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166312065fe081146100c65780631865c57d146100eb5780632cc689f9146101105780633d18b912146101255780634227357c1461014a578063437933cc146101d55780634e1937ab146102285780638da5cb5b1461024d578063b88a802f1461027c578063c17b9b9514610291578063f4caee88146102b6578063f66ea2f1146102e9578063f9010d191461037e575b5b5b005b34156100d157600080fd5b6100d9610393565b60405190815260200160405180910390f35b34156100f657600080fd5b6100d96103c0565b60405190815260200160405180910390f35b341561011b57600080fd5b6100c26103f4565b005b341561013057600080fd5b6100d96104aa565b60405190815260200160405180910390f35b341561015557600080fd5b61015d61050b565b60405160208082528190810183818151815260200191508051906020019080838360005b8381101561019a5780820151818401525b602001610181565b50505050905090810190601f1680156101c75780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34156101e057600080fd5b6100c260046024813581810190830135806020601f820181900481020160405190810160405281815292919060208401838380828437509496506105a995505050505050565b005b341561023357600080fd5b6100d96105dd565b60405190815260200160405180910390f35b341561025857600080fd5b6102606105e3565b604051600160a060020a03909116815260200160405180910390f35b341561028757600080fd5b6100c26105f2565b005b341561029c57600080fd5b6100d961080d565b60405190815260200160405180910390f35b34156102c157600080fd5b6102d5600160a060020a0360043516610813565b604051901515815260200160405180910390f35b34156102f457600080fd5b6100c26004602481358181019083013580602081810201604051908101604052809392919081815260200183836020028082843782019150505050505091908035906020019082018035906020019080806020026020016040519081016040528093929190818152602001838360200280828437509496505050509135151591506108359050565b005b341561038957600080fd5b6100c261095a565b005b6000805432600160a060020a039081169116146103af57600080fd5b50600160a060020a033016315b5b90565b6000805432600160a060020a039081169116146103dc57600080fd5b60065460ff1660038111156103ed57fe5b90505b5b90565b60005432600160a060020a0390811691161461040f57600080fd5b60005b60065460ff16600381111561042357fe5b14801561043257506003544210155b1561043f5761043f610b21565b5b60015b60065460ff16600381111561045457fe5b14801561046357506004544210155b1561047057610470610b21565b5b60065460029060ff16600381111561048557fe5b81600381111561049157fe5b1461049b57600080fd5b6104a3610b21565b5b5b505b5b565b60006104b532610813565b15156104c057600080fd5b60065460039060ff16818111156104d357fe5b8160038111156104df57fe5b146104e957600080fd5b600160a060020a03331660009081526002602052604090205491505b5b505b90565b60058054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156105a15780601f10610576576101008083540402835291602001916105a1565b820191906000526020600020905b81548152906001019060200180831161058457829003601f168201915b505050505081565b60005432600160a060020a039081169116146105c457600080fd5b60058180516105d7929160200190610bc8565b505b5b50565b60045481565b600054600160a060020a031681565b6105fb32610813565b151561060657600080fd5b60065460039060ff168181111561061957fe5b81600381111561062557fe5b1461062f57600080fd5b600160a060020a03331660009081526002602052604090205415156106a457600080516020610c698339815191526040516020808252808201527f596f7520646f206e6f7420616e79207265776172647320746f20636c61696d2e6040808301919091526060909101905180910390a16104a3565b600160a060020a033381166000908152600260205260409020543090911631101561076d57600080516020610c6983398151915260405160208082526046908201527f437269746963616c206572726f723a206e6f7420656e6f7567682062616c616e6040808301919091527f636520746f20706179206f7574207265776172642e20436f6e7461637420457660608301527f656e74756d2e0000000000000000000000000000000000000000000000000000608083015260a0909101905180910390a16104a3565b600160a060020a033316600081815260026020526040908190205480156108fc029151600060405180830381858888f1935050505015156107ad57600080fd5b33600160a060020a038116600090815260026020526040808220919091557f63e32091e4445d16e29c33a6b264577c2d86694021aa4e6f4dd590048f5792e8919051600160a060020a03909116815260200160405180910390a15b5b505b565b60035481565b600160a060020a03811660009081526001602052604090205460ff165b919050565b6000805432600160a060020a0390811691161461085157600080fd5b60005b60065460ff16600381111561086557fe5b14801561087457506003544210155b1561088157610881610b21565b5b60015b60065460ff16600381111561089657fe5b1480156108a557506004544210155b156108b2576108b2610b21565b5b60065460029060ff1660038111156108c757fe5b8160038111156108d357fe5b146108dd57600080fd5b83518551146108eb57600080fd5b600091505b845182101561094f5783828151811061090557fe5b906020019060200201516002600087858151811061091f57fe5b90602001906020020151600160a060020a031681526020810191909152604001600020555b8160010191506108f0565b5b5b505b5b50505050565b60005b60065460ff16600381111561096e57fe5b14801561097d57506003544210155b1561098a5761098a610b21565b5b60015b60065460ff16600381111561099f57fe5b1480156109ae57506004544210155b156109bb576109bb610b21565b5b6109c533610813565b15610a2257600080516020610c698339815191526040516020808252601e908201527f596f752061726520616c72656164792070617274696369706174696e672e00006040808301919091526060909101905180910390a16104a7565b60015b60065460ff166003811115610a3657fe5b14610ab957600080516020610c698339815191526040516020808252602b908201527f596f752063616e206f6e6c79206a6f696e20696e20746865204170706c6963616040808301919091527f74696f6e2073746174652e00000000000000000000000000000000000000000060608301526080909101905180910390a16104a7565b33600160a060020a038116600090815260016020819052604091829020805460ff191690911790557f0940fd5e528ae9fa6c086f42387c791c3854e0febdf0717c2da155c9dbf1e86c919051600160a060020a03909116815260200160405180910390a15b5b565b60035b60065460ff166003811115610b3557fe5b1415610b4057600080fd5b60065460ff166003811115610b5157fe5b6001016003811115610b5f57fe5b6006805460ff19166001836003811115610b7557fe5b02179055506006547fb9eb8a309bf89f3159b39681f485b6430fec1035b2b457edbcdadcdece888c0b9060ff1660405180826003811115610bb257fe5b60ff16815260200191505060405180910390a15b565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f10610c0957805160ff1916838001178555610c36565b82800160010185558215610c36579182015b82811115610c36578251825591602001919060010190610c1b565b5b50610505929150610c47565b5090565b6103bc91905b808211156105055760008155600101610c4d565b5090565b90560008c379a0afcc32b1a39302f7cb8073359698411ab5fd6e3edb2c02c0b5fba8aaa165627a7a723058208f433daab4fecd48f585fd3943b14407186423e7253e9fad023ba18e7facccb50029",
+  "networks": {
+    "3": {
+      "events": {
+        "0xb9eb8a309bf89f3159b39681f485b6430fec1035b2b457edbcdadcdece888c0b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newState",
+              "type": "uint8"
+            }
+          ],
+          "name": "StateTransition",
+          "type": "event"
+        },
+        "***REMOVED***": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "wallet",
+              "type": "address"
+            }
+          ],
+          "name": "JoinEvent",
+          "type": "event"
+        },
+        "0x63e32091e4445d16e29c33a6b264577c2d86694021aa4e6f4dd590048f5792e8": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "recipient",
+              "type": "address"
+            }
+          ],
+          "name": "ClaimReward",
+          "type": "event"
+        },
+        "0x08c379a0afcc32b1a39302f7cb8073359698411ab5fd6e3edb2c02c0b5fba8aa": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "description",
+              "type": "string"
+            }
+          ],
+          "name": "Error",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x8fcedd77b6631d5afa2243ef805ac19755e62e41",
+      "updated_at": 1508954880980
+    },
+    "1506363670348": {
+      "events": {},
+      "links": {},
+      "address": "0x06314d76dd5ec49c4fe972a046d62aeb6bbeb25b",
+      "updated_at": 1506363897160
+    },
+    "1506365266254": {
+      "events": {},
+      "links": {},
+      "address": "0x48824c4cd7c7be27a071971c633f63101fb2178b",
+      "updated_at": 1506365361886
+    },
+    "1506365439446": {
+      "events": {},
+      "links": {},
+      "address": "0xb1fb4f0df30bf5f506daa344ef30d74c9b9e0e06",
+      "updated_at": 1506365462080
+    },
+    "1506366628946": {
+      "events": {},
+      "links": {},
+      "address": "0x4eee50c1812cce1d89ac2a67d42815cd69d583c0",
+      "updated_at": 1506366648457
+    },
+    "1507561265787": {
+      "events": {},
+      "links": {},
+      "address": "0x1b6c935bd89149c90b9bd88d8b85d1fbce458ada",
+      "updated_at": 1507633277296
+    },
+    "1508337796303": {
+      "events": {
+        "0xb9eb8a309bf89f3159b39681f485b6430fec1035b2b457edbcdadcdece888c0b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newState",
+              "type": "uint8"
+            }
+          ],
+          "name": "StateTransition",
+          "type": "event"
+        },
+        "***REMOVED***": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "wallet",
+              "type": "address"
+            }
+          ],
+          "name": "JoinEvent",
+          "type": "event"
+        },
+        "0x63e32091e4445d16e29c33a6b264577c2d86694021aa4e6f4dd590048f5792e8": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "recipient",
+              "type": "address"
+            }
+          ],
+          "name": "ClaimReward",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x6efb624489f3e620c4d51375b67c0ae822c6d706",
+      "updated_at": 1508339085445
+    },
+    "1508346696681": {
+      "events": {
+        "0xb9eb8a309bf89f3159b39681f485b6430fec1035b2b457edbcdadcdece888c0b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newState",
+              "type": "uint8"
+            }
+          ],
+          "name": "StateTransition",
+          "type": "event"
+        },
+        "***REMOVED***": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "wallet",
+              "type": "address"
+            }
+          ],
+          "name": "JoinEvent",
+          "type": "event"
+        },
+        "0x63e32091e4445d16e29c33a6b264577c2d86694021aa4e6f4dd590048f5792e8": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "recipient",
+              "type": "address"
+            }
+          ],
+          "name": "ClaimReward",
+          "type": "event"
+        },
+        "0x08c379a0afcc32b1a39302f7cb8073359698411ab5fd6e3edb2c02c0b5fba8aa": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "description",
+              "type": "string"
+            }
+          ],
+          "name": "Error",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xff33738583c306f4ce913be5c35b33e141c9da04",
+      "updated_at": 1508346701199
+    },
+    "1508352452106": {
+      "events": {
+        "0xb9eb8a309bf89f3159b39681f485b6430fec1035b2b457edbcdadcdece888c0b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newState",
+              "type": "uint8"
+            }
+          ],
+          "name": "StateTransition",
+          "type": "event"
+        },
+        "***REMOVED***": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "wallet",
+              "type": "address"
+            }
+          ],
+          "name": "JoinEvent",
+          "type": "event"
+        },
+        "0x63e32091e4445d16e29c33a6b264577c2d86694021aa4e6f4dd590048f5792e8": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "recipient",
+              "type": "address"
+            }
+          ],
+          "name": "ClaimReward",
+          "type": "event"
+        },
+        "0x08c379a0afcc32b1a39302f7cb8073359698411ab5fd6e3edb2c02c0b5fba8aa": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "description",
+              "type": "string"
+            }
+          ],
+          "name": "Error",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x9efc04354ac5057992996053b572c8f09d26931f",
+      "updated_at": 1508352460117
+    },
+    "1512403718077": {
+      "events": {
+        "0xb9eb8a309bf89f3159b39681f485b6430fec1035b2b457edbcdadcdece888c0b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newState",
+              "type": "uint8"
+            }
+          ],
+          "name": "StateTransition",
+          "type": "event"
+        },
+        "***REMOVED***": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "wallet",
+              "type": "address"
+            }
+          ],
+          "name": "JoinEvent",
+          "type": "event"
+        },
+        "0x63e32091e4445d16e29c33a6b264577c2d86694021aa4e6f4dd590048f5792e8": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "recipient",
+              "type": "address"
+            }
+          ],
+          "name": "ClaimReward",
+          "type": "event"
+        },
+        "0x08c379a0afcc32b1a39302f7cb8073359698411ab5fd6e3edb2c02c0b5fba8aa": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "description",
+              "type": "string"
+            }
+          ],
+          "name": "Error",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xbb182e08f7cf937a4c5a83d1aeda3d0941f2d0c0",
+      "updated_at": 1512404618729
+    }
+  },
+  "schema_version": "0.0.5",
+  "updated_at": 1518548432160
+}

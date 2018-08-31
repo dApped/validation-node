@@ -1,0 +1,22 @@
+<html>
+
+<head>
+  <title>Websocket test</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io('http://localhost:8080');
+    socket.on('news', function(data) {
+      alert(data);
+      socket.emit('my other event', {
+        my: 'data'
+      });
+    });
+  </script>
+
+</head>
+
+<body>
+  test
+</body>
+
+</html>

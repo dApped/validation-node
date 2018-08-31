@@ -1,0 +1,38 @@
+{
+	"event_id": 3000,
+	"image": "https://s3.eu-central-1.amazonaws.com/alpha-resources/world_cup_bel_eng.jpg",
+	"name": "Test event",
+	"subject": "Test event subject",
+	"description": "<b>Test event subject</b>",
+	"category_id": 18,
+	"resource": "<b>Resource text</b>",
+	"resource_type": "text",
+	"contract_address": "",
+	"max_users": 500,
+	"min_consensus": 350,
+	"reward_ETH": 200000000000000000,
+	"reward_EVT": 1000,
+	"fields": [{
+			"name": "Dropdown 1",
+			"type": "dropdown",
+			"answers": ["Answer 1", "Answer 2"],
+			"validation_required": 1,
+			"validation_type": null
+		},
+		{
+			"name": "Text 1",
+			"type": "Text",
+			"answers": [],
+			"validation_required": 1,
+			"validation_type": "number"
+		}
+	],
+
+	"avg_event": 0,
+	"join_start": 1517486400,
+	"time_to_join": 1532091000,
+	"start_time": 1532091600,
+	"end_time": 1532097000,
+
+	"reward_distribution": null
+}
