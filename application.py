@@ -21,7 +21,6 @@ from pytz import utc
 
 from config import *
 from events import events
-from bounties import bounties
 import common
 
 import logging
@@ -146,99 +145,6 @@ def vote():
 
         result = events.vote(json_data, auth_token, scheduler)
 
-        if "data" in result:
-            return json.dumps(result), result["data"]["code"]
-        else:
-            return json.dumps(result), result["error"]["code"]
-    else:
-        result = common.error_resp(401,"Unauthorized","You need a valid authorization token to access this resource")
-        return json.dumps(result), result["error"]["code"]
-
-# ------------------------------------------------------------------------------
-# bounties endpoints -----------------------------------------------------------
-
-@application.route('/set_ref', methods=['POST'])
-def set_ref():
-    json_data = request.get_json()
-    headers = request.headers
-    auth_header = headers.get("Authorization") or None
-    if auth_header is not None:
-
-        auth_token = auth_header.split()[1]
-
-        result = account.generate_ref(json_data, auth_token)
-        if "data" in result:
-            return json.dumps(result), result["data"]["code"]
-        else:
-            return json.dumps(result), result["error"]["code"]
-    else:
-        result = common.error_resp(401,"Unauthorized","You need a valid authorization token to access this resource")
-        return json.dumps(result), result["error"]["code"]
-
-@application.route('/join_bounty', methods=['POST'])
-def join_bounty():
-    json_data = request.get_json()
-    headers = request.headers
-    auth_header = headers.get("Authorization") or None
-    if auth_header is not None:
-
-        auth_token = auth_header.split()[1]
-
-        result = bounties.join_bounty(json_data, auth_token)
-        if "data" in result:
-            return json.dumps(result), result["data"]["code"]
-        else:
-            return json.dumps(result), result["error"]["code"]
-    else:
-        result = common.error_resp(401,"Unauthorized","You need a valid authorization token to access this resource")
-        return json.dumps(result), result["error"]["code"]
-
-@application.route('/edit_bounty', methods=['POST'])
-def edit_bounty():
-    json_data = request.get_json()
-    headers = request.headers
-    auth_header = headers.get("Authorization") or None
-    if auth_header is not None:
-
-        auth_token = auth_header.split()[1]
-
-        result = bounties.edit_bounty_username(json_data, auth_token)
-        if "data" in result:
-            return json.dumps(result), result["data"]["code"]
-        else:
-            return json.dumps(result), result["error"]["code"]
-    else:
-        result = common.error_resp(401,"Unauthorized","You need a valid authorization token to access this resource")
-        return json.dumps(result), result["error"]["code"]
-
-@application.route('/verify_bounty', methods=['POST'])
-def verify_bounty():
-    json_data = request.get_json()
-    headers = request.headers
-    auth_header = headers.get("Authorization") or None
-    if auth_header is not None:
-
-        auth_token = auth_header.split()[1]
-
-        result = bounties.verify_bounty(json_data, auth_token)
-        if "data" in result:
-            return json.dumps(result), result["data"]["code"]
-        else:
-            return json.dumps(result), result["error"]["code"]
-    else:
-        result = common.error_resp(401,"Unauthorized","You need a valid authorization token to access this resource")
-        return json.dumps(result), result["error"]["code"]
-
-@application.route('/submit_bounty', methods=['POST'])
-def submit_bounty():
-    json_data = request.get_json()
-    headers = request.headers
-    auth_header = headers.get("Authorization") or None
-    if auth_header is not None:
-
-        auth_token = auth_header.split()[1]
-
-        result = bounties.submit_bounty(json_data, auth_token)
         if "data" in result:
             return json.dumps(result), result["data"]["code"]
         else:
