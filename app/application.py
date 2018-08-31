@@ -1,26 +1,15 @@
 import json
 import logging
 import os
-import sys
-import threading
-import time
-from config import *
-from datetime import datetime, timedelta
-from threading import Thread
+from datetime import datetime
 
 from pytz import utc
 
-import _thread
-import common
-import requests
 import scheduler as sch
-from _thread import start_new_thread
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from events import events
-from flask import (Flask, abort, redirect, render_template, request,
-                   send_from_directory)
-from flask_limiter import Limiter
-from flask_limiter.util import get_ipaddr, get_remote_address
+from flask import Flask, abort, request
 
 logging.basicConfig()
 
@@ -179,8 +168,7 @@ def reload_jobs():
 
 # run the app.
 if __name__ == "__main__":
-    # TODO Roman: Change debug and reload argument
     # Setting debug to True enables debug output. This line should be
     # removed before deploying a production app.
-    application.run(debug=True, use_reloader=True)
+    application.run(debug=os.getenv('FLASK_DEBUG'))
     #application.run()

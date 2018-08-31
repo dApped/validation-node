@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import requests
 import json
 
-from database import events, users
+from database import events
 import config
 from events import events as ev
 import common
