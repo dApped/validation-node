@@ -5,3 +5,4 @@ tags
 verity-validation-node.db
 
 env/
+.env

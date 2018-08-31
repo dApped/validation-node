@@ -1,0 +1,14 @@
+version: "3"
+services:
+  node:
+    build: ./app
+    entrypoint:
+      - flask
+      - run
+      - --host=0.0.0.0
+    environment:
+      FLASK_ENV: ${FLASK_ENV}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      FLASK_APP: ./application.py
+    ports: ['80:5000']
+    volumes: ['./app:/app']
