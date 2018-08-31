@@ -10,8 +10,7 @@ import statistics
 
 import config
 import common
-from database import events, tokens
-from database import users as usrs
+from database import events
 import scheduler as sch
 from ethereum import rewards, contract_deploy
 from web3 import Web3, HTTPProvider, IPCProvider
@@ -215,23 +214,6 @@ def vote(data, auth_token, scheduler):
 
     if "user_id" in data["data"]:
         user_id = data["data"]["user_id"]
-        check_auth = tokens.check_auth_token(auth_token)
-        if check_auth[0] == "success":
-            user = check_auth[2]["user_id"]
-            expiration = check_auth[2]["expiration"]
-            current_timestamp = int(time.time())
-            if current_timestamp > expiration:
-                return common.error_resp(400, "auth_expired", "Authorization token is expired")
-            elif user != user_id:
-                return common.error_resp(400, "auth_invalid", "Authorization token is not valid for this user")
-            else:
-                new_expiration = current_timestamp + config.AUTH_TOKEN_EXP
-                tokens.update_auth_token(new_expiration, auth_token)
-        else:
-            if check_auth[0] == "auth_not_found":
-                return common.error_resp(400, check_auth[0], check_auth[1])
-            else:
-                return common.error_resp(500, "db_error", "Unknown DB error")
     else:
         return common.error_resp(400, "json_error", "Could not find user_id field in the JSON")
 
