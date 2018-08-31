@@ -1,29 +1,27 @@
+import json
+import logging
 import os
 import sys
-import json
-
-import requests
 import threading
-from threading import Thread
-import _thread, time
-from _thread import start_new_thread
+import time
+from config import *
 from datetime import datetime, timedelta
-
-from flask import Flask,request,redirect,send_from_directory,render_template, abort
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from flask_limiter.util import get_ipaddr
-
-from apscheduler.schedulers.background import BackgroundScheduler
-import scheduler as sch
+from threading import Thread
 
 from pytz import utc
 
-from config import *
-from events import events
+import _thread
 import common
+import requests
+import scheduler as sch
+from _thread import start_new_thread
+from apscheduler.schedulers.background import BackgroundScheduler
+from events import events
+from flask import (Flask, abort, redirect, render_template, request,
+                   send_from_directory)
+from flask_limiter import Limiter
+from flask_limiter.util import get_ipaddr, get_remote_address
 
-import logging
 logging.basicConfig()
 
 # ------------------------------------------------------------------------------
@@ -89,7 +87,7 @@ def ip_whitelist():
 def hello():
     scheduler.print_jobs()
     print("Now: ", datetime.utcnow())
-    return "Nothing to see here 123", 200
+    return "Nothing to see here 523", 200
 
 
 @application.route('/reset', methods=['POST'])
