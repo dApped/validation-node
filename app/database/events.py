@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 import sqlite3
-from . import connection
-import json
 import time
-from datetime import datetime
+
+from . import connection
 
 # ------------------------------------------------------------------------------
 # event data -------------------------------------------------------------------
+
 
 def get_events():
     '''
@@ -21,7 +20,7 @@ def get_events():
         cnx = sqlite3.connect(connection.connection_info())
         cur = cnx.cursor()
 
-        event_query =  '''SELECT events.id,events.name,events.image,events.resource,events.resource_type,min_reputation,events.max_users,contract_address,reward_ETH,reward_EVT,reward_claimable,join_start,time_to_join,start_time,end_time,events.subject,events.end_flag,events.description,event_fields.id,event_fields.field,event_fields.type,
+        event_query = '''SELECT events.id,events.name,events.image,events.resource,events.resource_type,min_reputation,events.max_users,contract_address,reward_ETH,reward_EVT,reward_claimable,join_start,time_to_join,start_time,end_time,events.subject,events.end_flag,events.description,event_fields.id,event_fields.field,event_fields.type,
         event_fields.validation_required,event_fields.max, event_fields.min, event_fields.validation_type,event_answers.label,event_answers.value,events.join_topic, events.claim_topic,categories.name,categories.image,categories.description,rules,events.avg_event,events.hidden, c.count FROM events
                                 JOIN event_fields ON event_fields.event_id = events.id
                                 JOIN categories ON categories.id = events.category_id
@@ -98,50 +97,46 @@ def get_events():
             input_method["input_type"] = input_type
 
             if label != None:
-                input_method["values"] = [
-                    {
-                        "label": label,
-                        "value": value
-                    }
-                ]
+                input_method["values"] = [{"label": label, "value": value}]
 
             if input_method not in events[event_id]["input_methods"]:
                 if new_field:
                     events[event_id]["input_methods"].append(input_method)
                 else:
-                    events[event_id]["input_methods"][len(events[event_id]["input_methods"])-1]["values"].append({
-                                        "label": label,
-                                        "value": value
-                                    })
+                    events[event_id][
+                        "input_methods"][len(events[event_id]["input_methods"])
+                                         - 1]["values"].append({
+                                             "label": label,
+                                             "value": value
+                                         })
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", events]
+        succ_message = ["success", "DB operation was successful", events]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_user_events(user_id):
     '''
@@ -163,7 +158,6 @@ def get_user_events(user_id):
                         '''
 
         params = (user_id, user_id)
-
         ''' Execute INSERT statement '''
         cur.execute(event_query, params)
 
@@ -190,9 +184,11 @@ def get_user_events(user_id):
                 event["answers"] = []
             else:
                 #event["answers"] = [field_value]
-                event["answers"] = [{"field_id": field_id, "field_value": field_value}]
+                event["answers"] = [{
+                    "field_id": field_id,
+                    "field_value": field_value
+                }]
                 event["vote_timestamp"] = vote_timestamp
-
 
             event["user_voted"] = field_id != None and field_value != None
 
@@ -200,36 +196,43 @@ def get_user_events(user_id):
                 events[event_id] = event
             else:
                 if field_id != None and field_value != None:
-                    events[event_id]["answers"].append({"field_id": field_id, "field_value": field_value})
+                    events[event_id]["answers"].append({
+                        "field_id":
+                        field_id,
+                        "field_value":
+                        field_value
+                    })
                     events[event_id]["vote_timestamp"] = vote_timestamp
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", list(events.values())]
+        succ_message = [
+            "success", "DB operation was successful",
+            list(events.values())
+        ]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_event_id(contract_address):
 
@@ -245,7 +248,6 @@ def get_event_id(contract_address):
                         '''
 
         params = (contract_address, )
-
         ''' Execute INSERT statement '''
         cur.execute(event_query, params)
 
@@ -254,32 +256,31 @@ def get_event_id(contract_address):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", event_id]
+        succ_message = ["success", "DB operation was successful", event_id]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_event_data(event_id):
     '''
@@ -300,7 +301,6 @@ def get_event_data(event_id):
                         '''
 
         params = (event_id, )
-
         ''' Execute INSERT statement '''
         cur.execute(event_query, params)
 
@@ -336,32 +336,31 @@ def get_event_data(event_id):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", event]
+        succ_message = ["success", "DB operation was successful", event]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_event_users(event_address):
     '''
@@ -381,7 +380,6 @@ def get_event_users(event_address):
                         WHERE event_id = (SELECT id FROM events WHERE contract_address = %s)'''
 
         params = (event_address, )
-
         ''' Execute INSERT statement '''
         cur.execute(users_query, params)
 
@@ -390,32 +388,31 @@ def get_event_users(event_address):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", users]
+        succ_message = ["success", "DB operation was successful", users]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_event_user_ids(event_id):
     '''
@@ -435,7 +432,6 @@ def get_event_user_ids(event_id):
                         WHERE event_users.event_id = %s'''
 
         params = (event_id, )
-
         ''' Execute INSERT statement '''
         cur.execute(users_query, params)
 
@@ -459,32 +455,31 @@ def get_event_user_ids(event_id):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", users]
+        succ_message = ["success", "DB operation was successful", users]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def save_event_stats(stats, event_id):
 
@@ -509,10 +504,8 @@ def save_event_stats(stats, event_id):
             params.append(stat["wrong_votes"])
 
         stats_query = stats_query[:-1]
-
         ''' Construct query '''
         params = tuple(params)
-
         ''' Execute INSERT statement '''
         cur.execute(stats_query, params)
         affected = cur.rowcount
@@ -520,35 +513,34 @@ def save_event_stats(stats, event_id):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
         if affected == 0:
-            err_message = ["db_error","User or event doesn't exist"]
+            err_message = ["db_error", "User or event doesn't exist"]
             return err_message
         else:
-            succ_message = ["success","DB operation was successful"]
+            succ_message = ["success", "DB operation was successful"]
             return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_event_fields(event_id):
     '''
@@ -563,7 +555,7 @@ def get_event_fields(event_id):
         cnx = sqlite3.connect(connection.connection_info())
         cur = cnx.cursor()
 
-        event_query =  '''SELECT event_fields.id, event_fields.field, event_fields.type, event_fields.validation_required, event_fields.max, event_fields.min, event_fields.validation_type, event_answers.label, event_answers.value
+        event_query = '''SELECT event_fields.id, event_fields.field, event_fields.type, event_fields.validation_required, event_fields.max, event_fields.min, event_fields.validation_type, event_answers.label, event_answers.value
                         FROM event_fields
                         LEFT JOIN event_answers ON event_answers.field_id = event_fields.id
                         WHERE event_fields.event_id = %s'''
@@ -584,47 +576,44 @@ def get_event_fields(event_id):
                 }
             else:
                 if answer_label != None and answer_value != None:
-                    fields[field_id]["answers"].append(
-                        {
-                            "label": answer_label,
-                            "value": answer_value
-                        }
-                    )
+                    fields[field_id]["answers"].append({
+                        "label": answer_label,
+                        "value": answer_value
+                    })
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", fields]
+        succ_message = ["success", "DB operation was successful", fields]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
+
 # ------------------------------------------------------------------------------
 # event stats ------------------------------------------------------------------
 
-def get_saved_all_events_stats():
 
+def get_saved_all_events_stats():
     '''
         Info:
             Function that returns all events stats
@@ -641,8 +630,6 @@ def get_saved_all_events_stats():
                         FROM event_stats
                         ORDER BY timestamp ASC
                         '''
-
-
         ''' Execute INSERT statement '''
         cur.execute(event_query)
 
@@ -658,35 +645,33 @@ def get_saved_all_events_stats():
             events[event_id]["vote_data"].append(votes)
             events[event_id]["wrong_vote_data"].append(wrong_votes)
 
-
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", events]
+        succ_message = ["success", "DB operation was successful", events]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_all_events_stats(voter_id=None):
 
@@ -701,8 +686,6 @@ def get_all_events_stats(voter_id=None):
                         FROM votes
                         JOIN events ON votes.event_id = events.id
                         ORDER BY timestamp ASC, field_id ASC'''
-
-
         ''' Execute INSERT statement '''
         cur.execute(event_query)
 
@@ -720,48 +703,51 @@ def get_all_events_stats(voter_id=None):
             vote = {"field_id": field_id, "field_value": field_value}
 
             if user_id not in votes:
-                votes[user_id] = {"timestamp": timestamp, "correct": before_consensus,"vote": [vote]}
+                votes[user_id] = {
+                    "timestamp": timestamp,
+                    "correct": before_consensus,
+                    "vote": [vote]
+                }
                 if voter_id != None and user_id == voter_id:
-                    votes[user_id]["user": True]
+                    votes[user_id]["user":True]
             else:
                 votes[user_id]["vote"].append(vote)
 
         for event_id in events:
-            events[event_id]["votes"] = list(events[event_id]["votes"].values())
+            events[event_id]["votes"] = list(
+                events[event_id]["votes"].values())
 
         data = events
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", data]
+        succ_message = ["success", "DB operation was successful", data]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
-def get_event_stats(event_id, voter_id=None):
 
+def get_event_stats(event_id, voter_id=None):
     '''
         Info:
             Function that returns all events stats
@@ -781,7 +767,6 @@ def get_event_stats(event_id, voter_id=None):
                         ORDER BY timestamp ASC'''
 
         params = (event_id, )
-
         ''' Execute INSERT statement '''
         cur.execute(event_query, params)
 
@@ -792,45 +777,45 @@ def get_event_stats(event_id, voter_id=None):
             c_time = consensus_time
 
             if user_id not in votes:
-                votes[user_id] = {"timestamp": timestamp, "correct": before_consensus,"vote": [vote]}
+                votes[user_id] = {
+                    "timestamp": timestamp,
+                    "correct": before_consensus,
+                    "vote": [vote]
+                }
                 if voter_id != None and user_id == voter_id:
-                    votes[user_id]["user": True]
+                    votes[user_id]["user":True]
             else:
                 votes[user_id]["vote"].append(vote)
 
-        data = {
-            "votes": list(votes.values()),
-            "consensus_time": c_time
-        }
+        data = {"votes": list(votes.values()), "consensus_time": c_time}
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", data]
+        succ_message = ["success", "DB operation was successful", data]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_event_consensus_answer(event_id):
 
@@ -844,7 +829,6 @@ def get_event_consensus_answer(event_id):
         event_query = '''SELECT field_id, field_value FROM votes WHERE before_consensus = 1 AND event_id = %s GROUP BY field_id'''
 
         params = (event_id, )
-
         ''' Execute INSERT statement '''
         cur.execute(event_query, params)
 
@@ -853,35 +837,35 @@ def get_event_consensus_answer(event_id):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", answers]
+        succ_message = ["success", "DB operation was successful", answers]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
+
 # ------------------------------------------------------------------------------
 # event joining ----------------------------------------------------------------
+
 
 def join_event(user_address, event_address):
     '''
@@ -900,10 +884,8 @@ def join_event(user_address, event_address):
                                 SELECT users.id, events.id FROM users
                                 JOIN events
                                 WHERE users.eth_address = %s AND events.contract_address = %s'''
-
         ''' Construct query '''
         params = (user_address, event_address)
-
         ''' Execute INSERT statement '''
         cur.execute(join_event_query, params)
         affected = cur.rowcount
@@ -911,38 +893,36 @@ def join_event(user_address, event_address):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
         if affected == 0:
-            err_message = ["db_error","User or event doesn't exist"]
+            err_message = ["db_error", "User or event doesn't exist"]
             return err_message
         else:
-            succ_message = ["success","DB operation was successful"]
+            succ_message = ["success", "DB operation was successful"]
             return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
-def join_event_with_id(user_id, event_id):
 
+def join_event_with_id(user_id, event_id):
     '''
         Info:
             Function to add a user to the event
@@ -957,10 +937,8 @@ def join_event_with_id(user_id, event_id):
 
         join_event_query = '''INSERT INTO event_users (user_id, event_id)
                                 VALUES (%s, %s)'''
-
         ''' Construct query '''
         params = (user_id, event_id)
-
         ''' Execute INSERT statement '''
         cur.execute(join_event_query, params)
         affected = cur.rowcount
@@ -968,35 +946,34 @@ def join_event_with_id(user_id, event_id):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
         if affected == 0:
-            err_message = ["db_error","User or event doesn't exist"]
+            err_message = ["db_error", "User or event doesn't exist"]
             return err_message
         else:
-            succ_message = ["success","DB operation was successful"]
+            succ_message = ["success", "DB operation was successful"]
             return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def verify_join(user_address, event_address):
     '''
@@ -1014,98 +991,43 @@ def verify_join(user_address, event_address):
         join_event_query = '''UPDATE event_users
                                 SET verified = 1
                                 WHERE user_id = (SELECT id FROM users WHERE eth_address = %s) AND event_id = (SELECT id FROM events WHERE contract_address = %s)'''
-
         ''' Construct query '''
         params = (user_address, event_address)
-
         ''' Execute INSERT statement '''
         cur.execute(join_event_query, params)
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful"]
+        succ_message = ["success", "DB operation was successful"]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
-def user_joined(user_id, event_id):
-    '''
-        Info:
-            Function that checks if user has joined the event
-    '''
-
-    cnx = cur = None
-    user_joined = False
-
-    try:
-        ''' Connect to DB with connection info saved in connection.py '''
-        cnx = sqlite3.connect(connection.connection_info())
-        cur = cnx.cursor()
-
-        join_event_query = '''SELECT user_id FROM event_users WHERE user_id = %s AND event_id = %s'''
-
-        params = (user_id, event_id)
-
-        ''' Execute INSERT statement '''
-        cur.execute(join_event_query, params)
-
-        for c in cur:
-            user_joined = True
-
-    except sqlite3.Error as err:
-
-        err_message = ["db_error","Unknown DB error"]
-
-        ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
-        else:
-            err_message = ["db_error",err.msg]
-
-        return err_message
-
-    else:
-
-        succ_message = ["success","DB operation was successful", user_joined]
-        return succ_message
-
-    finally:
-
-        ''' Close connection and cursor no matter what happens '''
-        if cur:
-            cur.close()
-        if cnx:
-            cnx.close()
 
 # ------------------------------------------------------------------------------
 # event voting -----------------------------------------------------------------
+
 
 def vote_event(user_id, event_id, before_consensus, answers, ip_address):
     '''
@@ -1124,7 +1046,6 @@ def vote_event(user_id, event_id, before_consensus, answers, ip_address):
         vote_event_query = '''INSERT INTO votes
                         (user_id, event_id, before_consensus, field_id, field_value, timestamp, ip_address)
                         VALUES'''
-
         ''' Construct query '''
         current_timestamp = int(round(time.time() * 1000))
 
@@ -1135,46 +1056,48 @@ def vote_event(user_id, event_id, before_consensus, answers, ip_address):
             field_value = answer["field_value"]
 
             vote_event_query += """(%s, %s, %s, %s, %s, %s, %s)"""
-            params += [user_id, event_id, before_consensus, field_id, field_value, current_timestamp, ip_address]
+            params += [
+                user_id, event_id, before_consensus, field_id, field_value,
+                current_timestamp, ip_address
+            ]
             vote_event_query += ","
         vote_event_query = vote_event_query[:-1]
-
         ''' Execute INSERT statement '''
         cur.execute(vote_event_query, tuple(params))
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         print(err_message)
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful"]
+        succ_message = ["success", "DB operation was successful"]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
+
 # ------------------------------------------------------------------------------
 # event votes ------------------------------------------------------------------
+
 
 def get_event_votes(event_id):
     '''
@@ -1192,8 +1115,7 @@ def get_event_votes(event_id):
 
         votes_query = '''SELECT user_id, field_id, field_value, timestamp FROM votes WHERE event_id = %s ORDER BY user_id, field_id'''
 
-        params = (event_id,)
-
+        params = (event_id, )
         ''' Execute INSERT statement '''
         cur.execute(votes_query, params)
 
@@ -1209,32 +1131,31 @@ def get_event_votes(event_id):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", votes]
+        succ_message = ["success", "DB operation was successful", votes]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_event_votes_count(event_id):
 
@@ -1248,8 +1169,7 @@ def get_event_votes_count(event_id):
 
         votes_query = '''SELECT COUNT(DISTINCT user_id) FROM votes WHERE event_id = %s'''
 
-        params = (event_id,)
-
+        params = (event_id, )
         ''' Execute INSERT statement '''
         cur.execute(votes_query, params)
 
@@ -1258,32 +1178,31 @@ def get_event_votes_count(event_id):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", count]
+        succ_message = ["success", "DB operation was successful", count]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_events_votes(event_ids):
     '''
@@ -1311,9 +1230,7 @@ def get_events_votes(event_ids):
 
         votes_query = votes_query + sub_query + votes_query_part_2
 
-
         params = tuple(event_ids)
-
         ''' Execute INSERT statement '''
         cur.execute(votes_query, params)
 
@@ -1322,39 +1239,35 @@ def get_events_votes(event_ids):
             if event_id not in events:
                 events[event_id] = []
 
-            events[event_id].append(
-                user_id
-            )
-
+            events[event_id].append(user_id)
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", events]
+        succ_message = ["success", "DB operation was successful", events]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_event_correct_votes(event_id):
     cnx = cur = None
@@ -1367,8 +1280,7 @@ def get_event_correct_votes(event_id):
 
         votes_query = '''SELECT user_id, field_id, field_value, timestamp FROM votes WHERE event_id = %s AND before_consensus = 1 ORDER BY user_id, field_id'''
 
-        params = (event_id,)
-
+        params = (event_id, )
         ''' Execute INSERT statement '''
         cur.execute(votes_query, params)
 
@@ -1384,90 +1296,88 @@ def get_event_correct_votes(event_id):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", votes]
+        succ_message = ["success", "DB operation was successful", votes]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
+
 def get_event_wrong_votes(event_id):
-        cnx = cur = None
-        votes = {}
+    cnx = cur = None
+    votes = {}
 
-        try:
-            ''' Connect to DB with connection info saved in connection.py '''
-            cnx = sqlite3.connect(connection.connection_info())
-            cur = cnx.cursor()
+    try:
+        ''' Connect to DB with connection info saved in connection.py '''
+        cnx = sqlite3.connect(connection.connection_info())
+        cur = cnx.cursor()
 
-            votes_query = '''SELECT user_id, field_id, field_value, timestamp FROM votes WHERE event_id = %s AND before_consensus = 0 ORDER BY user_id, field_id'''
+        votes_query = '''SELECT user_id, field_id, field_value, timestamp FROM votes WHERE event_id = %s AND before_consensus = 0 ORDER BY user_id, field_id'''
 
-            params = (event_id,)
+        params = (event_id, )
+        ''' Execute INSERT statement '''
+        cur.execute(votes_query, params)
 
-            ''' Execute INSERT statement '''
-            cur.execute(votes_query, params)
+        for user_id, field_id, field_value, timestamp in cur:
+            vote = {}
 
-            for user_id, field_id, field_value, timestamp in cur:
-                vote = {}
-
-                if user_id not in votes:
-                    votes[user_id] = {}
-                    votes[user_id]["answers"] = [{field_id: field_value}]
-                    votes[user_id]["timestamp"] = timestamp
-                else:
-                    votes[user_id]["answers"].append({field_id: field_value})
-
-        except sqlite3.Error as err:
-
-            err_message = ["db_error","Unknown DB error"]
-
-            ''' Catch  'all' errors '''
-            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                err_message = ["db_error","Wrong DB username or password"]
-            elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                err_message = ["db_error","Database does not exist"]
-            elif err.errno == 1062:
-                err_message = ["duplicate",err.msg]
+            if user_id not in votes:
+                votes[user_id] = {}
+                votes[user_id]["answers"] = [{field_id: field_value}]
+                votes[user_id]["timestamp"] = timestamp
             else:
-                err_message = ["db_error",err.msg]
+                votes[user_id]["answers"].append({field_id: field_value})
 
-            return err_message
+    except sqlite3.Error as err:
 
+        err_message = ["db_error", "Unknown DB error"]
+        ''' Catch  'all' errors '''
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            err_message = ["db_error", "Wrong DB username or password"]
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            err_message = ["db_error", "Database does not exist"]
+        elif err.errno == 1062:
+            err_message = ["duplicate", err.msg]
         else:
+            err_message = ["db_error", err.msg]
 
-            succ_message = ["success","DB operation was successful", votes]
-            return succ_message
+        return err_message
 
-        finally:
+    else:
 
-            ''' Close connection and cursor no matter what happens '''
-            if cur:
-                cur.close()
-            if cnx:
-                cnx.close()
+        succ_message = ["success", "DB operation was successful", votes]
+        return succ_message
+
+    finally:
+        ''' Close connection and cursor no matter what happens '''
+        if cur:
+            cur.close()
+        if cnx:
+            cnx.close()
+
 
 # ------------------------------------------------------------------------------
 # event end --------------------------------------------------------------------
+
 
 def end_event(event_id, consensus_reached, consensus_time):
     '''
@@ -1485,42 +1395,39 @@ def end_event(event_id, consensus_reached, consensus_time):
         end_event_query = '''UPDATE events SET end_flag = 1, consensus = %s, consensus_time = %s WHERE id = %s'''
 
         params = (consensus_reached, consensus_time, event_id)
-
         ''' Execute INSERT statement '''
         cur.execute(end_event_query, params)
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful"]
+        succ_message = ["success", "DB operation was successful"]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
-def update_vote_consensus(event_id, before_list):
 
+def update_vote_consensus(event_id, before_list):
     '''
         Info:
             Function that sets user votes' parameter "before_consensus" to 1, indicating that vote was part of the consensus
@@ -1543,45 +1450,43 @@ def update_vote_consensus(event_id, before_list):
         q_ext = q_ext[:-1]
         q_ext += ")"
         before_event_query += q_ext
-
         ''' Execute INSERT statement '''
         cur.execute(before_event_query, params)
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful"]
+        succ_message = ["success", "DB operation was successful"]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
+
 # ------------------------------------------------------------------------------
 # event rewards ----------------------------------------------------------------
 
-def set_rewards(event_id, users, rewards):
 
+def set_rewards(event_id, users, rewards):
     '''
         Info:
             Function to set rewards for users that were part of the consensus
@@ -1611,42 +1516,39 @@ def set_rewards(event_id, users, rewards):
             params.append(str(event_id))
             params.append(str(users[i]))
             params.append(str(rewards[i]))
-
         ''' Execute INSERT statement '''
         cur.execute(whole_query, params)
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful"]
+        succ_message = ["success", "DB operation was successful"]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
-def set_EVT_rewards(event_id, users, rewards):
 
+def set_EVT_rewards(event_id, users, rewards):
     '''
         Info:
             Function to set EVT rewards for users that were part of the consensus
@@ -1676,39 +1578,37 @@ def set_EVT_rewards(event_id, users, rewards):
             params.append(str(event_id))
             params.append(str(users[i]))
             params.append(str(rewards[i]))
-
         ''' Execute INSERT statement '''
         cur.execute(whole_query, params)
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful"]
+        succ_message = ["success", "DB operation was successful"]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def set_reward_claimable(contract_address):
     '''
@@ -1725,43 +1625,40 @@ def set_reward_claimable(contract_address):
 
         event_query = '''UPDATE events SET reward_claimable = 1 WHERE contract_address = %s'''
 
-        params = (contract_address,)
-
+        params = (contract_address, )
         ''' Execute INSERT statement '''
         cur.execute(event_query, params)
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful"]
+        succ_message = ["success", "DB operation was successful"]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
-def set_reward_claimed(contract_address, user_address):
 
+def set_reward_claimed(contract_address, user_address):
     '''
         Info:
             Function that updates reward_claimed field in event_users table to 1
@@ -1777,7 +1674,6 @@ def set_reward_claimed(contract_address, user_address):
         event_query = '''UPDATE event_users SET reward_claimed = 1 WHERE event_id = (SELECT id FROM events WHERE contract_address = %s) AND user_id = (SELECT id FROM users WHERE eth_address = %s) '''
 
         params = (contract_address, user_address)
-
         ''' Execute INSERT statement '''
         cur.execute(event_query, params)
         affected = cur.rowcount
@@ -1785,30 +1681,28 @@ def set_reward_claimed(contract_address, user_address):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
         if affected == 0:
-            err_message = ["db_error","User or event doesn't exist"]
+            err_message = ["db_error", "User or event doesn't exist"]
             return err_message
         else:
-            succ_message = ["success","DB operation was successful"]
+            succ_message = ["success", "DB operation was successful"]
             return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
@@ -1817,8 +1711,10 @@ def set_reward_claimed(contract_address, user_address):
 
     pass
 
+
 # ------------------------------------------------------------------------------
 # sport events -----------------------------------------------------------------
+
 
 def get_score_event_data(event_id):
 
@@ -1834,7 +1730,6 @@ def get_score_event_data(event_id):
                         '''
 
         params = (event_id, )
-
         ''' Execute INSERT statement '''
         cur.execute(event_query, params)
 
@@ -1848,35 +1743,35 @@ def get_score_event_data(event_id):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", score_event]
+        succ_message = ["success", "DB operation was successful", score_event]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
+
 # ------------------------------------------------------------------------------
 # experimental functions -------------------------------------------------------
+
 
 def get_all_users():
     cnx = cur = None
@@ -1888,7 +1783,6 @@ def get_all_users():
         cur = cnx.cursor()
 
         query = '''SELECT id FROM users'''
-
         ''' Execute INSERT statement '''
         cur.execute(query)
 
@@ -1897,32 +1791,31 @@ def get_all_users():
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", users]
+        succ_message = ["success", "DB operation was successful", users]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def insert_vote(user_id, event_id, field_id, field_value, timestamp, cons):
     cnx = cur = None
@@ -1936,7 +1829,6 @@ def insert_vote(user_id, event_id, field_id, field_value, timestamp, cons):
         vote_event_query = '''INSERT INTO votes
                         (user_id, event_id, field_id, field_value, timestamp, before_consensus)
                         VALUES '''
-
         ''' Construct query '''
         current_timestamp = int(time.time())
 
@@ -1944,40 +1836,38 @@ def insert_vote(user_id, event_id, field_id, field_value, timestamp, cons):
 
         vote_event_query += """(%s, %s, %s, %s, %s, %s)"""
         params += [user_id, event_id, field_id, field_value, timestamp, cons]
-
         ''' Execute INSERT statement '''
         cur.execute(vote_event_query, tuple(params))
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         print(err_message)
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful"]
+        succ_message = ["success", "DB operation was successful"]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_event_names():
     '''
@@ -1993,7 +1883,6 @@ def get_event_names():
         cur = cnx.cursor()
 
         event_query = '''SELECT id, name FROM events'''
-
         ''' Execute INSERT statement '''
         cur.execute(event_query)
 
@@ -2002,32 +1891,31 @@ def get_event_names():
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", events]
+        succ_message = ["success", "DB operation was successful", events]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_consensus_answers():
 
@@ -2040,7 +1928,6 @@ def get_consensus_answers():
         cur = cnx.cursor()
 
         event_query = '''SELECT event_id, field_id, field_value FROM votes WHERE before_consensus = 1 GROUP BY field_id, field_value ORDER BY field_id'''
-
         ''' Execute INSERT statement '''
         cur.execute(event_query)
 
@@ -2052,32 +1939,31 @@ def get_consensus_answers():
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", answers]
+        succ_message = ["success", "DB operation was successful", answers]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def get_avg_consensus_answers(event_ids):
 
@@ -2099,8 +1985,6 @@ def get_avg_consensus_answers(event_ids):
         event_query += ")"
 
         event_query_part_2 = ''' ORDER BY field_id'''
-
-
         ''' Execute INSERT statement '''
         cur.execute(event_query, tuple(event_ids))
 
@@ -2112,37 +1996,40 @@ def get_avg_consensus_answers(event_ids):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", answers]
+        succ_message = ["success", "DB operation was successful", answers]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
+
 # ------------------------------------------------------------------------------
 # event creation ---------------------------------------------------------------
 
-def create_event(event_id, image, name, subject, description, category_id, resource, resource_type, contract_address, max_users, min_consensus, join_start, time_to_join, start_time, end_time, reward_ETH, reward_EVT, avg_event, reward_distribution):
+
+def create_event(event_id, image, name, subject, description, category_id,
+                 resource, resource_type, contract_address, max_users,
+                 min_consensus, join_start, time_to_join, start_time, end_time,
+                 reward_ETH, reward_EVT, avg_event, reward_distribution):
 
     cnx = cur = None
 
@@ -2156,42 +2043,47 @@ def create_event(event_id, image, name, subject, description, category_id, resou
         query = '''INSERT INTO events (id, image, name, subject, description, category_id, resource, resource_type, contract_address, max_users, min_consensus, join_start, time_to_join, start_time, end_time, reward_ETH, reward_EVT, hidden, avg_event, reward_distribution)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1, %s, %s)'''
 
-        params = (event_id, image, name, subject, description, category_id, resource, resource_type, contract_address, max_users, min_consensus, join_start, time_to_join, start_time, end_time, reward_ETH, reward_EVT, avg_event, reward_distribution)
-
+        params = (event_id, image, name, subject, description, category_id,
+                  resource, resource_type, contract_address, max_users,
+                  min_consensus, join_start, time_to_join, start_time,
+                  end_time, reward_ETH, reward_EVT, avg_event,
+                  reward_distribution)
         ''' Execute INSERT statement '''
         cur.execute(query, params)
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", cur.lastrowid]
+        succ_message = [
+            "success", "DB operation was successful", cur.lastrowid
+        ]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
 
-def create_event_field(event_id, field, type, validation_required, max, min, validation_type):
+
+def create_event_field(event_id, field, type, validation_required, max, min,
+                       validation_type):
 
     cnx = cur = None
 
@@ -2205,40 +2097,41 @@ def create_event_field(event_id, field, type, validation_required, max, min, val
         query = '''INSERT INTO event_fields (event_id, field, type, validation_required, max, min, validation_type)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)'''
 
-        params = (event_id, field, type, validation_required, max, min, validation_type)
-
+        params = (event_id, field, type, validation_required, max, min,
+                  validation_type)
         ''' Execute INSERT statement '''
         cur.execute(query, params)
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", cur.lastrowid]
+        succ_message = [
+            "success", "DB operation was successful", cur.lastrowid
+        ]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def create_field_answer(event_id, field_id, label, value):
 
@@ -2255,39 +2148,39 @@ def create_field_answer(event_id, field_id, label, value):
                     VALUES (%s, %s, %s, %s)'''
 
         params = (event_id, field_id, label, value)
-
         ''' Execute INSERT statement '''
         cur.execute(query, params)
         cnx.commit()
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
 
-        succ_message = ["success","DB operation was successful", cur.lastrowid]
+        succ_message = [
+            "success", "DB operation was successful", cur.lastrowid
+        ]
         return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()
         if cnx:
             cnx.close()
+
 
 def add_contract_address_to_event(event_id, contract_address):
 
@@ -2299,10 +2192,8 @@ def add_contract_address_to_event(event_id, contract_address):
         cur = cnx.cursor()
 
         update_query = '''UPDATE events SET contract_address = %s WHERE id = %s AND contract_address = "" '''
-
         ''' Construct query '''
         params = (contract_address, event_id)
-
         ''' Execute INSERT statement '''
         cur.execute(update_query, params)
         affected = cur.rowcount
@@ -2310,30 +2201,28 @@ def add_contract_address_to_event(event_id, contract_address):
 
     except sqlite3.Error as err:
 
-        err_message = ["db_error","Unknown DB error"]
-
+        err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error","Wrong DB username or password"]
+            err_message = ["db_error", "Wrong DB username or password"]
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error","Database does not exist"]
+            err_message = ["db_error", "Database does not exist"]
         elif err.errno == 1062:
-            err_message = ["duplicate",err.msg]
+            err_message = ["duplicate", err.msg]
         else:
-            err_message = ["db_error",err.msg]
+            err_message = ["db_error", err.msg]
 
         return err_message
 
     else:
         if affected == 0:
-            err_message = ["db_error","User or event doesn't exist"]
+            err_message = ["db_error", "User or event doesn't exist"]
             return err_message
         else:
-            succ_message = ["success","DB operation was successful"]
+            succ_message = ["success", "DB operation was successful"]
             return succ_message
 
     finally:
-
         ''' Close connection and cursor no matter what happens '''
         if cur:
             cur.close()

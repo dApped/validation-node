@@ -1,19 +1,14 @@
-import sys
-import json
-import requests
-import hashlib
-import hmac
-import time
-import string
-import random
-import statistics
-
 import config
+import hashlib
+import statistics
+import time
+
+from web3 import HTTPProvider, Web3
+
 import common
-from database import events
 import scheduler as sch
-from ethereum import rewards, contract_deploy
-from web3 import Web3, HTTPProvider, IPCProvider
+from database import events
+from ethereum import rewards
 
 provider = config.ETH_RPC_PROVIDER
 web3 = Web3(HTTPProvider(provider))
@@ -73,11 +68,14 @@ def get_events_data(stats=False):
                     if input_method["required"]:
                         input_method["validation"].append("required")
                     if input_method["val_min"] != None:
-                        input_method["validation"].append("min:" + str(input_method["val_min"]))
+                        input_method["validation"].append(
+                            "min:" + str(input_method["val_min"]))
                     if input_method["val_max"] != None:
-                        input_method["validation"].append("max:" + str(input_method["val_max"]))
+                        input_method["validation"].append(
+                            "max:" + str(input_method["val_max"]))
                     if input_method["input_type"] != None:
-                        input_method["validation"].append(input_method["input_type"])
+                        input_method["validation"].append(
+                            input_method["input_type"])
                     input_method.pop("val_max", None)
                     input_method.pop("val_min", None)
                     input_method.pop("input_type", None)
@@ -112,18 +110,23 @@ def get_events_data(stats=False):
                 if event["state"] >= 3:
                     if event_id in all_stats:
                         event["graph_data"] = all_stats[event_id]
-                        event["graph_data"]["majority"] = sum(event["graph_data"]["vote_data"])
+                        event["graph_data"]["majority"] = sum(
+                            event["graph_data"]["vote_data"])
                         event["graph_data"]["minority"] = sum(
                             event["graph_data"]["wrong_vote_data"])
                         event["graph_data"]["providers"] = sum(
-                            event["graph_data"]["vote_data"]) + sum(event["graph_data"]["wrong_vote_data"])
+                            event["graph_data"]["vote_data"]) + sum(
+                                event["graph_data"]["wrong_vote_data"])
 
                         if event_id not in answers:
                             answers[event_id] = ["None"]
 
                         if event["avg_event"]:
-                            event_answers = list(map(float, avg_answers[event_id]))
-                            event["graph_data"]["answer"] = [statistics.mean(event_answers)]
+                            event_answers = list(
+                                map(float, avg_answers[event_id]))
+                            event["graph_data"]["answer"] = [
+                                statistics.mean(event_answers)
+                            ]
                         else:
                             event["graph_data"]["answer"] = answers[event_id]
 
@@ -187,6 +190,7 @@ def get_user_events_data(user_id):
 
     return all_user_events
 
+
 # ------------------------------------------------------------------------------
 # voting & consensus -----------------------------------------------------------
 
@@ -215,28 +219,33 @@ def vote(data, auth_token, scheduler):
     if "user_id" in data["data"]:
         user_id = data["data"]["user_id"]
     else:
-        return common.error_resp(400, "json_error", "Could not find user_id field in the JSON")
+        return common.error_resp(400, "json_error",
+                                 "Could not find user_id field in the JSON")
 
     if "event_id" in data["data"]:
         event_id = data["data"]["event_id"]
     else:
-        return common.error_resp(400, "json_error", "Could not find event_id field in the JSON")
+        return common.error_resp(400, "json_error",
+                                 "Could not find event_id field in the JSON")
 
     if "answers" in data["data"]:
         answer_ids = data["data"]["answers"]
     else:
-        return common.error_resp(400, "json_error", "Could not find answer_ids field in the JSON")
+        return common.error_resp(
+            400, "json_error", "Could not find answer_ids field in the JSON")
 
     if "ip_address" in data["data"]:
         ip_address = data["data"]["ip_address"]
     else:
         ip_address = "None"
 
+    # TODO Roman: Read from smart contract
     user_joined = events.user_joined(user_id, event_id)
     if user_joined[0] != "success":
         return common.error_resp(500, "db_error", "Unknown DB error")
     elif user_joined[2] == False:
-        return common.error_resp(400, "not_joined_error", "User is not joined on this event")
+        return common.error_resp(400, "not_joined_error",
+                                 "User is not joined on this event")
 
     all_data = events.get_event_data(event_id)
     if all_data[0] != "success":
@@ -250,7 +259,8 @@ def vote(data, auth_token, scheduler):
                 answer["field_value"] = float(answer["field_value"])
             except:
                 print("Can't convert answer to float")
-                return common.error_resp(400, "answer_not_float", "Please provide a numerical value!")
+                return common.error_resp(400, "answer_not_float",
+                                         "Please provide a numerical value!")
 
     min_consensus = event_data["min_consensus"]
     min_consensus_ratio = event_data["min_consensus_ratio"]
@@ -265,20 +275,26 @@ def vote(data, auth_token, scheduler):
     if end_time < current_timestamp:
         return common.error_resp(400, "event_end_error", "Event already ended")
     if end_flag:
-        return common.success_resp(201, "vote_cast", "Vote cast, consensus reached beforehand, confirmation saved")
+        return common.success_resp(
+            201, "vote_cast",
+            "Vote cast, consensus reached beforehand, confirmation saved")
         if vote[0] == "duplicate":
-            return common.error_resp(400, "already_voted_error", "User already voted on this event")
+            return common.error_resp(400, "already_voted_error",
+                                     "User already voted on this event")
         elif vote[0] != "success":
             return common.error_resp(500, "db_error", "Unknown DB error")
         else:
-            return common.success_resp(201, "vote_cast", "Vote cast, consensus reached beforehand, confirmation saved")
+            return common.success_resp(
+                201, "vote_cast",
+                "Vote cast, consensus reached beforehand, confirmation saved")
     if start_time > current_timestamp:
         return common.error_resp(400, "event_start_error", "Event not started")
 
     vote = events.vote_event(user_id, event_id, False, answer_ids, ip_address)
     user_hash = hashlib.md5(str(user_id)).hexdigest()
     if vote[0] == "duplicate":
-        return common.error_resp(400, "already_voted_error", "User already voted on this event")
+        return common.error_resp(400, "already_voted_error",
+                                 "User already voted on this event")
     elif vote[0] != "success":
         return common.error_resp(500, "db_error", "Unknown DB error")
 
@@ -288,8 +304,10 @@ def vote(data, auth_token, scheduler):
         cons = check_consensus(event_id, event_data, scheduler)
 
     if "vote_number" in cons:
-        common.send_terminal_event(event_id, "Vote #" + str(
-            cons["vote_number"]) + " ***REMOVED*** " + str(user_hash) + " @ " + str(current_timestamp) + ")")
+        common.send_terminal_event(
+            event_id, "Vote #" + str(
+                cons["vote_number"]) + " ***REMOVED*** " +
+            str(user_hash) + " @ " + str(current_timestamp) + ")")
 
     if cons["consensus_reached"]:
         message = "Vote cast, consensus reached"
@@ -391,15 +409,14 @@ def check_consensus(event_id, event_data, scheduler):
     for count in combinations_count:
         # min_consensus_percentage (how many users must agree),
         # min_consensus_ratio (how many voters must agree)
-        if float(count)/user_count >= min_consensus_percentage and float(count)/voter_count >= min_consensus_ratio:
+        if float(count) / user_count >= min_consensus_percentage and float(
+                count) / voter_count >= min_consensus_ratio:
             consensus_vote = answer_combinations[idx]
             timestamps = []
             for voter in votes:
                 answers = votes[voter]["answers"]
                 if answers == consensus_vote:
-                    timestamps.append(
-                        votes[voter]["timestamp"] / 1000
-                    )
+                    timestamps.append(votes[voter]["timestamp"] / 1000)
 
             vote_median = statistics.mean(timestamps)
             stop_voting_timestamp = vote_median + stop_voting_delta
@@ -408,16 +425,22 @@ def check_consensus(event_id, event_data, scheduler):
 
             for voter in votes:
                 answer = votes[voter]["answers"]
-                if answer == consensus_vote and (votes[voter]["timestamp"]/1000) < stop_voting_timestamp:
+                if answer == consensus_vote and (votes[voter]["timestamp"] /
+                                                 1000) < stop_voting_timestamp:
                     valid_count += 1
                     in_consensus.append(voter)
-                    winners.append({"user_id": voter, "timestamp": votes[voter]["timestamp"]})
+                    winners.append({
+                        "user_id": voter,
+                        "timestamp": votes[voter]["timestamp"]
+                    })
                     winner_ids.append(voter)
                 elif answer == consensus_vote:
                     outside_consensus.append(voter)
                     losers_ids.append(voter)
 
-            if float(valid_count)/user_count >= min_consensus_percentage and float(valid_count)/voter_count >= min_consensus_ratio:
+            if float(valid_count
+                     ) / user_count >= min_consensus_percentage and float(
+                         valid_count) / voter_count >= min_consensus_ratio:
                 consensus_time = int(time.time())
                 consensus = True
             else:
@@ -452,7 +475,12 @@ def check_consensus(event_id, event_data, scheduler):
         assign_rewards(event_data, winners, scheduler)
         send_end_notification(event_id)
 
-        return {"consensus_reached": True, "in_consensus": in_consensus, "outside_consensus": outside_consensus, "vote_number": voter_count}
+        return {
+            "consensus_reached": True,
+            "in_consensus": in_consensus,
+            "outside_consensus": outside_consensus,
+            "vote_number": voter_count
+        }
     else:
         return {"consensus_reached": False, "vote_number": voter_count}
 
@@ -507,13 +535,9 @@ def check_avg_consensus(event_id, event_data, scheduler, forced=False):
         for answer in answers:
             for field_id in answer:
                 if field_id in vote_values:
-                    vote_values[field_id].append(
-                        float(answer[field_id])
-                    )
+                    vote_values[field_id].append(float(answer[field_id]))
                 else:
-                    vote_values[field_id] = [
-                        float(answer[field_id])
-                    ]
+                    vote_values[field_id] = [float(answer[field_id])]
 
     for field_id in vote_values:
         vote_averages[field_id] = statistics.mean(vote_values[field_id])
@@ -530,10 +554,11 @@ def check_avg_consensus(event_id, event_data, scheduler, forced=False):
                 vote_distance = abs(vote_medians[field_id] - float(vote_value))
                 vote["distance"] = vote_distance
 
-    sorted_votes = sorted(list(votes.values()), key=lambda k: (k["distance"], k["timestamp"]))
+    sorted_votes = sorted(
+        list(votes.values()), key=lambda k: (k["distance"], k["timestamp"]))
 
     number_of_votes = len(sorted_votes)
-    winners_size = int(number_of_votes*(float(2)/3))
+    winners_size = int(number_of_votes * (float(2) / 3))
 
     sorted_winners = sorted_votes[0:winners_size]
     outside_consensus = sorted_votes[winners_size:]
@@ -573,7 +598,7 @@ def check_avg_consensus(event_id, event_data, scheduler, forced=False):
                 event_reps.append(-2)
             else:
                 event_reps.append(-1)
-        print(usrs.update_reputation(event_users, event_reps))
+        # print(usrs.update_reputation(event_users, event_reps))
 
     save_event_stats(event_id)
 
@@ -582,7 +607,13 @@ def check_avg_consensus(event_id, event_data, scheduler, forced=False):
     assign_rewards(event_data, in_consensus, scheduler, by_time=False)
     send_end_notification(event_id)
 
-    return {"consensus_reached": True, "in_consensus": in_consensus, "outside_consensus": outside_consensus, "vote_number": vote_count}
+    return {
+        "consensus_reached": True,
+        "in_consensus": in_consensus,
+        "outside_consensus": outside_consensus,
+        "vote_number": vote_count
+    }
+
 
 # ------------------------------------------------------------------------------
 # event END functions ----------------------------------------------------------
@@ -640,14 +671,14 @@ def assign_rewards(event_data, users, scheduler, by_time=True):
         min_reward = 1.0
         rewards_list = []
         summ = 0
-        factor = 8/float(num_users)
+        factor = 8 / float(num_users)
         for i in range(0, num_users):
-            points = min_reward + 1/float(factor*i+1)
+            points = min_reward + 1 / float(factor * i + 1)
             rewards_list.append(points)
 
         last = rewards_list[-1]
         first = rewards_list[0] - last
-        multi = 29/first
+        multi = 29 / first
 
         for i in range(0, len(rewards_list)):
             rewards_list[i] = rewards_list[i] - last
@@ -660,11 +691,11 @@ def assign_rewards(event_data, users, scheduler, by_time=True):
     if reward_distribution == "linear":
         rewards_list = []
         for i in range(0, num_users):
-            rewards_list.append(1/float(num_users))
+            rewards_list.append(1 / float(num_users))
         summ = sum(rewards_list)
 
     for reward in rewards_list:
-        part = reward/summ
+        part = reward / summ
         rewards_ETH.append(int(part * event_reward))
         rewards_EVT.append(int(part * event_reward_EVT))
 
@@ -710,8 +741,10 @@ def assign_rewards(event_data, users, scheduler, by_time=True):
         for i in range(0, len(participants_batched)):
             trx_batched.append(
                 rewards.set_rewards(
-                    participants_batched[i], wei_rewards_batched[i], contract_address, next_nonce=next_nonce+i)
-            )
+                    participants_batched[i],
+                    wei_rewards_batched[i],
+                    contract_address,
+                    next_nonce=next_nonce + i))
 
         job_id = trx_batched[0] + "_" + contract_address
 
@@ -723,8 +756,16 @@ def assign_rewards(event_data, users, scheduler, by_time=True):
             for evt in events_data:
                 if evt["event_id"] == event_id:
                     current_event = evt
-                    scheduler.add_job(rewards.set_claimable_status_batched, 'interval', seconds=10, args=[
-                                      trx_batched, contract_address, scheduler, job_id, claim_topic, event_id, current_event], id=job_id, name="Set rewards job: "+job_id)
+                    scheduler.add_job(
+                        rewards.set_claimable_status_batched,
+                        'interval',
+                        seconds=10,
+                        args=[
+                            trx_batched, contract_address, scheduler, job_id,
+                            claim_topic, event_id, current_event
+                        ],
+                        id=job_id,
+                        name="Set rewards job: " + job_id)
             return True
         else:
             print("error getting events data")
@@ -755,7 +796,8 @@ def send_end_notification(event_id):
         for event in result["data"]["events"]:
             if event["event_id"] == event_id:
                 event_data = event
-                sch.make_call_to_socket_server("/end_event/", event_id, "end_event", event_data)
+                sch.make_call_to_socket_server("/end_event/", event_id,
+                                               "end_event", event_data)
                 return True
     return False
 
@@ -798,12 +840,13 @@ def save_event_stats(event_id):
         minority = 0
         majority = 0
 
-        stats["votes"] = sorted(stats["votes"], key=lambda vote: vote["timestamp"])
+        stats["votes"] = sorted(
+            stats["votes"], key=lambda vote: vote["timestamp"])
         providers = len(stats["votes"])
 
         first_timestamp = stats["votes"][0]["timestamp"]
         last_timestamp = stats["votes"][-1]["timestamp"]
-        step = (last_timestamp - first_timestamp)/10
+        step = (last_timestamp - first_timestamp) / 10
         ts = first_timestamp
 
         for i in range(0, 11):
@@ -819,7 +862,7 @@ def save_event_stats(event_id):
             timestamp = v["timestamp"]
 
             for label in labels:
-                if timestamp - (step/2) >= label:
+                if timestamp - (step / 2) >= label:
                     label_idx += 1
 
             if v["correct"] == 0:
@@ -839,7 +882,7 @@ def save_event_stats(event_id):
 
         readable_labels = []
         for label in labels:
-            r_l = label - event["start_time"]*1000
+            r_l = label - event["start_time"] * 1000
             readable_labels.append(r_l)
 
         save_stats = []
@@ -861,6 +904,7 @@ def save_event_stats(event_id):
         else:
             return False
 
+
 # ------------------------------------------------------------------------------
 # experimental - DO NOT TOUCH --------------------------------------------------
 
@@ -870,7 +914,8 @@ def reload_jobs(data, scheduler):
     if "data" in data:
 
         if "key" not in data["data"]:
-            return common.error_resp(400, "json_error", "Could not find key field in the JSON")
+            return common.error_resp(400, "json_error",
+                                     "Could not find key field in the JSON")
 
         if data["data"]["key"] != config.RELOAD_SCHEDULER_KEY:
             return common.error_resp(400, "json_error", "Wrong key")
@@ -889,7 +934,8 @@ def kill_event(data, scheduler):
     if "data" in data:
 
         if "key" not in data["data"]:
-            return common.error_resp(400, "json_error", "Could not find key field in the JSON")
+            return common.error_resp(400, "json_error",
+                                     "Could not find key field in the JSON")
 
         if data["data"]["key"] != config.KILL_EVENT_KEY:
             return common.error_resp(400, "json_error", "Wrong key")
@@ -910,8 +956,10 @@ def kill_event(data, scheduler):
 
             if avg_event:
 
-                check_avg_consensus(event_id, event_data, scheduler, forced=True)
-                return common.success_resp(201, "killing_event", "Killed event " + str(event_id))
+                check_avg_consensus(
+                    event_id, event_data, scheduler, forced=True)
+                return common.success_resp(201, "killing_event",
+                                           "Killed event " + str(event_id))
 
             else:
                 event_id = data["data"]["event_id"]
@@ -919,7 +967,8 @@ def kill_event(data, scheduler):
                 if votes[0] == "success":
                     votes = votes[2]
                 else:
-                    return common.error_resp(500, "db_error", "Unknown DB error")
+                    return common.error_resp(500, "db_error",
+                                             "Unknown DB error")
 
                 for voter in votes:
                     answer = votes[voter]["answers"]
@@ -951,7 +1000,10 @@ def kill_event(data, scheduler):
                     if answer == winning_vote:
                         valid_count += 1
                         in_consensus.append(voter)
-                        winners.append({"user_id": voter, "timestamp": votes[voter]["timestamp"]})
+                        winners.append({
+                            "user_id": voter,
+                            "timestamp": votes[voter]["timestamp"]
+                        })
                         winner_ids.append(voter)
                     else:
                         outside_consensus.append(voter)
@@ -983,10 +1035,12 @@ def kill_event(data, scheduler):
                 assign_rewards(event_data, winners, scheduler)
                 send_end_notification(event_id)
 
-                return common.success_resp(201, "killing_event", "Killed event " + str(event_id))
+                return common.success_resp(201, "killing_event",
+                                           "Killed event " + str(event_id))
 
         else:
-            return common.error_resp(400, "json_error", "Could not find event_id field in the JSON")
+            return common.error_resp(
+                400, "json_error", "Could not find event_id field in the JSON")
 
 
 def get_event_outcome(event_id):
