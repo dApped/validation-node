@@ -73,6 +73,7 @@ def send_terminal_event(event_id, text):
         "Content-Type": "application/json",
     }
 
+    # TODO Nejc: move this api key to env
     data = {
         "api_key": "***REMOVED***",
         "event": {
