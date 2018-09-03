@@ -1,0 +1,21 @@
+{
+  "id": 1337,
+  "contract_address": "hexaddr",
+  "claim_topic": "??",
+  "name": "Mock Event",
+  "max_users": 20,
+  "consensus_rules": {
+    "min_consensus": 6,
+    "min_consensus_ratio": 0.7,
+    "min_consensus_percentage": 0.9
+  },
+  "end_flag": "??",
+  "consensus": "??",
+  "application_start_time": 1234,
+  "application_end_time": 2345,
+  "event_start": 1234,
+  "event_run_time": 1200
+  "reward_ETH": 1,
+  "reward_VTY": 100,
+  "reward_distribution": "linear"
+}

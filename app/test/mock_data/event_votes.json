@@ -1,0 +1,16 @@
+{
+  "event_id": 1337,
+  "votes":{
+    "0xabcdef12abcdef12abcdef12abcdef12abcdef12": [1, 0, 1],
+    "0xabcdef34abcdef34abcdef34abcdef34abcdef34": [0, 1, 0],
+    "0xabcdef56abcdef56abcdef56abcdef56abcdef56": [1, 0, 1],
+    "0xabcdef78abcdef78abcdef78abcdef78abcdef78": [1, 0, 1],
+    "0xabcdef90abcdef90abcdef90abcdef90abcdef90": [1, 1, 1],
+    "0xfedcba09fedcba09fedcba09fedcba09fedcba09": [0, 0, 0],
+    "0xfedcba87fedcba87fedcba87fedcba87fedcba87": [1, 0, 1],
+    "0xfedcba65fedcba65fedcba65fedcba65fedcba65": [1, 0, 1],
+    "0xfedcba43fedcba43fedcba43fedcba43fedcba43": [1, 0, 1],
+    "0xfedcba21fedcba21fedcba21fedcba21fedcba21": [1, 0, 1],
+    "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": [1, 0, 1]
+  }
+}

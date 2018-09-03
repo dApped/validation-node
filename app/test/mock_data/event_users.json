@@ -1,0 +1,15 @@
+{
+  "event_id": 1337,
+  "users": [
+    "0xabcdef12abcdef12abcdef12abcdef12abcdef12",
+    "0xabcdef34abcdef34abcdef34abcdef34abcdef34",
+    "0xabcdef56abcdef56abcdef56abcdef56abcdef56",
+    "0xabcdef78abcdef78abcdef78abcdef78abcdef78",
+    "0xabcdef90abcdef90abcdef90abcdef90abcdef90",
+    "0xfedcba09fedcba09fedcba09fedcba09fedcba09",
+    "0xfedcba87fedcba87fedcba87fedcba87fedcba87",
+    "0xfedcba65fedcba65fedcba65fedcba65fedcba65",
+    "0xfedcba43fedcba43fedcba43fedcba43fedcba43",
+    "0xfedcba21fedcba21fedcba21fedcba21fedcba21"
+  ]
+}
