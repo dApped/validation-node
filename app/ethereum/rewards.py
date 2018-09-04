@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
-import sys
-import json
-import hashlib
-import hmac
-import time
-import string
-import random
 
-from web3 import Web3, HTTPProvider, IPCProvider
+from web3 import Web3, HTTPProvider
 
-import config,common
-from database import events
+import common
+import config
 import scheduler as sch
+from database import events
 
 provider = config.ETH_RPC_PROVIDER
 web3 = Web3(HTTPProvider(provider))

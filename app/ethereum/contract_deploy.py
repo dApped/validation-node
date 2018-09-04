@@ -1,11 +1,8 @@
 import json
-import web3
-import config
 
-from web3 import Web3, HTTPProvider, IPCProvider
-from web3.contract import ConciseContract
-import json
-import time
+from web3 import Web3, HTTPProvider
+
+import config
 
 provider = config.ETH_RPC_PROVIDER
 w3 = Web3(HTTPProvider(provider))

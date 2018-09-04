@@ -7,7 +7,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, abort, request
 from pytz import utc
 
-import common
 import scheduler as sch
 from events import events
 
@@ -83,7 +82,7 @@ def ip_whitelist():
 def hello():
     scheduler.print_jobs()
     print("Now: ", datetime.utcnow())
-    return "Nothing to see here 123", 200
+    return "Nothing to see here, verity dev", 200
 
 
 @application.route('/events', methods=['GET'])

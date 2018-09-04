@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
-import sys
-import json
-import requests
-import hashlib
-import hmac
-import time
-import string
 import random
+import string
+import time
 
-import config
+import requests
+
 
 def random_string(size=11, chars=string.ascii_letters + string.digits):
     return ''.join(random.choice(chars) for _ in list(range(size)))

@@ -1,4 +1,3 @@
-import config
 import hashlib
 import statistics
 import time
@@ -6,6 +5,7 @@ import time
 from web3 import HTTPProvider, Web3
 
 import common
+import config
 import scheduler as sch
 from database import events
 from ethereum import rewards

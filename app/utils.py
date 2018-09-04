@@ -1,9 +1,8 @@
-import config
 import time
 
 from web3 import HTTPProvider, Web3
 
-import common
+import config, common
 
 provider = config.ETH_RPC_PROVIDER
 web3 = Web3(HTTPProvider(provider))

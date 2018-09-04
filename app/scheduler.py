@@ -1,15 +1,14 @@
-from datetime import datetime, timedelta
-import requests
-import json
-
-from database import events
-import config
-from events import events as ev
-import common
-import hashlib
 import _thread
+import hashlib
+from datetime import datetime
 
-from web3 import Web3, HTTPProvider, IPCProvider
+import requests
+from web3 import Web3, HTTPProvider
+
+import common
+import config
+from database import events
+from events import events as ev
 
 #initiate web3 lib and connect to RPC provider
 provider = config.ETH_RPC_PROVIDER
