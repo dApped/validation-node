@@ -2,7 +2,7 @@
 
 ## Getting started
 
-Validation node environment is set up using [Docker](https://www.docker.com/get-started) and [Python 3.7](https://www.python.org/downloads/release/python-370/) (so make sure you have it installed).
+Validation node environment is set up using [Docker](https://www.docker.com/get-started) (so make sure you have it installed).
 
 
 First clone this repo.
@@ -29,6 +29,8 @@ Validation node REST API is now accessible at `localhost:<DESIRED_PORT>`
 
 
 ## Dev setup
+
+For development [Python 3.7](https://www.python.org/downloads/release/python-370/) is used, so have it installed.
 
 ### Local Python Environment
 Even if application is running in Docker container you will want to have python library dependencies installed localy, so we use virtual environment.
