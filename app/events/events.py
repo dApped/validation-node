@@ -1,16 +1,16 @@
 import hashlib
+import os
 import statistics
 import time
 
 from web3 import HTTPProvider, Web3
 
 import common
-import config
 import scheduler as sch
 from database import events
 from ethereum import rewards
 
-provider = config.ETH_RPC_PROVIDER
+provider = os.getenv('ETH_RPC_PROVIDER')
 web3 = Web3(HTTPProvider(provider))
 
 # ------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ web3 = Web3(HTTPProvider(provider))
 
 
 def get_events_data(stats=False):
-    '''
+    """
         Function that return ALL data of ALL events
 
         Parameters
@@ -31,7 +31,7 @@ def get_events_data(stats=False):
         ------------
         'dict'
             A dictionary structure of ALL events data
-    '''
+    """
 
     events_data = events.get_events()
 
@@ -699,7 +699,8 @@ def assign_rewards(event_data, users, scheduler, by_time=True):
         rewards_ETH.append(int(part * event_reward))
         rewards_EVT.append(int(part * event_reward_EVT))
 
-    participants = usrs.get_eth_addresses(user_ids)
+    # TODO participans should be list of ETH addresses
+    participants = users #usrs.get_eth_addresses(user_ids)
 
     if participants[0] == "success":
 
@@ -722,7 +723,7 @@ def assign_rewards(event_data, users, scheduler, by_time=True):
 
         participants_batched = []
         wei_rewards_batched = []
-        batch_size = config.BATCH_SIZE
+        batch_size = os.getenv('BATCH_SIZE')
 
         batch_idx = -1
         for i in range(0, len(participants)):
@@ -735,7 +736,7 @@ def assign_rewards(event_data, users, scheduler, by_time=True):
 
         trx_batched = []
 
-        developers_account = config.DEVELOPERS_ACCOUNT
+        developers_account = os.getenv('DEVELOPERS_ACCOUNT')
         next_nonce = web3.eth.getTransactionCount(developers_account)
 
         for i in range(0, len(participants_batched)):
@@ -1029,7 +1030,8 @@ def kill_event(data, scheduler):
                             event_reps.append(-2)
                         else:
                             event_reps.append(-1)
-                    print(usrs.update_reputation(event_users, event_reps))
+                    # TODO how to set reputation, probably write to blockchain eventually
+                    #print(usrs.update_reputation(event_users, event_reps))
 
                 save_event_stats(event_id)
                 assign_rewards(event_data, winners, scheduler)

@@ -28,8 +28,6 @@ except:
 
 # EB looks for an 'application' callable by default.
 application = Flask(__name__)
-application.config[
-    "RATELIMIT_STORAGE_URL"] = ''  # "redis://eventum-redis.muydls.0001.euc1.cache.amazonaws.com"
 
 
 @application.before_request
@@ -88,9 +86,8 @@ def hello():
 @application.route('/events', methods=['GET'])
 def get_events():
     include = request.args.get('include')
-    statistics = False
-    if include == "statistics":
-        statistics = True
+    statistics = include == "statistics"
+
     result = events.get_events_data(stats=statistics)
 
     if "data" in result:
@@ -155,7 +152,4 @@ def reload_jobs():
 
 # run the app.
 if __name__ == "__main__":
-    # Setting debug to True enables debug output. This line should be
-    # removed before deploying a production app.
     application.run(debug=os.getenv('FLASK_DEBUG'))
-    # application.run()

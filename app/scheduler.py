@@ -1,3 +1,4 @@
+import os
 import _thread
 import hashlib
 from datetime import datetime
@@ -6,12 +7,12 @@ import requests
 from web3 import Web3, HTTPProvider
 
 import common
-import config
+
 from database import events
 from events import events as ev
 
 #initiate web3 lib and connect to RPC provider
-provider = config.ETH_RPC_PROVIDER
+provider = os.getenv('ETH_RPC_PROVIDER')
 web3 = Web3(HTTPProvider(provider))
 
 def add_event_jobs(scheduler):
@@ -127,11 +128,11 @@ def socket_push(event_id,event_type,consensus=False,contract=False,scheduler=Fal
 def make_call_to_socket_server(url_endpoint,event_id,event_type,event_data):
 
     data = {
-        "api_key": config.WEBSOCKET_API_KEY,
+        "api_key": os.getenv('WEBSOCKET_API_KEY'),
         "event": event_data
     }
 
-    url = config.WEBSOCKET_SERVER_URL + url_endpoint
+    url = os.getenv('WEBSOCKET_SERVER_URL') + url_endpoint
     headers = {'content-type': 'application/json'}
     r = requests.post(url, json=data, headers=headers)
 

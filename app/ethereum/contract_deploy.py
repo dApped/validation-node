@@ -1,10 +1,9 @@
 import json
+import os
 
 from web3 import Web3, HTTPProvider
 
-import config
-
-provider = config.ETH_RPC_PROVIDER
+provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
 
 def get_contract_application_times(contract_address):
@@ -27,8 +26,8 @@ def get_contract_balance(contract_address):
 
 def send_eth(address, amount, next_nonce=None):
 
-    developers_account = config.DEVELOPERS_ACCOUNT
-    developers_account_private_key = config.DEVELOPERS_ACCOUNT_PRIVATE_KEY
+    developers_account = os.getenv('DEVELOPERS_ACCOUNT')
+    developers_account_private_key = os.getenv('DEVELOPERS_ACCOUNT_PRIVATE_KEY')
 
     if next_nonce == None:
         next_nonce = w3.eth.getTransactionCount(developers_account)

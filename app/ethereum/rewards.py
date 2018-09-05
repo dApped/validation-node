@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
+import os
 
 from web3 import Web3, HTTPProvider
 
 import common
-import config
 import scheduler as sch
 from database import events
 
-provider = config.ETH_RPC_PROVIDER
+provider = os.getenv('ETH_RPC_PROVIDER')
 web3 = Web3(HTTPProvider(provider))
 
 def set_rewards(participants,rewards,contract_address, next_nonce=None):
@@ -34,8 +34,8 @@ def set_rewards(participants,rewards,contract_address, next_nonce=None):
         transaction hash
     '''
 
-    developers_account = config.DEVELOPERS_ACCOUNT
-    developers_account_private_key = config.DEVELOPERS_ACCOUNT_PRIVATE_KEY
+    developers_account = os.getenv('DEVELOPERS_ACCOUNT')
+    developers_account_private_key = os.getenv('DEVELOPERS_ACCOUNT_PRIVATE_KEY')
 
     participants_length = len(participants)
     rewards_length = len(rewards)
