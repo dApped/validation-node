@@ -82,6 +82,7 @@ in your `.env` file. Now you can start the app on 2 different ways:
 or
 2. `python app/application.py` and app is exposed at Flask's default port `5000` 
 
+Both support live reloads, so no need to restart those commands after making code changes.
 
 
 
