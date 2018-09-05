@@ -44,7 +44,7 @@ Create virtual environment
 ```bash
 virtualenv <DESIRED_PATH_TO_VIRTUALENV>/<VENV_NAME>
 ```
-Optinally you set pass `--python=<PATH_TO_PYTHON_BIN>` argument to specify which python you want installed.
+Optinally you set pass `--python=<PATH_TO_PYTHON3.7_BIN>` argument to specify which python you want installed.
 
 Now activate virtual environment
 ```bash
@@ -78,7 +78,7 @@ FLASK_DEBUG=1
 ```
 in your `.env` file. Now you can start the app on 2 different ways:
 
-1. `docker-compose up`, and app is exposed òn port `80`
+1. `docker-compose up`, and app is exposed on port `80`
 or
 2. `python app/application.py` and app is exposed at Flask's default port `5000` 
 
