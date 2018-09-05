@@ -114,14 +114,15 @@ def get_events():
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -207,15 +208,16 @@ def get_user_events(user_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
-
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
+        #
         return err_message
 
     else:
@@ -257,15 +259,15 @@ def get_event_id(contract_address):
     except sqlite3.Error as err:
 
         err_message = ["db_error", "Unknown DB error"]
-        ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -338,14 +340,15 @@ def get_event_data(event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -390,15 +393,16 @@ def get_event_users(event_address):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
-
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
+        #
         return err_message
 
     else:
@@ -457,14 +461,15 @@ def get_event_user_ids(event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -515,14 +520,15 @@ def save_event_stats(stats, event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -585,14 +591,15 @@ def get_event_fields(event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -649,14 +656,15 @@ def get_saved_all_events_stats():
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -723,14 +731,15 @@ def get_all_events_stats(voter_id=None):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -793,14 +802,15 @@ def get_event_stats(event_id, voter_id=None):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -839,14 +849,15 @@ def get_event_consensus_answer(event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -895,14 +906,15 @@ def join_event(user_address, event_address):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -948,14 +960,15 @@ def join_event_with_id(user_id, event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1001,14 +1014,15 @@ def verify_join(user_address, event_address):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1070,14 +1084,15 @@ def vote_event(user_id, event_id, before_consensus, answers, ip_address):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         print(err_message)
         return err_message
@@ -1133,14 +1148,15 @@ def get_event_votes(event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1180,14 +1196,15 @@ def get_event_votes_count(event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1245,14 +1262,15 @@ def get_events_votes(event_ids):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1298,14 +1316,15 @@ def get_event_correct_votes(event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1351,14 +1370,15 @@ def get_event_wrong_votes(event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1403,14 +1423,15 @@ def end_event(event_id, consensus_reached, consensus_time):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1458,14 +1479,15 @@ def update_vote_consensus(event_id, before_list):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1524,14 +1546,15 @@ def set_rewards(event_id, users, rewards):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1586,14 +1609,15 @@ def set_EVT_rewards(event_id, users, rewards):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1634,14 +1658,15 @@ def set_reward_claimable(contract_address):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1683,14 +1708,15 @@ def set_reward_claimed(contract_address, user_address):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1745,14 +1771,15 @@ def get_score_event_data(event_id):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1793,14 +1820,15 @@ def get_all_users():
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1844,14 +1872,15 @@ def insert_vote(user_id, event_id, field_id, field_value, timestamp, cons):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         print(err_message)
         return err_message
@@ -1893,14 +1922,15 @@ def get_event_names():
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1941,14 +1971,15 @@ def get_consensus_answers():
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -1998,14 +2029,15 @@ def get_avg_consensus_answers(event_ids):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -2056,14 +2088,15 @@ def create_event(event_id, image, name, subject, description, category_id,
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -2107,14 +2140,15 @@ def create_event_field(event_id, field, type, validation_required, max, min,
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -2156,14 +2190,15 @@ def create_field_answer(event_id, field_id, label, value):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
@@ -2203,14 +2238,15 @@ def add_contract_address_to_event(event_id, contract_address):
 
         err_message = ["db_error", "Unknown DB error"]
         ''' Catch  'all' errors '''
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            err_message = ["db_error", "Wrong DB username or password"]
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            err_message = ["db_error", "Database does not exist"]
-        elif err.errno == 1062:
-            err_message = ["duplicate", err.msg]
-        else:
-            err_message = ["db_error", err.msg]
+        # TODO replace mysql connector errorcode
+        # if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        #     err_message = ["db_error", "Wrong DB username or password"]
+        # elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        #     err_message = ["db_error", "Database does not exist"]
+        # elif err.errno == 1062:
+        #     err_message = ["duplicate", err.msg]
+        # else:
+        #     err_message = ["db_error", err.msg]
 
         return err_message
 
