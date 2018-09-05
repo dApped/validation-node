@@ -10,7 +10,8 @@ from pytz import utc
 import scheduler as sch
 from events import events
 
-logging.basicConfig()
+logger = logging.getLogger('spam_application')
+logger.setLevel(logging.DEBUG)
 
 # ------------------------------------------------------------------------------
 # apscheduler ------------------------------------------------------------------
@@ -21,7 +22,7 @@ try:
     sch.add_event_jobs(scheduler)
     sch.listen_for_contract_events(scheduler)
 except:
-    print("Scheduler error")
+    logger.error("Scheduler error")
 
 # ------------------------------------------------------------------------------
 # flask setup ------------------------------------------------------------------
