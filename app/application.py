@@ -7,9 +7,6 @@ from flask import Flask, abort, request
 
 from events import events
 
-logger = logging.getLogger('spam_application')
-logger.setLevel(logging.DEBUG)
-
 # ------------------------------------------------------------------------------
 # Flask Setup ------------------------------------------------------------------
 
@@ -39,7 +36,6 @@ def limit_remote_addr():
     if request.environ['REMOTE_ADDR'] in blacklist:
         print("Vietnamese bot detected!")
         abort(403)
-
 
 
 @application.after_request

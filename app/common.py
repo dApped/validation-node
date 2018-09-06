@@ -3,6 +3,12 @@ import random
 import string
 import time
 
+import requests
+
+
+def get_content(url):
+    req = requests.get(url)
+    return req.content.decode()
 
 def random_string(size=11, chars=string.ascii_letters + string.digits):
     return ''.join(random.choice(chars) for _ in list(range(size)))
