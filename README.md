@@ -61,6 +61,10 @@ pip -V
 ```
 should output ```<PATH_TO_VIRTUALENV>/<VENV_NAME>/lib/python3.7/site-packages/pip (python 3.7)```
 
+Then install dependencies by running
+```bash
+pip install -r app/requirements.txt
+````
 
 ### Environment variables
 
