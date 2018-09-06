@@ -1,3 +1,4 @@
+import json
 import os
 
 from web3 import HTTPProvider, Web3
@@ -7,7 +8,7 @@ import common
 provider = os.getenv('ETH_RPC_PROVIDER')
 web3 = Web3(HTTPProvider(provider))
 
-verity_event_contract_abi = common.get_content("http://api.verity.network/contract/abi")
+verity_event_contract_abi = common.get_content(os.getenv('VERITY_EVENT_ABI'))
 
 
 def get_all_events():
@@ -16,7 +17,7 @@ def get_all_events():
     Gets all registered events in a contract from ethereum
     """
     print("Getting events from blockchain...")
-    return []
+    return json.loads(GENERATED_JSON_FILE)
 
 
 def get_my_events(events):

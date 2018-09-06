@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 
 from flask import Flask, abort, request
+from web3 import HTTPProvider, Web3
 
 from events import events
 
@@ -18,11 +19,18 @@ application.logger.handlers.extend(gunicorn_error_logger.handlers)
 application.logger.setLevel(logging.DEBUG)
 logger = application.logger
 
+provider = os.getenv('ETH_RPC_PROVIDER')
+web3 = Web3(HTTPProvider(provider))
+
+
 
 def startup():
     """
     At startup
     """
+    # Mock this nodes account
+    my_account = web3.eth.accounts[1]
+
     logger.debug("Validation Node Starting...")
     all_events = events.get_all_events()
     my_events = events.get_my_events(all_events)
@@ -74,7 +82,7 @@ def hello():
 
 @application.route('/events', methods=['GET'])
 def get_events():
-    my_events = ['abcde']
+    my_events = ['0xee19f1d6dbc27cf4e68952e41873b4f84ce0ca58']
     return json.dumps(my_events), 200
 
 
