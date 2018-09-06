@@ -13,14 +13,20 @@ from events import events
 # EB looks for an 'application' callable by default.
 application = Flask(__name__)
 
+gunicorn_error_logger = logging.getLogger('gunicorn.error')
+application.logger.handlers.extend(gunicorn_error_logger.handlers)
+application.logger.setLevel(logging.DEBUG)
+logger = application.logger
+
+
 def startup():
     """
     At startup
     """
-    print("Validation Node Starting...")
+    logger.debug("Validation Node Starting...")
     all_events = events.get_all_events()
     my_events = events.get_my_events(all_events)
-    print("Setting up finished")
+    logger.debug("Setting up finished")
 
 startup()
 
@@ -31,10 +37,10 @@ def limit_remote_addr():
     blacklist = ['14.165.36.165', '104.199.227.129']
 
     if "HTTP_X_FORWARDED_FOR" in request.environ and request.environ["HTTP_X_FORWARDED_FOR"] in blacklist:
-        print("Vietnamese bot detected!")
+        logger.debug("Vietnamese bot detected!")
         abort(403)
     if request.environ['REMOTE_ADDR'] in blacklist:
-        print("Vietnamese bot detected!")
+        logger.debug("Vietnamese bot detected!")
         abort(403)
 
 
@@ -61,7 +67,8 @@ def ip_whitelist():
 @application.route('/', methods=['GET'])
 # @limiter.limit("10/minute")
 def hello():
-    print("Now: ", datetime.utcnow())
+    application.logger.debug("Root resource requested" +str(datetime.utcnow()))
+    logger.debug('Logger is up')
     return "Nothing to see here, verity dev", 200
 
 

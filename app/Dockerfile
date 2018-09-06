@@ -22,6 +22,7 @@ RUN apk add bash gcc linux-headers make musl-dev python3-dev py-setuptools
 RUN pip3 install -r requirements.txt
 
 ENTRYPOINT ["gunicorn", "-b", ":5000", "application"]
+#ENTRYPOINT ["gunicorn", "-b", ":5000", "application", "--access-logfile=logs/gunicorn.log", "--error-logfile=logs/error.log"]
 # for debug
 #ENTRYPOINT ["/bin/bash"]
 # only local
