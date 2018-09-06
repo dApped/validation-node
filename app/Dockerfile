@@ -12,7 +12,7 @@ RUN apk update
 
 # apk has named gunicorn as py-gunicorn
 # TODO check if all are really necessary and if we prebuild this
-RUN apk add gcc linux-headers make musl-dev python3-dev py-setuptools
+RUN apk add bash gcc linux-headers make musl-dev python3-dev py-setuptools
 
 # when running non-alpine images
 #RUN apt-get update
