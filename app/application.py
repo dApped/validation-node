@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import redis
 from datetime import datetime
 
 from flask import Flask, abort, request
@@ -20,16 +21,19 @@ application.logger.setLevel(logging.DEBUG)
 logger = application.logger
 
 provider = os.getenv('ETH_RPC_PROVIDER')
+logger.info(provider)
 web3 = Web3(HTTPProvider(provider))
 
+#r = redis.StrictRedis(host='redis', port=6379, db=0)
+r = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
 
 def startup():
     """
     At startup
     """
     # Mock this nodes account
-    my_account = web3.eth.accounts[1]
-
+    #my_account = web3.eth.accounts[1]
+    r.set('foo', 'bar')
     logger.debug("Validation Node Starting...")
     all_events = events.get_all_events()
     print('all event addresses', all_events)
@@ -74,6 +78,7 @@ def ip_whitelist():
 def hello():
     application.logger.debug("Root resource requested" + str(datetime.utcnow()))
     logger.debug('Logger is up')
+    logger.info(r.get('foo'))
     return "Nothing to see here, verity dev", 200
 
 

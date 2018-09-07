@@ -80,7 +80,15 @@ Make sure you have set
 FLASK_ENV=dev
 FLASK_DEBUG=1
 ```
-in your `.env` file. Now you can start the app on 2 different ways:
+in your `.env` file.
+
+As we use redis, you need to run it before starting the app.
+```bash
+docker run -d -p 6379:6379 redis
+```
+
+
+Now you can start the app on 2 different ways:
 
 1. `docker-compose up`, and app is exposed on port `80`
 or
@@ -88,6 +96,7 @@ or
 
 Both support live reloads, so no need to restart those commands after making code changes.
 
+**Development branch only supports option 2.
 
 
 
