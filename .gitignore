@@ -2,8 +2,11 @@ __pycache__
 
 tags
 
-verity-validation-node.db
+*.pkl
+*.json
 
 env/
-.env
 .idea/
+
+.* 
+!/.gitignore
