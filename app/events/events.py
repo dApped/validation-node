@@ -1,23 +1,20 @@
 import json
 import os
+import pickle
+import sys
 
 from web3 import HTTPProvider, Web3
-
-import common
-
 provider = os.getenv('ETH_RPC_PROVIDER')
 web3 = Web3(HTTPProvider(provider))
 
-verity_event_contract_abi = common.get_content(os.getenv('VERITY_EVENT_ABI'))
+project_root = os.path.dirname(sys.modules['__main__'].__file__)
+verity_event_contract_abi = json.loads(open(os.path.join(project_root, 'VerityEvent.json')).read())['abi']
 
 
 def get_all_events():
-    """
-    TODO
-    Gets all registered events in a contract from ethereum
-    """
-    print("Getting events from blockchain...")
-    return json.loads(GENERATED_JSON_FILE)
+    f = open(os.path.join(project_root, 'event_addresses.pkl'), 'rb')
+    event_addresses = pickle.load(f)
+    return event_addresses
 
 
 def get_my_events(events):

@@ -27,7 +27,6 @@ web3 = Web3(HTTPProvider(provider))
 #r = redis.StrictRedis(host='redis', port=6379, db=0)
 r = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
 
-
 def startup():
     """
     At startup
@@ -37,11 +36,9 @@ def startup():
     r.set('foo', 'bar')
     logger.debug("Validation Node Starting...")
     all_events = events.get_all_events()
+    print('all event addresses', all_events)
     my_events = events.get_my_events(all_events)
     logger.debug("Setting up finished")
-
-
-startup()
 
 
 @application.before_request
@@ -61,11 +58,10 @@ def limit_remote_addr():
 def apply_headers(response):
     response.headers["Content-Type"] = "application/json"
     response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers[
-        "Access-Control-Allow-Headers"] = "Content-Type,Accept,Authorization"
-    response.headers[
-        "Access-Control-Allow-Methods"] = "POST,GET,OPTIONS,PUT,DELETE"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type,Accept,Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "POST,GET,OPTIONS,PUT,DELETE"
     return response
+
 
 # @limiter.request_filter
 # TODO check why this is here
@@ -80,7 +76,7 @@ def ip_whitelist():
 @application.route('/', methods=['GET'])
 # @limiter.limit("10/minute")
 def hello():
-    application.logger.debug("Root resource requested" +str(datetime.utcnow()))
+    application.logger.debug("Root resource requested" + str(datetime.utcnow()))
     logger.debug('Logger is up')
     logger.info(r.get('foo'))
     return "Nothing to see here, verity dev", 200
@@ -110,4 +106,5 @@ def vote():
 
 # run the app.
 if __name__ == "__main__":
+    startup()
     application.run(debug=os.getenv('FLASK_DEBUG'))
