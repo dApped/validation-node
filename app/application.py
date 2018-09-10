@@ -3,8 +3,9 @@ import logging
 import os
 from datetime import datetime
 
+import functools
 import redis
-from flask import Flask, abort, request
+from flask import Flask, abort, request, jsonify
 
 from events import events
 
@@ -20,13 +21,13 @@ application.logger.setLevel(logging.DEBUG)
 logger = application.logger
 
 #r = redis.StrictRedis(host='redis', port=6379, db=0)
-r = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
+redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
 
 
 def init():
     logger.info('Validation Node Init started')
 
-    r.set('foo', 'bar')
+    redis_db.set('foo', 'bar')
 
     all_events = events.all_events_addresses()
     logger.info('All event addresses %s', all_events)
@@ -36,6 +37,11 @@ def init():
 
     logger.info('Validation Node Init done')
 
+def return_json(resp):
+    @functools.wraps(resp)
+    def wrapped_resp(**values):
+        return jsonify(resp(**values))
+    return wrapped_resp
 
 @application.before_request
 def limit_remote_addr():
@@ -73,17 +79,18 @@ def ip_whitelist():
 # @limiter.limit('10/minute')
 def hello():
     application.logger.debug('Root resource requested' + str(datetime.utcnow()))
-    logger.info(r.get('foo'))
+    logger.info(redis_db.get('foo'))
     return "Nothing to see here, verity dev", 200
 
 
 @application.route('/events', methods=['GET'])
 def get_events():
     my_events = ['0xee19f1d6dbc27cf4e68952e41873b4f84ce0ca58']
-    return json.dumps(my_events), 200
+    return json.dumps(my_events)
 
 
 @application.route('/vote', methods=['POST'])
+@return_json
 def vote():
     json_data = request.get_json()
     headers = request.headers
@@ -91,12 +98,8 @@ def vote():
     # check if json is right format and add ip addres to the json
     if 'data' in json_data and 'HTTP_X_FORWARDED_FOR' in request.environ:
         json_data['data']['ip_address'] = request.environ['HTTP_X_FORWARDED_FOR']
-
-    result = events.vote(json_data)
-
-    if 'data' in result:
-        return json.dumps(result), result['data']['code']
-    return json.dumps(result), result['error']['code']
+    result = events.vote(json_data['data'])
+    return result
 
 
 # run the app.
