@@ -1,10 +1,12 @@
 import functools
-import json
 import logging
 import os
 from datetime import datetime
 
-from flask import Flask, abort, jsonify, request
+from flask import Flask, abort, request, jsonify
+
+project_root = os.path.dirname(os.path.realpath(__file__))
+os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
 
 from events import events
 from database import events as database_events
@@ -19,7 +21,6 @@ gunicorn_error_logger = logging.getLogger('gunicorn.error')
 application.logger.handlers.extend(gunicorn_error_logger.handlers)
 application.logger.setLevel(logging.DEBUG)
 logger = application.logger
-
 
 def init():
     logger.info('Validation Node Init started')
@@ -82,14 +83,13 @@ def ip_whitelist():
 # @limiter.limit('10/minute')
 def hello():
     application.logger.debug('Root resource requested' + str(datetime.utcnow()))
-    logger.info(redis_db.get('foo'))
     return "Nothing to see here, verity dev", 200
 
 
 @application.route('/events', methods=['GET'])
+@return_json
 def get_events():
-    my_events = ['0xee19f1d6dbc27cf4e68952e41873b4f84ce0ca58']
-    return json.dumps(my_events)
+    return events.get_all()
 
 
 @application.route('/vote', methods=['POST'])
@@ -106,6 +106,7 @@ def vote():
 
 
 # run the app.
+# if init in main it does not get executed by gunicorn
+init()
 if __name__ == '__main__':
-    init()
     application.run(debug=os.getenv('FLASK_DEBUG'))

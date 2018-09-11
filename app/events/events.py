@@ -1,31 +1,34 @@
 import json
 import os
 import pickle
-import sys
 import time
 
 from web3 import HTTPProvider, Web3
 
-from database.database import redis_db  # TODO Roman: This is temporary
 from database.events import Event
 from ethereum import rewards
 
 provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
 
-project_root = os.path.dirname(sys.modules['__main__'].__file__)
-verity_event_contract_abi = json.loads(open(os.path.join(project_root,
+verity_event_contract_abi = json.loads(open(os.path.join(os.getenv('DATA_DIR'),
                                                          'VerityEvent.json')).read())['abi']
 
+# Test method
+def get_all():
+    return w3.eth.accounts
 
 def all_events_addresses():
-    f = open(os.path.join(project_root, 'event_addresses.pkl'), 'rb')
+    # MOCK
+    f = open(os.path.join(os.path.join(os.getenv('DATA_DIR'), 'event_addresses.pkl')), 'rb')
     event_addresses = pickle.load(f)
+
     return event_addresses
 
 
 def filter_events_addresses(all_events):
     ''' Checks if node is registered in each of the events '''
+
     node_address = w3.eth.accounts[0]  # TODO Roman: read it from environment
 
     events = []
@@ -80,7 +83,7 @@ def vote(data):
         return user_error_response
 
     # 3.1 Get current votes. Data structure to store votes is still TBD
-    event_votes = redis_db.get(data['event_id'], [])
+    event_votes = [] #redis_db.get(data['event_id'], [])
     # 3.2 Add vote to other votes
     event_votes.append(data['answers'])
 
@@ -89,8 +92,7 @@ def vote(data):
         consensus_reached, consensus_votes = check_consensus(event_votes)
 
         if consensus_reached:
-            event_rewards = rewards.determine_rewards(
-                consensus_votes)  # event.distribution_function)
+            event_rewards = rewards.determine_rewards(consensus_votes)  # event.distribution_function)
             rewards.set_consensus_rewards(event_id, event_rewards)
 
     return success_response
@@ -103,7 +105,6 @@ def get_event_instance(event_address):
 
 
 def is_user_registered(event, user_id):
-
     event_join_filter = event.eventFilter('JoinEvent', {'fromBlock': 0, 'toBlock': 'latest'})
     users_joined = event_join_filter.get_all_entries()
     return user_id in users_joined
