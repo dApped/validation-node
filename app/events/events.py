@@ -6,7 +6,8 @@ import time
 
 from web3 import HTTPProvider, Web3
 
-from application import redis_db
+from database.database import redis_db  # TODO Roman: This is temporary
+from database.events import Event
 from ethereum import rewards
 
 provider = os.getenv('ETH_RPC_PROVIDER')
@@ -15,31 +16,6 @@ w3 = Web3(HTTPProvider(provider))
 project_root = os.path.dirname(sys.modules['__main__'].__file__)
 verity_event_contract_abi = json.loads(open(os.path.join(project_root,
                                                          'VerityEvent.json')).read())['abi']
-
-
-class Event:
-    def __init__(self, event_address, owner, token_address, node_addresses,
-                 leftovers_recoverable_after, application_start_time, application_end_time,
-                 event_start_time, event_end_time, event_name, data_feed_hash):
-        self.event_address = event_address
-        self.owner = owner
-        self.token_address = token_address
-        self.node_addresses = node_addresses
-        self.leftovers_recoverable_after = leftovers_recoverable_after
-        self.application_start_time = application_start_time
-        self.application_end_time = application_end_time
-        self.event_start_time = event_start_time
-        self.event_end_time = event_end_time
-        self.event_name = event_name
-        self.data_feed_hash = data_feed_hash
-
-    def to_json(self):
-        return json.dumps(self.__dict__)
-
-    @classmethod
-    def from_json(cls, json_data):
-        dict_data = json.loads(json_data)
-        return cls(**dict_data)
 
 
 def all_events_addresses():
