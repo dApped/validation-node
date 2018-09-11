@@ -1,18 +1,29 @@
 version: "3"
 services:
+  #ganache:
+  #  image: trufflesuite/ganache-cli:latest
+  #  ports: ['8545:8545']
   redis:
     image: redis
+    ports: ['6379:6379']
   node:
     build: ./app
     entrypoint:
-      - flask
-      - run
-      - --host=0.0.0.0
+      - gunicorn
+      - -b :5000
+      - --reload
+      - application
     environment:
+      REDIS_URL: 'redis'
+      ETH_RPC_PROVIDER: 'HTTP://host.docker.internal:8545'
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
     ports: ['80:5000']
     volumes: ['./app:/app']
+    depends_on:
+      - redis
+    #  - ganache
     links:
       - redis
+    #  - ganache
