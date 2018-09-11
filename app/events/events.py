@@ -3,7 +3,6 @@ import os
 import pickle
 import time
 
-import redis
 from web3 import HTTPProvider, Web3
 
 from ethereum import rewards
@@ -14,14 +13,11 @@ w3 = Web3(HTTPProvider(provider))
 verity_event_contract_abi = json.loads(open(os.path.join(os.getenv('DATA_DIR'),
                                                          'VerityEvent.json')).read())['abi']
 
-redis_db = redis.StrictRedis(host=os.getenv('REDIS_URL'), port=6379, db=0)
-
 # Test method
 def get_all():
     return w3.eth.accounts
 
 def all_events_addresses():
-    print(redis_db.get('foo'))
     # MOCK
     f = open(os.path.join(os.path.join(os.getenv('DATA_DIR'), 'event_addresses.pkl')), 'rb')
     event_addresses = pickle.load(f)
@@ -64,7 +60,7 @@ def vote(data):
         return user_error_response
 
     # 3.1 Get current votes. Data structure to store votes is still TBD
-    event_votes = redis_db.get(data['event_id'], [])
+    event_votes = [] #redis_db.get(data['event_id'], [])
     # 3.2 Add vote to other votes
     event_votes.append(data['answers'])
 
