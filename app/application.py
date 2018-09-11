@@ -1,11 +1,13 @@
-import json
+import functools
 import logging
 import os
 from datetime import datetime
 
-import functools
 import redis
 from flask import Flask, abort, request, jsonify
+
+project_root = os.path.dirname(os.path.realpath(__file__))
+os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
 
 from events import events
 
@@ -20,9 +22,7 @@ application.logger.handlers.extend(gunicorn_error_logger.handlers)
 application.logger.setLevel(logging.DEBUG)
 logger = application.logger
 
-#r = redis.StrictRedis(host='redis', port=6379, db=0)
-redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
-
+redis_db = redis.StrictRedis(host=os.getenv('REDIS_URL'), port=6379, db=0)
 
 def init():
     logger.info('Validation Node Init started')
@@ -84,9 +84,9 @@ def hello():
 
 
 @application.route('/events', methods=['GET'])
+@return_json
 def get_events():
-    my_events = ['0xee19f1d6dbc27cf4e68952e41873b4f84ce0ca58']
-    return json.dumps(my_events)
+    return events.get_all()
 
 
 @application.route('/vote', methods=['POST'])
@@ -103,6 +103,7 @@ def vote():
 
 
 # run the app.
+# if init in main it does not get executed by gunicorn
+init()
 if __name__ == '__main__':
-    init()
     application.run(debug=os.getenv('FLASK_DEBUG'))

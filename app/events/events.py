@@ -1,30 +1,37 @@
 import json
 import os
 import pickle
-import sys
 import time
 
+import redis
 from web3 import HTTPProvider, Web3
 
-from application import redis_db
 from ethereum import rewards
 
 provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
 
-project_root = os.path.dirname(sys.modules['__main__'].__file__)
-verity_event_contract_abi = json.loads(open(os.path.join(project_root,
+verity_event_contract_abi = json.loads(open(os.path.join(os.getenv('DATA_DIR'),
                                                          'VerityEvent.json')).read())['abi']
 
+redis_db = redis.StrictRedis(host=os.getenv('REDIS_URL'), port=6379, db=0)
+
+# Test method
+def get_all():
+    return w3.eth.accounts
 
 def all_events_addresses():
-    f = open(os.path.join(project_root, 'event_addresses.pkl'), 'rb')
+    print(redis_db.get('foo'))
+    # MOCK
+    f = open(os.path.join(os.path.join(os.getenv('DATA_DIR'), 'event_addresses.pkl')), 'rb')
     event_addresses = pickle.load(f)
+
     return event_addresses
 
 
 def filter_node_events(all_events):
     ''' Checks if node is registered in each of the events '''
+
     node_address = w3.eth.accounts[0]  # TODO Roman: read it from environment
 
     events = []
@@ -66,7 +73,8 @@ def vote(data):
         consensus_reached, consensus_votes = check_consensus(event_votes)
 
         if consensus_reached:
-            event_rewards = rewards.determine_rewards(consensus_votes) #, event.distribution_function)
+            event_rewards = rewards.determine_rewards(
+                consensus_votes)  # , event.distribution_function)
             rewards.set_consensus_rewards(event_id, event_rewards)
 
     return success_response
@@ -80,7 +88,6 @@ def get_event_instance(event_address):
 
 
 def is_user_registered(event, user_id):
-
     event_join_filter = event.eventFilter('JoinEvent', {
         'fromBlock': 0,
         'toBlock': 'latest'
