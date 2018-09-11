@@ -4,10 +4,10 @@ import logging
 import os
 from datetime import datetime
 
-import redis
 from flask import Flask, abort, jsonify, request
 
 from events import events
+from database import events as database_events
 
 # ------------------------------------------------------------------------------
 # Flask Setup ------------------------------------------------------------------
@@ -19,11 +19,6 @@ gunicorn_error_logger = logging.getLogger('gunicorn.error')
 application.logger.handlers.extend(gunicorn_error_logger.handlers)
 application.logger.setLevel(logging.DEBUG)
 logger = application.logger
-
-# redis_db = redis.StrictRedis(host='redis', port=6379, db=0)
-redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
-
-EVENTS_KEY = 'events'
 
 
 def init():
@@ -38,16 +33,7 @@ def init():
     node_events = events.retrieve_events(filtered_events)
     logger.info('Validation node events %s', node_events)
 
-    for event in node_events:
-        event_json = event.to_json()
-        redis_db.rpush(EVENTS_KEY, event_json)
-
-    node_events = []
-    for i in range(redis_db.llen(EVENTS_KEY)):
-        event_json = redis_db.lindex(EVENTS_KEY, i)
-        event = events.Event.from_json(event_json)
-        node_events.append(event)
-    logger.info('Validation node events in redis %s', node_events)
+    database_events.store_events(node_events)
 
     logger.info('Validation Node Init done')
 
