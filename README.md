@@ -82,17 +82,20 @@ FLASK_DEBUG=1
 ```
 in your `.env` file.
 
-As we use redis, you need to run it before starting the app.
+For development you are going to want to have a local blockchain. We use [Ganache](https://truffleframework.com/ganache). You can download it from their site or run it as a Docker container
 ```bash
-docker run -d -p 6379:6379 redis
+docker run -d -p 8545:8545 trufflesuite/ganache-cli
 ```
-
 
 Now you can start the app on 2 different ways:
 
 1. `docker-compose up`, and app is exposed on port `80`
 or
-2. `python app/application.py` and app is exposed at Flask's default port `5000` 
+2. As we use redis, you need to run it before starting the app.
+```bash
+docker run -d -p 6379:6379 redis
+```
+Then run `python app/application.py` and app is exposed at Flask's default port `5000` 
 
 Both support live reloads, so no need to restart those commands after making code changes.
 
