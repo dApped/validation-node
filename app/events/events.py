@@ -17,13 +17,38 @@ verity_event_contract_abi = json.loads(open(os.path.join(project_root,
                                                          'VerityEvent.json')).read())['abi']
 
 
+class Event:
+    def __init__(self, event_address, owner, token_address, node_addresses,
+                 leftovers_recoverable_after, application_start_time, application_end_time,
+                 event_start_time, event_end_time, event_name, data_feed_hash):
+        self.event_address = event_address
+        self.owner = owner
+        self.token_address = token_address
+        self.node_addresses = node_addresses
+        self.leftovers_recoverable_after = leftovers_recoverable_after
+        self.application_start_time = application_start_time
+        self.application_end_time = application_end_time
+        self.event_start_time = event_start_time
+        self.event_end_time = event_end_time
+        self.event_name = event_name
+        self.data_feed_hash = data_feed_hash
+
+    def to_json(self):
+        return json.dumps(self.__dict__)
+
+    @classmethod
+    def from_json(cls, json_data):
+        dict_data = json.loads(json_data)
+        return cls(**dict_data)
+
+
 def all_events_addresses():
     f = open(os.path.join(project_root, 'event_addresses.pkl'), 'rb')
     event_addresses = pickle.load(f)
     return event_addresses
 
 
-def filter_node_events(all_events):
+def filter_events_addresses(all_events):
     ''' Checks if node is registered in each of the events '''
     node_address = w3.eth.accounts[0]  # TODO Roman: read it from environment
 
@@ -33,6 +58,27 @@ def filter_node_events(all_events):
         node_addresses = contract_instance.functions.getEventResolvers().call()
         if node_address in node_addresses:
             events.append(event_address)
+    return events
+
+
+def retrieve_events(filtered_events):
+    events = []
+    for event_address in filtered_events:
+        contract_instance = w3.eth.contract(address=event_address, abi=verity_event_contract_abi)
+        owner = contract_instance.functions.owner().call()
+        token_address = contract_instance.functions.tokenAddress().call()
+        node_addresses = contract_instance.functions.getEventResolvers().call()
+        leftovers_recoverable_after = contract_instance.functions.leftoversRecoverableAfter().call()
+        application_start_time = contract_instance.functions.applicationStartTime().call()
+        application_end_time = contract_instance.functions.applicationEndTime().call()
+        event_start_time = contract_instance.functions.eventStartTime().call()
+        event_end_time = contract_instance.functions.eventEndTime().call()
+        event_name = contract_instance.functions.eventName().call()
+        data_feed_hash = contract_instance.functions.dataFeedHash().call()
+        event = Event(event_address, owner, token_address, node_addresses,
+                      leftovers_recoverable_after, application_start_time, application_end_time,
+                      event_start_time, event_end_time, event_name, data_feed_hash)
+        events.append(event)
     return events
 
 
@@ -48,7 +94,8 @@ def vote(data):
     ####
 
     # 1. Validate users can vote on this event now
-    if current_timestamp < event.call().eventStartTime() or current_timestamp > event.call().eventEndTime():
+    if current_timestamp < event.call().eventStartTime() or current_timestamp > event.call(
+    ).eventEndTime():
         return user_error_response
 
     # 2. Check user has registered for event
@@ -66,25 +113,22 @@ def vote(data):
         consensus_reached, consensus_votes = check_consensus(event_votes)
 
         if consensus_reached:
-            event_rewards = rewards.determine_rewards(consensus_votes) #, event.distribution_function)
+            event_rewards = rewards.determine_rewards(
+                consensus_votes)  # event.distribution_function)
             rewards.set_consensus_rewards(event_id, event_rewards)
 
     return success_response
 
 
 def get_event_instance(event_address):
-    event_instance = w3.eth.contract(address=event_address,
-                                     abi=verity_event_contract_abi)
+    event_instance = w3.eth.contract(address=event_address, abi=verity_event_contract_abi)
     # TODO Create Event Class
     return event_instance
 
 
 def is_user_registered(event, user_id):
 
-    event_join_filter = event.eventFilter('JoinEvent', {
-        'fromBlock': 0,
-        'toBlock': 'latest'
-    })
+    event_join_filter = event.eventFilter('JoinEvent', {'fromBlock': 0, 'toBlock': 'latest'})
     users_joined = event_join_filter.get_all_entries()
     return user_id in users_joined
 
