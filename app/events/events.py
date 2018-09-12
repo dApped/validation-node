@@ -7,6 +7,7 @@ from web3 import HTTPProvider, Web3
 
 import common
 from database import events as database_events
+from database import votes as database_votes
 from ethereum import rewards
 
 provider = os.getenv('ETH_RPC_PROVIDER')
@@ -67,7 +68,7 @@ def retrieve_events(filtered_events):
                                       leftovers_recoverable_after, application_start_time,
                                       application_end_time, event_start_time, event_end_time,
                                       event_name, data_feed_hash, state, is_master_node,
-                                      consensus_rules)
+                                      *consensus_rules)
         events.append(event)
     return events
 
