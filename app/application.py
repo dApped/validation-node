@@ -3,13 +3,14 @@ import logging
 import os
 from datetime import datetime
 
-from flask import Flask, abort, request, jsonify
+from flask import Flask, abort, jsonify, request
+
+import scheduler
+from database import events as database_events
+from events import events
 
 project_root = os.path.dirname(os.path.realpath(__file__))
 os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
-
-from events import events
-from database import events as database_events
 
 # ------------------------------------------------------------------------------
 # Flask Setup ------------------------------------------------------------------
@@ -21,6 +22,7 @@ gunicorn_error_logger = logging.getLogger('gunicorn.error')
 application.logger.handlers.extend(gunicorn_error_logger.handlers)
 application.logger.setLevel(logging.DEBUG)
 logger = application.logger
+
 
 def init():
     logger.info('Validation Node Init started')
@@ -35,6 +37,7 @@ def init():
     logger.info('Validation node events %s', node_events)
 
     database_events.store_events(node_events)
+    scheduler.init()
 
     logger.info('Validation Node Init done')
 
