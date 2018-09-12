@@ -19,9 +19,7 @@ def init():
 
     contract_abi = common.contract_abi()
 
-    scheduler.add_job(
-        filters.filter_join_events, 'interval', seconds=5, args=[w3, contract_abi, False])
-    scheduler.add_job(filters.filter_join_events, args=[w3, contract_abi, True])
+    scheduler.add_job(filters.filter_join_events, 'interval', seconds=5, args=[w3, contract_abi])
 
     logger.info('Scheduler Init done')
     try:
