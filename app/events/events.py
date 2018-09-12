@@ -1,18 +1,16 @@
-import json
 import os
 import pickle
 import time
 import logging
 from web3 import HTTPProvider, Web3
 
-from database.events import Event
+import common
+from database import events as database_events
 from ethereum import rewards
 
 provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
 
-verity_event_contract_abi = json.loads(open(os.path.join(os.getenv('DATA_DIR'),
-                                                         'VerityEvent.json')).read())['abi']
 
 logger = logging.getLogger('flask.app')
 
@@ -20,6 +18,7 @@ logger = logging.getLogger('flask.app')
 def get_all():
     logger.info('Reading all events from blockchain')
     return w3.eth.accounts
+
 
 def all_events_addresses():
     # MOCK
@@ -33,10 +32,11 @@ def filter_events_addresses(all_events):
     ''' Checks if node is registered in each of the events '''
 
     node_address = w3.eth.accounts[0]  # TODO Roman: read it from environment
+    contract_abi = common.verity_event_contract_abi()
 
     events = []
     for event_address in all_events:
-        contract_instance = w3.eth.contract(address=event_address, abi=verity_event_contract_abi)
+        contract_instance = w3.eth.contract(address=event_address, abi=contract_abi)
         node_addresses = contract_instance.functions.getEventResolvers().call()
         if node_address in node_addresses:
             events.append(event_address)
@@ -44,9 +44,11 @@ def filter_events_addresses(all_events):
 
 
 def retrieve_events(filtered_events):
+    contract_abi = common.verity_event_contract_abi()
+
     events = []
     for event_address in filtered_events:
-        contract_instance = w3.eth.contract(address=event_address, abi=verity_event_contract_abi)
+        contract_instance = w3.eth.contract(address=event_address, abi=contract_abi)
         owner = contract_instance.functions.owner().call()
         token_address = contract_instance.functions.tokenAddress().call()
         node_addresses = contract_instance.functions.getEventResolvers().call()
@@ -57,9 +59,11 @@ def retrieve_events(filtered_events):
         event_end_time = contract_instance.functions.eventEndTime().call()
         event_name = contract_instance.functions.eventName().call()
         data_feed_hash = contract_instance.functions.dataFeedHash().call()
-        event = Event(event_address, owner, token_address, node_addresses,
-                      leftovers_recoverable_after, application_start_time, application_end_time,
-                      event_start_time, event_end_time, event_name, data_feed_hash)
+        state = contract_instance.functions.getState().call()
+        event = database_events.Event(event_address, owner, token_address, node_addresses,
+                                      leftovers_recoverable_after, application_start_time,
+                                      application_end_time, event_start_time, event_end_time,
+                                      event_name, data_feed_hash, state)
         events.append(event)
     return events
 
@@ -67,7 +71,7 @@ def retrieve_events(filtered_events):
 def vote(data):
     current_timestamp = int(time.time())
     event_id = data['event_id']
-    event = get_event_instance(event_id)
+    event = database_events.get_event(event_id)
 
     #### Maybe move this to some common later?
     success_response = {'status': 200}
@@ -86,7 +90,7 @@ def vote(data):
         return user_error_response
 
     # 3.1 Get current votes. Data structure to store votes is still TBD
-    event_votes = [] #redis_db.get(data['event_id'], [])
+    event_votes = []  #redis_db.get(data['event_id'], [])
     # 3.2 Add vote to other votes
     event_votes.append(data['answers'])
 
@@ -95,16 +99,11 @@ def vote(data):
         consensus_reached, consensus_votes = check_consensus(event_votes)
 
         if consensus_reached:
-            event_rewards = rewards.determine_rewards(consensus_votes)  # event.distribution_function)
+            event_rewards = rewards.determine_rewards(
+                consensus_votes)  # event.distribution_function)
             rewards.set_consensus_rewards(event_id, event_rewards)
 
     return success_response
-
-
-def get_event_instance(event_address):
-    event_instance = w3.eth.contract(address=event_address, abi=verity_event_contract_abi)
-    # TODO Create Event Class
-    return event_instance
 
 
 def is_user_registered(event, user_id):
