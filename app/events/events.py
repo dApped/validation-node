@@ -5,6 +5,7 @@ import time
 import logging
 from web3 import HTTPProvider, Web3
 
+
 from database.events import Event
 from ethereum import rewards
 
@@ -63,27 +64,35 @@ def retrieve_events(filtered_events):
         events.append(event)
     return events
 
+#### Maybe move this to some common later?
+success_response = {'status': 200}
+user_error_response = {'status': 400}
+node_error_response = {'status': 500}
+####
+
+def _is_vote_valid(timestamp, data, event):
+    # 1. Validate users can vote on this event now
+    if timestamp < event.call().eventStartTime() or timestamp > event.call(
+    ).eventEndTime():
+        return False, user_error_response
+
+    # 2. Check user has registered for event
+    user_registered = is_user_registered(event, )
+    if not user_registered:
+        return False, user_error_response
+
+    return True, success_response
 
 def vote(data):
     current_timestamp = int(time.time())
     event_id = data['event_id']
+    user_id = data['user_id']
+
     event = get_event_instance(event_id)
+    valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
+    if not valid_vote:
+        return response
 
-    #### Maybe move this to some common later?
-    success_response = {'status': 200}
-    user_error_response = {'status': 400}
-    node_error_response = {'status': 500}
-    ####
-
-    # 1. Validate users can vote on this event now
-    if current_timestamp < event.call().eventStartTime() or current_timestamp > event.call(
-    ).eventEndTime():
-        return user_error_response
-
-    # 2. Check user has registered for event
-    user_registered = is_user_registered(event, data['user_id'])
-    if not user_registered:
-        return user_error_response
 
     # 3.1 Get current votes. Data structure to store votes is still TBD
     event_votes = [] #redis_db.get(data['event_id'], [])
@@ -92,10 +101,10 @@ def vote(data):
 
     # 3. check if consensus reached
     if len(event_votes) > event.call().minConsensus():
-        consensus_reached, consensus_votes = check_consensus(event_votes)
+        consensus_reached, consensus_votes = check_consensus(event_id)
 
         if consensus_reached:
-            event_rewards = rewards.determine_rewards(consensus_votes)  # event.distribution_function)
+            event_rewards = rewards.determine_rewards(event_id)  # event.distribution_function)
             rewards.set_consensus_rewards(event_id, event_rewards)
 
     return success_response
