@@ -25,5 +25,5 @@ def calculate_event_state(end_flag, time_to_join, start_time, end_time, reward_c
     return state
 
 
-def contract_abi():
+def verity_event_contract_abi():
     return json.loads(open(os.path.join(os.getenv('DATA_DIR'), 'VerityEvent.json')).read())['abi']

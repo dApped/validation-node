@@ -17,7 +17,7 @@ def init():
     provider = os.getenv('ETH_RPC_PROVIDER')
     w3 = Web3(HTTPProvider(provider))
 
-    contract_abi = common.contract_abi()
+    contract_abi = common.verity_event_contract_abi()
 
     scheduler.add_job(filters.filter_join_events, 'interval', seconds=5, args=[w3, contract_abi])
 

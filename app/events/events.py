@@ -29,7 +29,7 @@ def filter_events_addresses(all_events):
     ''' Checks if node is registered in each of the events '''
 
     node_address = w3.eth.accounts[0]  # TODO Roman: read it from environment
-    contract_abi = common.contract_abi()
+    contract_abi = common.verity_event_contract_abi()
 
     events = []
     for event_address in all_events:
@@ -41,7 +41,7 @@ def filter_events_addresses(all_events):
 
 
 def retrieve_events(filtered_events):
-    contract_abi = common.contract_abi()
+    contract_abi = common.verity_event_contract_abi()
 
     events = []
     for event_address in filtered_events:
@@ -103,7 +103,7 @@ def vote(data):
 
 
 def get_event_instance(event_address):
-    contract_abi = common.contract_abi()
+    contract_abi = common.verity_event_contract_abi()
     event_instance = w3.eth.contract(address=event_address, abi=contract_abi)
     # TODO Create Event Class
     return event_instance
