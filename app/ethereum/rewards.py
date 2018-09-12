@@ -10,7 +10,7 @@ def determine_rewards(consensus_votes):
     token_rewards = []
     eth_rewards = []
 
-    token_rewards, eth_rewards
+    return token_rewards, eth_rewards
 
 
 def set_consensus_rewards(event_id, rewards):
