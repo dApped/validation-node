@@ -78,14 +78,16 @@ node_error_response = {'status': 500}
 ####
 
 def _is_vote_valid(timestamp, user_id, event):
+
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
+        logger.info("Voting is not active")
         return False, user_error_response
 
     # 2. Check user has registered for event
     user_registered = is_user_registered(event, user_id)
+    logger.info("User is not registered for this event")
     if not user_registered:
         return False, user_error_response
-
     return True, success_response
 
 
@@ -93,21 +95,20 @@ def vote(data):
     current_timestamp = int(time.time())
     event_id = data['event_id']
     user_id = data['user_id']
-
     event = database_events.get_event(event_id)
+
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
-        return response
+        logger.info("VOTE NOT VALID BUT CONTINUE ANYWAY")
+        #return response
 
-
-    # 3.1 Get current votes. Data structure to store votes is still TBD
-    event_votes = []  #redis_db.get(data['event_id'], [])
-    # 3.2 Add vote to other votes
-    event_votes.append(data['answers'])
-
+    logger.info("Valid vote")
+    database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).store()
+    event_votes = event.get_votes()
     # 3. check if consensus reached
+    # TODO add condition (#votes/#participants) > consensusRatio
     if len(event_votes) > event.min_consensus_votes:
-        consensus_reached, consensus_votes = check_consensus(event_id)
+        consensus_reached, consensus_votes = check_consensus(event_votes)
 
         if consensus_reached:
             logger.info("Consensus reached")
@@ -127,9 +128,7 @@ def is_user_registered(event, user_id):
     return user_id in database_events.all_participants(event.event_address)
 
 
-def check_consensus(event_id):
-    # mock for now
-    votes = [] # get event_id votes from redis
+def check_consensus(votes):
     if len(votes) > 5:
         return True
     return False
