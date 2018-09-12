@@ -1,24 +1,9 @@
-import random
-import string
+import json
+import os
 import time
 
 
-def random_string(size=11, chars=string.ascii_letters + string.digits):
-    return ''.join(random.choice(chars) for _ in list(range(size)))
-
-
-def error_resp(code, id, message):
-    result = {"error": {"code": code, "id": id, "message": message}}
-    return result
-
-
-def success_resp(code, id, message):
-    result = {"data": {"code": code, "id": id, "message": message}}
-    return result
-
-
 def calculate_event_state(end_flag, time_to_join, start_time, end_time, reward_claimable):
-
     current_timestamp = int(time.time())
 
     if end_flag:
@@ -40,15 +25,5 @@ def calculate_event_state(end_flag, time_to_join, start_time, end_time, reward_c
     return state
 
 
-def pad_hex(string, num_of_bytes, prefix=False):
-    if prefix:
-        return '0x' + string[2:].zfill(num_of_bytes * 2)
-    else:
-        return string[2:].zfill(num_of_bytes * 2)
-
-
-def pad_hex_right(string, num_of_bytes, prefix=False):
-    if prefix:
-        return '0x' + string[2:].ljust(num_of_bytes * 2, '0')
-    else:
-        return string[2:].ljust(num_of_bytes * 2, '0')
+def verity_event_contract_abi():
+    return json.loads(open(os.path.join(os.getenv('DATA_DIR'), 'VerityEvent.json')).read())['abi']
