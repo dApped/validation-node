@@ -5,7 +5,7 @@ import time
 from web3 import HTTPProvider, Web3
 
 import common
-from database.events import Event
+from database import events as database_events
 from ethereum import rewards
 
 provider = os.getenv('ETH_RPC_PROVIDER')
@@ -57,9 +57,10 @@ def retrieve_events(filtered_events):
         event_name = contract_instance.functions.eventName().call()
         data_feed_hash = contract_instance.functions.dataFeedHash().call()
         state = contract_instance.functions.getState().call()
-        event = Event(event_address, owner, token_address, node_addresses,
-                      leftovers_recoverable_after, application_start_time, application_end_time,
-                      event_start_time, event_end_time, event_name, data_feed_hash, state)
+        event = database_events.Event(event_address, owner, token_address, node_addresses,
+                                      leftovers_recoverable_after, application_start_time,
+                                      application_end_time, event_start_time, event_end_time,
+                                      event_name, data_feed_hash, state)
         events.append(event)
     return events
 
@@ -67,7 +68,7 @@ def retrieve_events(filtered_events):
 def vote(data):
     current_timestamp = int(time.time())
     event_id = data['event_id']
-    event = get_event_instance(event_id)
+    event = database_events.get_event(event_id)
 
     #### Maybe move this to some common later?
     success_response = {'status': 200}
@@ -100,13 +101,6 @@ def vote(data):
             rewards.set_consensus_rewards(event_id, event_rewards)
 
     return success_response
-
-
-def get_event_instance(event_address):
-    contract_abi = common.verity_event_contract_abi()
-    event_instance = w3.eth.contract(address=event_address, abi=contract_abi)
-    # TODO Create Event Class
-    return event_instance
 
 
 def is_user_registered(event, user_id):

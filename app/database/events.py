@@ -35,6 +35,14 @@ class Event:
         return cls(**dict_data)
 
 
+def get_event(event_address):
+    events = all_events()
+    for event in events:
+        if event.event_address == event_address:
+            return event
+    return None
+
+
 def store_events(events):
     redis_db.rpush(EVENTS_KEY, *[event.to_json() for event in events])
 
