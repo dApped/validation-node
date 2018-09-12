@@ -2,7 +2,7 @@ import json
 import os
 import pickle
 import time
-
+import logging
 from web3 import HTTPProvider, Web3
 
 from database.events import Event
@@ -14,8 +14,11 @@ w3 = Web3(HTTPProvider(provider))
 verity_event_contract_abi = json.loads(open(os.path.join(os.getenv('DATA_DIR'),
                                                          'VerityEvent.json')).read())['abi']
 
+logger = logging.getLogger('flask.app')
+
 # Test method
 def get_all():
+    logger.info('Reading all events from blockchain')
     return w3.eth.accounts
 
 def all_events_addresses():

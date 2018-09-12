@@ -1,5 +1,4 @@
 import functools
-import logging
 import os
 from datetime import datetime
 
@@ -16,10 +15,6 @@ from database import events as database_events
 
 # EB looks for an 'application' callable by default.
 application = Flask(__name__)
-
-gunicorn_error_logger = logging.getLogger('gunicorn.error')
-application.logger.handlers.extend(gunicorn_error_logger.handlers)
-application.logger.setLevel(logging.DEBUG)
 logger = application.logger
 
 def init():
@@ -89,6 +84,7 @@ def hello():
 @application.route('/events', methods=['GET'])
 @return_json
 def get_events():
+    logger.info('GET /events')
     return events.get_all()
 
 
