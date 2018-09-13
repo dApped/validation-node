@@ -97,7 +97,6 @@ def store_participants(event_address, participants_list):
 
 def all_participants(event_address):
     key = compose_participants_key(event_address)
-    # TODO this always returnes an empty set!!
     return redis_db.smembers(key)
 
 

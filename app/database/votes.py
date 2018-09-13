@@ -4,6 +4,7 @@ from database.database import redis_db
 
 VOTES_PREFIX = 'votes'
 
+
 class Vote:
     def __init__(self, user_id, event_id, timestamp, answers):
         self.user_id = user_id
@@ -22,6 +23,7 @@ class Vote:
     def push(self):
         redis_db.rpush(compose_vote_key(self.event_id), self.to_json())
         return self
+
 
 def compose_vote_key(event_id):
     return '%s_%s' % (VOTES_PREFIX, event_id)

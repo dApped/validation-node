@@ -88,7 +88,7 @@ def _is_vote_valid(timestamp, user_id, event):
         return False, user_error_response
 
     # 2. Check user has registered for event
-    user_registered = database_events.is_participant(event, user_id)
+    user_registered = database_events.is_participant(event.event_address, user_id)
     if not user_registered:
         return False, user_error_response
     return True, success_response
