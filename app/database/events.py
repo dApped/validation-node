@@ -4,7 +4,7 @@ import logging
 from database import votes
 from database.database import redis_db
 
-EVENTS_ADDRESSES_KEY = 'events_addreses'
+EVENT_IDS_KEY = 'event_ids'
 EVENT_PREFIX = 'event'
 JOIN_EVENT_PREFIX = 'join_event'
 
@@ -68,7 +68,7 @@ def get_event(event_address):
 
 
 def get_all_events():
-    addresses = event_addresses()
+    addresses = event_ids()
     events = [get_event(event_address) for event_address in addresses]
     return [event for event in events if event]
 
@@ -78,11 +78,11 @@ def store_events(events):
     for event in events:
         key = compose_event_key(event.event_address)
         redis_db.set(key, event.to_json())
-    redis_db.rpush(EVENTS_ADDRESSES_KEY, *[event.event_address for event in events])
+    redis_db.rpush(EVENT_IDS_KEY, *[event.event_address for event in events])
 
 
-def event_addresses():
-    return redis_db.lrange(EVENTS_ADDRESSES_KEY, 0, -1)
+def event_ids():
+    return redis_db.lrange(EVENT_IDS_KEY, 0, -1)
 
 
 # Participants
@@ -103,3 +103,21 @@ def all_participants(event_address):
 def is_participant(event_address, address):
     key = compose_participants_key(event_address)
     return redis_db.sismember(key, address)
+
+
+class Filters:
+    PREFIX = 'filters'
+
+    @staticmethod
+    def key(event_id):
+        return '%s_%s' % (Filters.PREFIX, event_id)
+
+    @staticmethod
+    def push(event_id, filter_id):
+        key = Filters.key(event_id)
+        redis_db.rpush(key, filter_id)
+
+    @staticmethod
+    def lrange(event_id):
+        key = Filters.key(event_id)
+        return redis_db.lrange(key, 0, -1)

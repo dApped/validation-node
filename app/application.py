@@ -26,6 +26,8 @@ def init():
     logger.info('Flushing Redis')
     database.flush_database()
 
+    scheduler.init()
+
     all_events = events.all_events_addresses()
     logger.info('All event addresses %s', all_events)
 
@@ -36,7 +38,7 @@ def init():
     logger.info('Validation node events %s', node_events)
 
     database_events.store_events(node_events)
-    scheduler.init()
+    events.init_filters_for_events(node_events)
 
     logger.info('Validation Node Init done')
 

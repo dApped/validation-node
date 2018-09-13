@@ -6,6 +6,7 @@ import time
 from web3 import HTTPProvider, Web3
 
 import common
+from events import filters
 from database import events as database_events
 from database import votes as database_votes
 from ethereum import rewards
@@ -74,6 +75,13 @@ def retrieve_events(filtered_events):
 
         events.append(event)
     return events
+
+
+def init_filters_for_events(events):
+    # TODO Roman: Move this somewhere else and improve it
+    contract_abi = common.verity_event_contract_abi()
+    for event in events:
+        filters.init_filters_for_event(w3, contract_abi, event.event_address)
 
 
 #### Maybe move this to some common later?
