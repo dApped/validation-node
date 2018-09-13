@@ -96,7 +96,6 @@ def _is_vote_valid(timestamp, user_id, event):
 
 
 def vote(data):
-    #import ipdb; ipdb.set_trace()
     current_timestamp = int(time.time())
     event_id = data['event_id']
     user_id = data['user_id']
@@ -112,7 +111,7 @@ def vote(data):
         #return response
 
     logger.info("Valid vote")
-    database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).store()
+    database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).push()
     event_votes = event.get_votes()
     # 3. check if consensus reached
     # TODO add condition (#votes/#participants) > consensusRatio
@@ -123,7 +122,7 @@ def vote(data):
             logger.info("Consensus reached")
             # FIXME this is a mock, should change
             event.state = 1
-            event.redis_update()
+            event.set()
 
             event_rewards = rewards.determine_rewards(event_id)  # event.distribution_function)
 

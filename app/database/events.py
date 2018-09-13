@@ -50,7 +50,7 @@ class Event:
         # TODO figure out how state behaves, for now it is always 4
         return self.state != 4
 
-    def redis_update(self):
+    def set(self):
         redis_db.set(compose_event_key(self.event_address), self.to_json())
 
 

@@ -19,7 +19,7 @@ class Vote:
         dict_data = json.loads(json_data)
         return cls(**dict_data)
 
-    def store(self):
+    def push(self):
         redis_db.rpush(compose_vote_key(self.event_id), self.to_json())
         return self
 
