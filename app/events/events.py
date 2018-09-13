@@ -115,12 +115,12 @@ def vote(data):
     # 3. check if consensus reached
     # TODO add condition (#votes/#participants) > consensusRatio
     if len(event_votes) > event.min_consensus_votes:
-        consensus_reached, consensus_votes = check_consensus(event_votes)
+        consensus_reached, consensus_votes = check_consensus(event, event_votes)
 
         if consensus_reached:
             logger.info("Consensus reached")
             # FIXME this is a mock, should change
-            event.state = 1
+            event.state = 3
             event.set()
 
             event_rewards = rewards.determine_rewards(event_id)  # event.distribution_function)
@@ -135,8 +135,26 @@ def vote(data):
     return success_response
 
 
-def check_consensus(votes):
-    # mock calculations for now
-    if len(votes) > 5:
-        return True, votes
-    return False, votes
+def check_consensus(event, votes):
+    answers_combinations = {}
+    for vote in votes:
+        # TODO implement
+        ordered_answer = vote.answers
+        # ....
+
+        answers_repr = ordered_answer.__repr__()
+        # store in vote for when adding to consensus_votes
+        vote.ordered_answer_repr = answers_repr
+        answers_combinations[answers_repr] = answers_combinations.get(answers_repr, 0) + 1
+
+    consensus_candidate = max(answers_combinations, key=answers_combinations.get)
+    cc_vote_count = answers_combinations[consensus_candidate]
+
+    # TODO add more checks
+    if cc_vote_count < event.min_consensus_votes:
+        return False, []
+
+    consensus_votes = [v for v in votes if vote.ordered_answer_repr == consensus_candidate]
+    # TODO order consensus_votes by timestamp, probably
+    return True, consensus_votes
+

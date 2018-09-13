@@ -48,7 +48,7 @@ class Event:
 
     def is_consensus_reached(self):
         # TODO figure out how state behaves, for now it is always 4
-        return self.state != 4
+        return self.state > 1
 
     def set(self):
         redis_db.set(compose_event_key(self.event_address), self.to_json())

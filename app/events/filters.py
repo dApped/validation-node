@@ -19,6 +19,4 @@ def filter_join_events(w3, contract_abi):
         if not entries:
             continue
         participants = [entry['args']['wallet'] for entry in entries]
-
-
         events.store_participants(event.event_address, participants)
