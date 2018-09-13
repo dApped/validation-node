@@ -7,7 +7,7 @@ from database.database import redis_db
 EVENTS_KEY = 'events'
 JOIN_EVENT_KEY = 'join_event'
 
-logger = logging.getLogger('app.sub')
+logger = logging.getLogger('flask.app')
 
 
 class Event:
@@ -46,6 +46,9 @@ class Event:
         event_votes = redis_db.lrange(votes.compose_vote_key(self.event_address), 0, -1)
         return [votes.Vote.from_json(vote) for vote in event_votes]
 
+    def is_consensus_reached(self):
+        # TODO figure out how state behaves, for now it is always 4
+        return self.state != 4
 
 def get_event(event_address):
     events = all_events()
