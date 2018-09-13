@@ -13,8 +13,8 @@ from ethereum import rewards
 provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
 
-
 logger = logging.getLogger('flask.app')
+
 
 # Test method
 def get_all():
@@ -71,14 +71,16 @@ def retrieve_events(filtered_events):
                                       application_end_time, event_start_time, event_end_time,
                                       event_name, data_feed_hash, state, is_master_node,
                                       min_votes, min_consensus_votes, consensus_ratio, max_users)
+
         events.append(event)
     return events
+
 
 #### Maybe move this to some common later?
 success_response = {'status': 200}
 user_error_response = {'status': 400}
 node_error_response = {'status': 500}
-####
+
 
 def _is_vote_valid(timestamp, user_id, event):
 
@@ -87,8 +89,7 @@ def _is_vote_valid(timestamp, user_id, event):
         return False, user_error_response
 
     # 2. Check user has registered for event
-    user_registered = is_user_registered(event, user_id)
-    logger.info("User is not registered for this event")
+    user_registered = database_events.is_participant(event, user_id)
     if not user_registered:
         return False, user_error_response
     return True, success_response
@@ -121,8 +122,8 @@ def vote(data):
         if consensus_reached:
             logger.info("Consensus reached")
             # FIXME this is a mock, should change
-            event.state = 4
-            event.
+            event.state = 1
+            event.redis_update()
 
             event_rewards = rewards.determine_rewards(event_id)  # event.distribution_function)
 
@@ -136,11 +137,8 @@ def vote(data):
     return success_response
 
 
-def is_user_registered(event, user_id):
-    return user_id in database_events.all_participants(event.event_address)
-
-
 def check_consensus(votes):
+    # mock calculations for now
     if len(votes) > 5:
         return True, votes
     return False, votes

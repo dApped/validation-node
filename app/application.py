@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Flask, abort, jsonify, request
 
 import scheduler
-from database.database import redis_db
+from database import database
 from database import events as database_events
 from events import events
 
@@ -23,7 +23,9 @@ logger = application.logger
 def init():
     logger.info('Validation Node Init started')
 
-    redis_db.flushdb()
+    logger.info('Flushing Redis')
+    database.flush_database()
+
     all_events = events.all_events_addresses()
     logger.info('All event addresses %s', all_events)
 
@@ -52,7 +54,8 @@ def limit_remote_addr():
     # forbidden for a vietnamese bot
     blacklist = ['14.165.36.165', '104.199.227.129']
 
-    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ['HTTP_X_FORWARDED_FOR'] in blacklist:
+    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ[
+        'HTTP_X_FORWARDED_FOR'] in blacklist:
         logger.debug('Vietnamese bot detected!')
         abort(403)
     if request.environ['REMOTE_ADDR'] in blacklist:
