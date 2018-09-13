@@ -1,13 +1,14 @@
 import json
 import logging
 
+from database import votes
 from database.database import redis_db
 
 EVENTS_ADDRESSES_KEY = 'events_addreses'
 EVENT_PREFIX = 'event'
 JOIN_EVENT_PREFIX = 'join_event'
 
-logger = logging.getLogger('app.sub')
+logger = logging.getLogger('flask.app')
 
 
 class Event:
@@ -40,6 +41,17 @@ class Event:
     def from_json(cls, json_data):
         dict_data = json.loads(json_data)
         return cls(**dict_data)
+
+    def get_votes(self):
+        event_votes = redis_db.lrange(votes.compose_vote_key(self.event_address), 0, -1)
+        return [votes.Vote.from_json(vote) for vote in event_votes]
+
+    def is_consensus_reached(self):
+        # TODO figure out how state behaves, for now it is always 4
+        return self.state != 4
+
+    def set(self):
+        redis_db.set(compose_event_key(self.event_address), self.to_json())
 
 
 # Events

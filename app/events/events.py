@@ -7,6 +7,7 @@ from web3 import HTTPProvider, Web3
 
 import common
 from database import events as database_events
+from database import votes as database_votes
 from ethereum import rewards
 
 provider = os.getenv('ETH_RPC_PROVIDER')
@@ -63,10 +64,14 @@ def retrieve_events(filtered_events):
         state = contract_instance.functions.getState().call()
         is_master_node = contract_instance.functions.isMasterNode().call()
         consensus_rules = contract_instance.functions.getConsensusRules().call()
-        event = database_events.Event(
-            event_address, owner, token_address, node_addresses, leftovers_recoverable_after,
-            application_start_time, application_end_time, event_start_time, event_end_time,
-            event_name, data_feed_hash, state, is_master_node, *consensus_rules)
+        min_votes, min_consensus_votes, consensus_ratio, max_users = consensus_rules
+
+        event = database_events.Event(event_address, owner, token_address, node_addresses,
+                                      leftovers_recoverable_after, application_start_time,
+                                      application_end_time, event_start_time, event_end_time,
+                                      event_name, data_feed_hash, state, is_master_node,
+                                      min_votes, min_consensus_votes, consensus_ratio, max_users)
+
         events.append(event)
     return events
 
@@ -79,13 +84,13 @@ node_error_response = {'status': 500}
 
 def _is_vote_valid(timestamp, user_id, event):
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
+        logger.info("Voting is not active")
         return False, user_error_response
 
     # 2. Check user has registered for event
-    user_registered = database_events.is_participant(event, user_id)
+    user_registered = database_events.is_participant(event.event_address, user_id)
     if not user_registered:
         return False, user_error_response
-
     return True, success_response
 
 
@@ -93,23 +98,31 @@ def vote(data):
     current_timestamp = int(time.time())
     event_id = data['event_id']
     user_id = data['user_id']
-
     event = database_events.get_event(event_id)
+    # consensus already reached, no more voting possible
+
+    if event.is_consensus_reached():
+        logger.info("Consensus already reached, no more voting")
+        return user_error_response
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
-        return response
+        logger.info("VOTE NOT VALID BUT CONTINUE ANYWAY")
+        #return response
 
-    # 3.1 Get current votes. Data structure to store votes is still TBD
-    event_votes = []  #redis_db.get(data['event_id'], [])
-    # 3.2 Add vote to other votes
-    event_votes.append(data['answers'])
-
+    logger.info("Valid vote")
+    database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).push()
+    event_votes = event.get_votes()
     # 3. check if consensus reached
+    # TODO add condition (#votes/#participants) > consensusRatio
     if len(event_votes) > event.min_consensus_votes:
-        consensus_reached, consensus_votes = check_consensus(event_id)
+        consensus_reached, consensus_votes = check_consensus(event_votes)
 
         if consensus_reached:
             logger.info("Consensus reached")
+            # FIXME this is a mock, should change
+            event.state = 1
+            event.set()
+
             event_rewards = rewards.determine_rewards(event_id)  # event.distribution_function)
 
             if event.is_master_node:
@@ -122,9 +135,8 @@ def vote(data):
     return success_response
 
 
-def check_consensus(event_id):
-    # mock for now
-    votes = []  # get event_id votes from redis
+def check_consensus(votes):
+    # mock calculations for now
     if len(votes) > 5:
-        return True
-    return False
+        return True, votes
+    return False, votes
