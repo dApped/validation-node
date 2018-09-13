@@ -64,11 +64,13 @@ def retrieve_events(filtered_events):
         state = contract_instance.functions.getState().call()
         is_master_node = contract_instance.functions.isMasterNode().call()
         consensus_rules = contract_instance.functions.getConsensusRules().call()
+        min_votes, min_consensus_votes, consensus_ratio, max_users = consensus_rules
+
         event = database_events.Event(event_address, owner, token_address, node_addresses,
                                       leftovers_recoverable_after, application_start_time,
                                       application_end_time, event_start_time, event_end_time,
                                       event_name, data_feed_hash, state, is_master_node,
-                                      *consensus_rules)
+                                      min_votes, min_consensus_votes, consensus_ratio, max_users)
         events.append(event)
     return events
 
@@ -93,11 +95,16 @@ def _is_vote_valid(timestamp, user_id, event):
 
 
 def vote(data):
+    #import ipdb; ipdb.set_trace()
     current_timestamp = int(time.time())
     event_id = data['event_id']
     user_id = data['user_id']
     event = database_events.get_event(event_id)
+    # consensus already reached, no more voting possible
 
+    if event.is_consensus_reached():
+        logger.info("Consensus already reached, no more voting")
+        return user_error_response
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
         logger.info("VOTE NOT VALID BUT CONTINUE ANYWAY")
@@ -113,6 +120,10 @@ def vote(data):
 
         if consensus_reached:
             logger.info("Consensus reached")
+            # FIXME this is a mock, should change
+            event.state = 4
+            event.
+
             event_rewards = rewards.determine_rewards(event_id)  # event.distribution_function)
 
             if event.is_master_node:
@@ -131,5 +142,5 @@ def is_user_registered(event, user_id):
 
 def check_consensus(votes):
     if len(votes) > 5:
-        return True
-    return False
+        return True, votes
+    return False, votes
