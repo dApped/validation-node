@@ -81,7 +81,7 @@ def init_filters_for_events(events):
     # TODO Roman: Move this somewhere else and improve it
     contract_abi = common.verity_event_contract_abi()
     for event in events:
-        filters.init_filters_for_event(w3, contract_abi, event.event_address)
+        filters.init_event_filters(w3, contract_abi, event.event_address)
 
 
 #### Maybe move this to some common later?
