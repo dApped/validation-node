@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 def filter_join_events(w3, contract_abi):
-    node_events = events.all_events()
+    node_events = events.get_all_events()
     for event in node_events:
         if event.state != 1:
             continue

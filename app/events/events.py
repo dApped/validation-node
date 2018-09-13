@@ -12,8 +12,8 @@ from ethereum import rewards
 provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
 
-
 logger = logging.getLogger('flask.app')
+
 
 # Test method
 def get_all():
@@ -63,26 +63,26 @@ def retrieve_events(filtered_events):
         state = contract_instance.functions.getState().call()
         is_master_node = contract_instance.functions.isMasterNode().call()
         consensus_rules = contract_instance.functions.getConsensusRules().call()
-        event = database_events.Event(event_address, owner, token_address, node_addresses,
-                                      leftovers_recoverable_after, application_start_time,
-                                      application_end_time, event_start_time, event_end_time,
-                                      event_name, data_feed_hash, state, is_master_node,
-                                      *consensus_rules)
+        event = database_events.Event(
+            event_address, owner, token_address, node_addresses, leftovers_recoverable_after,
+            application_start_time, application_end_time, event_start_time, event_end_time,
+            event_name, data_feed_hash, state, is_master_node, *consensus_rules)
         events.append(event)
     return events
+
 
 #### Maybe move this to some common later?
 success_response = {'status': 200}
 user_error_response = {'status': 400}
 node_error_response = {'status': 500}
-####
+
 
 def _is_vote_valid(timestamp, user_id, event):
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
         return False, user_error_response
 
     # 2. Check user has registered for event
-    user_registered = is_user_registered(event, user_id)
+    user_registered = database_events.is_participant(event, user_id)
     if not user_registered:
         return False, user_error_response
 
@@ -98,7 +98,6 @@ def vote(data):
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
         return response
-
 
     # 3.1 Get current votes. Data structure to store votes is still TBD
     event_votes = []  #redis_db.get(data['event_id'], [])
@@ -123,13 +122,9 @@ def vote(data):
     return success_response
 
 
-def is_user_registered(event, user_id):
-    return user_id in database_events.all_participants(event.event_address)
-
-
 def check_consensus(event_id):
     # mock for now
-    votes = [] # get event_id votes from redis
+    votes = []  # get event_id votes from redis
     if len(votes) > 5:
         return True
     return False

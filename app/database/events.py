@@ -3,8 +3,9 @@ import logging
 
 from database.database import redis_db
 
-EVENTS_KEY = 'events'
-JOIN_EVENT_KEY = 'join_event'
+EVENTS_ADDRESSES_KEY = 'events_addreses'
+EVENT_PREFIX = 'event'
+JOIN_EVENT_PREFIX = 'join_event'
 
 logger = logging.getLogger('app.sub')
 
@@ -41,25 +42,40 @@ class Event:
         return cls(**dict_data)
 
 
+# Events
+def compose_event_key(event_address):
+    return '%s_%s' % (EVENT_PREFIX, event_address)
+
+
 def get_event(event_address):
-    events = all_events()
-    for event in events:
-        if event.event_address == event_address:
-            return event
+    key = compose_event_key(event_address)
+    event = redis_db.get(key)
+    if event:
+        return Event.from_json(event)
     return None
 
 
+def get_all_events():
+    addresses = event_addresses()
+    events = [get_event(event_address) for event_address in addresses]
+    return [event for event in events if event]
+
+
 def store_events(events):
-    redis_db.rpush(EVENTS_KEY, *[event.to_json() for event in events])
+    # TODO Roman: Add transaction
+    for event in events:
+        key = compose_event_key(event.event_address)
+        redis_db.set(key, event.to_json())
+    redis_db.rpush(EVENTS_ADDRESSES_KEY, *[event.event_address for event in events])
 
 
-def all_events():
-    events_json = redis_db.lrange(EVENTS_KEY, 0, -1)
-    return [Event.from_json(event) for event in events_json]
+def event_addresses():
+    return redis_db.lrange(EVENTS_ADDRESSES_KEY, 0, -1)
 
 
+# Participants
 def compose_participants_key(event_address):
-    return '%s_%s' % (event_address, JOIN_EVENT_KEY)
+    return '%s_%s' % (JOIN_EVENT_PREFIX, event_address)
 
 
 def store_participants(event_address, participants_list):
@@ -70,3 +86,8 @@ def store_participants(event_address, participants_list):
 def all_participants(event_address):
     key = compose_participants_key(event_address)
     return redis_db.smembers(key)
+
+
+def is_participant(event_address, address):
+    key = compose_participants_key(event_address)
+    return redis_db.sismember(key, address)
