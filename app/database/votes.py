@@ -2,7 +2,7 @@ import json
 
 from database.database import redis_db
 
-VOTES_KEY = 'votes'
+VOTES_PREFIX = 'votes'
 
 class Vote:
     def __init__(self, user_id, event_id, timestamp, answers):
@@ -24,4 +24,4 @@ class Vote:
         return self
 
 def compose_vote_key(event_id):
-    return '%s_%s' % (VOTES_KEY, event_id)
+    return '%s_%s' % (VOTES_PREFIX, event_id)

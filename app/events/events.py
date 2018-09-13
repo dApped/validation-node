@@ -83,7 +83,6 @@ node_error_response = {'status': 500}
 
 
 def _is_vote_valid(timestamp, user_id, event):
-
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
         logger.info("Voting is not active")
         return False, user_error_response
