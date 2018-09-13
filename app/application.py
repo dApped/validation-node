@@ -5,6 +5,7 @@ from datetime import datetime
 from flask import Flask, abort, jsonify, request
 
 import scheduler
+from database import database
 from database import events as database_events
 from events import events
 
@@ -21,6 +22,9 @@ logger = application.logger
 
 def init():
     logger.info('Validation Node Init started')
+
+    logger.info('Flushing Redis')
+    database.flush_database()
 
     all_events = events.all_events_addresses()
     logger.info('All event addresses %s', all_events)
