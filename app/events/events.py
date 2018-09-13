@@ -7,7 +7,6 @@ from web3 import HTTPProvider, Web3
 
 import common
 from database import events as database_events
-from database import votes as database_votes
 from ethereum import rewards
 
 provider = os.getenv('ETH_RPC_PROVIDER')

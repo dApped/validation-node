@@ -13,7 +13,7 @@ class Event:
     def __init__(self, event_address, owner, token_address, node_addresses,
                  leftovers_recoverable_after, application_start_time, application_end_time,
                  event_start_time, event_end_time, event_name, data_feed_hash, state,
-                 is_master_node, consensus_rules):
+                 is_master_node, min_votes, min_consensus_votes, consensus_ratio, max_users):
         self.event_address = event_address
         self.owner = owner
         self.token_address = token_address
@@ -27,10 +27,10 @@ class Event:
         self.data_feed_hash = data_feed_hash
         self.state = state
         self.is_master_node = is_master_node
-        self.min_votes = consensus_rules[0]
-        self.min_consensus_votes = consensus_rules[1]
-        self.consensus_ratio = consensus_rules[2]
-        self.max_users = consensus_rules[3]
+        self.min_votes = min_votes
+        self.min_consensus_votes = min_consensus_votes
+        self.consensus_ratio = consensus_ratio
+        self.max_users = max_users
 
     def to_json(self):
         return json.dumps(self.__dict__)
