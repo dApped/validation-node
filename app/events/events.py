@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import time
+from collections import defaultdict
 
 from web3 import HTTPProvider, Web3
 
@@ -141,17 +142,17 @@ def vote(data):
 
 
 def check_consensus(event, votes):
-    answers_combinations = {}
+    answers_combinations = defaultdict(list)
     for vote in votes:
         vote_answers = vote.ordered_answers().__repr__()
         # store in vote for when adding to consensus_votes
-        answers_combinations.get(vote_answers, []).append(vote)
+        answers_combinations[vote_answers].append(vote)
 
-    consensus_candidate = max(answers_combinations, key=answers_combinations.get)
-    cons_vote_count = answers_combinations[consensus_candidate]
+    consensus_candidate = max(answers_combinations, key=lambda x: len(answers_combinations[x]))
+    cons_vote_count = len(answers_combinations[consensus_candidate])
 
     consensus_ratio = cons_vote_count / len(votes)
-    if cons_vote_count < event.min_consensus_votes or consensus_ratio < event.consensus_ratio:
+    if cons_vote_count < event.min_consensus_votes or consensus_ratio * 100 < event.consensus_ratio:
         logger.info('Not enough consensus votes!')
         return False, []
 

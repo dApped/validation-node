@@ -8,12 +8,12 @@ class Vote:
     PREFIX = 'votes'
     ANSWERS_SORT_KEY = 'field_name'
 
-    def __init__(self, user_id, event_id, timestamp, answers):
+    def __init__(self, user_id, event_id, timestamp, answers, _ordered_answers=None):
         self.user_id = user_id
         self.event_id = event_id
         self.timestamp = timestamp
         self.answers = answers
-        self._ordered_answers = None
+        self._ordered_answers = _ordered_answers
 
     @staticmethod
     def key(event_id):
