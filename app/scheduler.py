@@ -1,28 +1,21 @@
 import logging
-import os
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from web3 import HTTPProvider, Web3
 
-import common
-from events import filters
+from events import events, filters
 
 scheduler = BackgroundScheduler()
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('flask.app')
 
 
 def init():
     logger.info('Scheduler Init started')
-    provider = os.getenv('ETH_RPC_PROVIDER')
-    w3 = Web3(HTTPProvider(provider))
 
-    contract_abi = common.verity_event_contract_abi()
+    scheduler.add_job(filters.filter_events, 'interval', seconds=5, args=[events.w3])
 
-    scheduler.add_job(filters.filter_join_events, 'interval', seconds=5, args=[w3, contract_abi])
-
-    logger.info('Scheduler Init done')
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
         pass
+    logger.info('Scheduler Init done')
