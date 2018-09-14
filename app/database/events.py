@@ -34,8 +34,8 @@ class Event:
         self.max_users = max_users
 
     @staticmethod
-    def key(event_address):
-        return '%s_%s' % (Event.PREFIX, event_address)
+    def key(event_id):
+        return '%s_%s' % (Event.PREFIX, event_id)
 
     def to_json(self):
         return json.dumps(self.__dict__)
@@ -53,9 +53,9 @@ class Event:
         return self.state > 1
 
     @staticmethod
-    def get(event_address):
+    def get(event_id):
         ''' Get event from the database'''
-        event_json = redis_db.get(Event.key(event_address))
+        event_json = redis_db.get(Event.key(event_id))
         if event_json:
             return Event.from_json(event_json)
         return None
@@ -78,34 +78,28 @@ class Event:
     def get_ids_list():
         return redis_db.lrange(Event.IDS_KEY, 0, -1)
 
-    @staticmethod
-    def get_events_list():
-        addresses = Event.ids()
-        events = [Event.get(event_address) for event_address in addresses]
-        return [event for event in events if event]
-
 
 class Participants:
     PREFIX = 'join_event'
 
     @staticmethod
-    def key(event_address):
-        return '%s_%s' % (Participants.PREFIX, event_address)
+    def key(event_id):
+        return '%s_%s' % (Participants.PREFIX, event_id)
 
     @staticmethod
-    def create(event_address, participants_list):
-        key = Participants.key(event_address)
-        redis_db.sadd(key, *participants_list)
+    def create(event_id, user_ids):
+        key = Participants.key(event_id)
+        redis_db.sadd(key, *user_ids)
 
     @staticmethod
-    def get_set(event_address):
-        key = Participants.key(event_address)
+    def get_set(event_id):
+        key = Participants.key(event_id)
         return redis_db.smembers(key)
 
     @staticmethod
-    def exists(event_address, address):
-        key = Participants.key(event_address)
-        return redis_db.sismember(key, address)
+    def exists(event_id, user_id):
+        key = Participants.key(event_id)
+        return redis_db.sismember(key, user_id)
 
 
 class Filters:
