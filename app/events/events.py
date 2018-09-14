@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import time
+from collections import defaultdict
 
 from web3 import HTTPProvider, Web3
 
@@ -85,6 +86,8 @@ node_error_response = {'status': 500}
 
 
 def _is_vote_valid(timestamp, user_id, event):
+    # TODO check request data format, maybe use schema validator
+
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
         logger.info("Voting is not active")
         return False, user_error_response
@@ -109,20 +112,21 @@ def vote(data):
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
         logger.info("VOTE NOT VALID BUT CONTINUE ANYWAY")
-        #return response
+        # return response
 
     logger.info("Valid vote")
     database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).create()
     event_votes = event.votes()
     # 3. check if consensus reached
-    # TODO add condition (#votes/#participants) > consensusRatio
-    if len(event_votes) > event.min_consensus_votes:
-        consensus_reached, consensus_votes = check_consensus(event_votes)
-
+    # TODO min_consensus_percantage not in contract yet, participants method not on this branch
+    vote_count = len(event_votes)
+    if vote_count >= event.min_votes:  # and (
+        # vote_count / event.participants()) >= event.min_consensus_percantage:
+        consensus_reached, consensus_votes = check_consensus(event, event_votes)
         if consensus_reached:
             logger.info("Consensus reached")
             # FIXME this is a mock, should change
-            event.state = 1
+            event.state = 3
             event.update()
 
             event_rewards = rewards.determine_rewards(event_id)  # event.distribution_function)
@@ -137,8 +141,23 @@ def vote(data):
     return success_response
 
 
-def check_consensus(votes):
-    # mock calculations for now
-    if len(votes) > 5:
-        return True, votes
-    return False, votes
+def check_consensus(event, votes):
+    answers_combinations = defaultdict(list)
+    for vote in votes:
+        vote_answers = vote.ordered_answers().__repr__()
+        # store in vote for when adding to consensus_votes
+        answers_combinations[vote_answers].append(vote)
+
+    consensus_candidate = max(answers_combinations, key=lambda x: len(answers_combinations[x]))
+    cons_vote_count = len(answers_combinations[consensus_candidate])
+
+    consensus_ratio = cons_vote_count / len(votes)
+    if cons_vote_count < event.min_consensus_votes or consensus_ratio * 100 < event.consensus_ratio:
+        logger.info('Not enough consensus votes!')
+        return False, []
+
+    consensus_votes = sorted(
+        [answers_combinations[consensus_candidate]],
+        key=lambda v: v.timestamp)
+    # Consensus reached
+    return True, consensus_votes
