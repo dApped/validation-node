@@ -25,7 +25,7 @@ def init_event_filters(w3, contract_abi, event_id):
 
 def filter_events(w3):
     '''filter_events runs in a cron job and requests new entries for all events'''
-    event_ids = events.Events.get_ids_list()
+    event_ids = events.Event.get_ids_list()
     for event_id in event_ids:
         filter_ids = events.Filters.get_list(event_id)
         for event_name, filter_id in zip(EVENTS, filter_ids):
