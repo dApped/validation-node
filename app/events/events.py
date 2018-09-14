@@ -5,11 +5,10 @@ import time
 
 from web3 import HTTPProvider, Web3
 
-import common
-from events import filters
 from database import events as database_events
 from database import votes as database_votes
 from ethereum import rewards
+from events import filters
 
 provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
@@ -17,71 +16,66 @@ w3 = Web3(HTTPProvider(provider))
 logger = logging.getLogger('flask.app')
 
 
-# Test method
 def get_all():
+    # TODO: Remove test method
     logger.info('Reading all events from blockchain')
     return w3.eth.accounts
 
 
-def all_events_addresses():
-    # MOCK
+def call_event_contract_for_event_ids():
+    # TODO Roman: Remove this mock
     f = open(os.path.join(os.path.join(os.getenv('DATA_DIR'), 'event_addresses.pkl')), 'rb')
     event_addresses = pickle.load(f)
-
     return event_addresses
 
 
-def filter_events_addresses(all_events):
-    ''' Checks if node is registered in each of the events '''
-
-    node_address = w3.eth.accounts[0]  # TODO Roman: read it from environment
-    contract_abi = common.verity_event_contract_abi()
-
-    events = []
-    for event_address in all_events:
-        contract_instance = w3.eth.contract(address=event_address, abi=contract_abi)
-        node_addresses = contract_instance.functions.getEventResolvers().call()
-        if node_address in node_addresses:
-            events.append(event_address)
-    return events
+def read_node_id():
+    ''' Returns the node address'''
+    # TODO set node_id from environment
+    return w3.eth.accounts[0]
 
 
-def retrieve_events(filtered_events):
-    contract_abi = common.verity_event_contract_abi()
-
-    events = []
-    for event_address in filtered_events:
-        contract_instance = w3.eth.contract(address=event_address, abi=contract_abi)
-        owner = contract_instance.functions.owner().call()
-        token_address = contract_instance.functions.tokenAddress().call()
-        node_addresses = contract_instance.functions.getEventResolvers().call()
-        leftovers_recoverable_after = contract_instance.functions.leftoversRecoverableAfter().call()
-        application_start_time = contract_instance.functions.applicationStartTime().call()
-        application_end_time = contract_instance.functions.applicationEndTime().call()
-        event_start_time = contract_instance.functions.eventStartTime().call()
-        event_end_time = contract_instance.functions.eventEndTime().call()
-        event_name = contract_instance.functions.eventName().call()
-        data_feed_hash = contract_instance.functions.dataFeedHash().call()
-        state = contract_instance.functions.getState().call()
-        is_master_node = contract_instance.functions.isMasterNode().call()
-        consensus_rules = contract_instance.functions.getConsensusRules().call()
-        min_votes, min_consensus_votes, consensus_ratio, max_users = consensus_rules
-
-        event = database_events.Event(event_address, owner, token_address, node_addresses,
-                                      leftovers_recoverable_after, application_start_time,
-                                      application_end_time, event_start_time, event_end_time,
-                                      event_name, data_feed_hash, state, is_master_node,
-                                      min_votes, min_consensus_votes, consensus_ratio, max_users)
-
-        events.append(event)
-    return events
+def is_node_registered_on_event(contract_abi, node_id, event_id):
+    contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
+    node_ids = contract_instance.functions.getEventResolvers().call()
+    node_ids = set(node_ids)
+    return node_id in node_ids
 
 
-def init_filters_for_events(events):
-    # TODO Roman: Move this somewhere else and improve it
-    contract_abi = common.verity_event_contract_abi()
-    for event in events:
-        filters.init_event_filters(w3, contract_abi, event.event_address)
+def call_event_contract_for_metadata(contract_abi, event_id):
+    contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
+
+    owner = contract_instance.functions.owner().call()
+    token_address = contract_instance.functions.tokenAddress().call()
+    node_addresses = contract_instance.functions.getEventResolvers().call()
+    leftovers_recoverable_after = contract_instance.functions.leftoversRecoverableAfter().call()
+    application_start_time = contract_instance.functions.applicationStartTime().call()
+    application_end_time = contract_instance.functions.applicationEndTime().call()
+    event_start_time = contract_instance.functions.eventStartTime().call()
+    event_end_time = contract_instance.functions.eventEndTime().call()
+    event_name = contract_instance.functions.eventName().call()
+    data_feed_hash = contract_instance.functions.dataFeedHash().call()
+    state = contract_instance.functions.getState().call()
+    is_master_node = contract_instance.functions.isMasterNode().call()
+    consensus_rules = contract_instance.functions.getConsensusRules().call()
+    min_votes, min_consensus_votes, consensus_ratio, max_users = consensus_rules
+
+    event = database_events.Event(event_id, owner, token_address, node_addresses,
+                                  leftovers_recoverable_after, application_start_time,
+                                  application_end_time, event_start_time, event_end_time,
+                                  event_name, data_feed_hash, state, is_master_node, min_votes,
+                                  min_consensus_votes, consensus_ratio, max_users)
+    return event
+
+
+def init_event(contract_abi, node_id, event_id):
+    if not is_node_registered_on_event(contract_abi, node_id, event_id):
+        logger.info('Node %s is not included in %s event', node_id, event_id)
+        return
+    logger.info('Initializing %s event', event_id)
+    event = call_event_contract_for_metadata(contract_abi, event_id)
+    event.create()
+    filters.init_event_filters(w3, contract_abi, event.event_id)
 
 
 #### Maybe move this to some common later?
@@ -96,7 +90,7 @@ def _is_vote_valid(timestamp, user_id, event):
         return False, user_error_response
 
     # 2. Check user has registered for event
-    user_registered = database_events.is_participant(event.event_address, user_id)
+    user_registered = database_events.exists(event.event_address, user_id)
     if not user_registered:
         return False, user_error_response
     return True, success_response
@@ -106,7 +100,7 @@ def vote(data):
     current_timestamp = int(time.time())
     event_id = data['event_id']
     user_id = data['user_id']
-    event = database_events.get_event(event_id)
+    event = database_events.Event.get(event_id)
     # consensus already reached, no more voting possible
 
     if event.is_consensus_reached():
@@ -118,8 +112,8 @@ def vote(data):
         #return response
 
     logger.info("Valid vote")
-    database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).push()
-    event_votes = event.get_votes()
+    database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).create()
+    event_votes = event.votes()
     # 3. check if consensus reached
     # TODO add condition (#votes/#participants) > consensusRatio
     if len(event_votes) > event.min_consensus_votes:
@@ -129,7 +123,7 @@ def vote(data):
             logger.info("Consensus reached")
             # FIXME this is a mock, should change
             event.state = 1
-            event.set()
+            event.update()
 
             event_rewards = rewards.determine_rewards(event_id)  # event.distribution_function)
 
