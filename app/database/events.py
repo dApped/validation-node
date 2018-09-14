@@ -4,19 +4,18 @@ import logging
 from database import votes
 from database.database import redis_db
 
-EVENT_IDS_KEY = 'event_ids'
-EVENT_PREFIX = 'event'
-JOIN_EVENT_PREFIX = 'join_event'
-
 logger = logging.getLogger('flask.app')
 
 
 class Event:
-    def __init__(self, event_address, owner, token_address, node_addresses,
-                 leftovers_recoverable_after, application_start_time, application_end_time,
-                 event_start_time, event_end_time, event_name, data_feed_hash, state,
-                 is_master_node, min_votes, min_consensus_votes, consensus_ratio, max_users):
-        self.event_address = event_address
+    IDS_KEY = 'event_ids'
+    PREFIX = 'event'
+
+    def __init__(self, event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
+                 application_start_time, application_end_time, event_start_time, event_end_time,
+                 event_name, data_feed_hash, state, is_master_node, min_votes, min_consensus_votes,
+                 consensus_ratio, max_users):
+        self.event_id = event_id  #TODO Roman: make event_id immutable
         self.owner = owner
         self.token_address = token_address
         self.node_addresses = node_addresses
@@ -34,6 +33,10 @@ class Event:
         self.consensus_ratio = consensus_ratio
         self.max_users = max_users
 
+    @staticmethod
+    def key(event_id):
+        return '%s_%s' % (Event.PREFIX, event_id)
+
     def to_json(self):
         return json.dumps(self.__dict__)
 
@@ -42,67 +45,61 @@ class Event:
         dict_data = json.loads(json_data)
         return cls(**dict_data)
 
-    def get_votes(self):
-        event_votes = redis_db.lrange(votes.compose_vote_key(self.event_address), 0, -1)
-        return [votes.Vote.from_json(vote) for vote in event_votes]
+    def votes(self):
+        return votes.Vote.get_list(self.event_id)
 
     def is_consensus_reached(self):
         # TODO figure out how state behaves, for now it is always 4
-        return self.state != 4
+        return self.state > 1
 
-    def set(self):
-        redis_db.set(compose_event_key(self.event_address), self.to_json())
+    @staticmethod
+    def get(event_id):
+        ''' Get event from the database'''
+        event_json = redis_db.get(Event.key(event_id))
+        if event_json:
+            return Event.from_json(event_json)
+        return None
 
+    def update(self):
+        ''' Update event in the database'''
+        redis_db.set(self.key(self.event_id), self.to_json())
 
-# Events
-def compose_event_key(event_address):
-    return '%s_%s' % (EVENT_PREFIX, event_address)
+    def create(self):
+        ''' Create event in the database and add event_id to event_ids list'''
+        pipeline = redis_db.pipeline()
+        pipeline.rpush(self.IDS_KEY, self.event_id)
+        pipeline.set(self.key(self.event_id), self.to_json())
+        pipeline.execute()
 
+    def participants(self):
+        return Participants.get_set(self.event_address)
 
-def get_event(event_address):
-    key = compose_event_key(event_address)
-    event = redis_db.get(key)
-    if event:
-        return Event.from_json(event)
-    return None
-
-
-def get_all_events():
-    addresses = event_ids()
-    events = [get_event(event_address) for event_address in addresses]
-    return [event for event in events if event]
-
-
-def store_events(events):
-    # TODO Roman: Add transaction
-    for event in events:
-        key = compose_event_key(event.event_address)
-        redis_db.set(key, event.to_json())
-    redis_db.rpush(EVENT_IDS_KEY, *[event.event_address for event in events])
+    @staticmethod
+    def get_ids_list():
+        return redis_db.lrange(Event.IDS_KEY, 0, -1)
 
 
-def event_ids():
-    return redis_db.lrange(EVENT_IDS_KEY, 0, -1)
+class Participants:
+    PREFIX = 'join_event'
 
+    @staticmethod
+    def key(event_id):
+        return '%s_%s' % (Participants.PREFIX, event_id)
 
-# Participants
-def compose_participants_key(event_address):
-    return '%s_%s' % (JOIN_EVENT_PREFIX, event_address)
+    @staticmethod
+    def create(event_id, user_ids):
+        key = Participants.key(event_id)
+        redis_db.sadd(key, *user_ids)
 
+    @staticmethod
+    def get_set(event_id):
+        key = Participants.key(event_id)
+        return redis_db.smembers(key)
 
-def store_participants(event_address, participants_list):
-    key = compose_participants_key(event_address)
-    redis_db.sadd(key, *participants_list)
-
-
-def all_participants(event_address):
-    key = compose_participants_key(event_address)
-    return redis_db.smembers(key)
-
-
-def is_participant(event_address, address):
-    key = compose_participants_key(event_address)
-    return redis_db.sismember(key, address)
+    @staticmethod
+    def exists(event_id, user_id):
+        key = Participants.key(event_id)
+        return redis_db.sismember(key, user_id)
 
 
 class Filters:
@@ -113,11 +110,11 @@ class Filters:
         return '%s_%s' % (Filters.PREFIX, event_id)
 
     @staticmethod
-    def push(event_id, filter_id):
+    def create(event_id, filter_id):
         key = Filters.key(event_id)
         redis_db.rpush(key, filter_id)
 
     @staticmethod
-    def lrange(event_id):
+    def get_list(event_id):
         key = Filters.key(event_id)
         return redis_db.lrange(key, 0, -1)
