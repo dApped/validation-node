@@ -50,8 +50,8 @@ def limit_remote_addr():
     # forbidden for a vietnamese bot
     blacklist = ['14.165.36.165', '104.199.227.129']
 
-    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ['HTTP_X_FORWARDED_FOR'] in blacklist:
-        logger.debug('Vietnamese bot detected!')
+    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ[
+            'HTTP_X_FORWARDED_FOR'] in blacklist:
         logger.debug('Vietnamese bot detected!')
         abort(403)
     if request.environ['REMOTE_ADDR'] in blacklist:
