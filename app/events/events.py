@@ -2,7 +2,6 @@ import logging
 import os
 import pickle
 import time
-from collections import OrderedDict
 
 from web3 import HTTPProvider, Web3
 
@@ -15,8 +14,6 @@ provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
 
 logger = logging.getLogger('flask.app')
-# TODO rename to something smart
-ANSWER_KEY = 'field_name'
 
 
 def get_all():
@@ -143,31 +140,23 @@ def vote(data):
     return success_response
 
 
-def generate_ordered_answers(answers):
-    # Order each dictionary and sort dictionaries by a key
-    return sorted([OrderedDict(sorted(answer.items(), key=lambda t: t[0]))
-                   for answer in answers], key=lambda x: x[ANSWER_KEY])
-
-
 def check_consensus(event, votes):
     answers_combinations = {}
     for vote in votes:
-        ordered_answer = generate_ordered_answers(vote.answers)
-        answers_repr = ordered_answer.__repr__()
+        vote_answers = vote.ordered_answers().__repr__()
         # store in vote for when adding to consensus_votes
-        vote.ordered_answer_repr = answers_repr
+        answers_combinations.get(vote_answers, []).append(vote)
 
-        answers_combinations[answers_repr] = answers_combinations.get(answers_repr, 0) + 1
     consensus_candidate = max(answers_combinations, key=answers_combinations.get)
-    cc_vote_count = answers_combinations[consensus_candidate]
+    cons_vote_count = answers_combinations[consensus_candidate]
 
-    if cc_vote_count < event.min_consensus_votes and cc_vote_count / len(
-            votes) < event.consensus_ratio:
+    consensus_ratio = cons_vote_count / len(votes)
+    if cons_vote_count < event.min_consensus_votes or consensus_ratio < event.consensus_ratio:
         logger.info('Not enough consensus votes!')
         return False, []
 
     consensus_votes = sorted(
-        [vote for vote in votes if vote.ordered_answer_repr == consensus_candidate],
+        [answers_combinations[consensus_candidate]],
         key=lambda v: v.timestamp)
     # Consensus reached
     return True, consensus_votes
