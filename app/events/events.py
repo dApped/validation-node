@@ -156,8 +156,6 @@ def check_consensus(event, votes):
         logger.info('Not enough consensus votes!')
         return False, []
 
-    consensus_votes = sorted(
-        [answers_combinations[consensus_candidate]],
-        key=lambda v: v.timestamp)
+    consensus_votes = sorted([answers_combinations[consensus_candidate]],key=lambda v: v.timestamp)
     # Consensus reached
     return True, consensus_votes
