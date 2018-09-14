@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import time
+from collections import OrderedDict
 
 from web3 import HTTPProvider, Web3
 
@@ -14,6 +15,8 @@ provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
 
 logger = logging.getLogger('flask.app')
+# TODO rename to something smart
+ANSWER_KEY = 'field_name'
 
 
 # Test method
@@ -83,6 +86,8 @@ node_error_response = {'status': 500}
 
 
 def _is_vote_valid(timestamp, user_id, event):
+    # TODO check request data format, maybe use schema validator
+
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
         logger.info("Voting is not active")
         return False, user_error_response
@@ -107,16 +112,17 @@ def vote(data):
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
         logger.info("VOTE NOT VALID BUT CONTINUE ANYWAY")
-        #return response
+        # return response
 
     logger.info("Valid vote")
     database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).push()
     event_votes = event.get_votes()
     # 3. check if consensus reached
-    # TODO add condition (#votes/#participants) > consensusRatio
-    if len(event_votes) > event.min_consensus_votes:
+    # TODO min_consensus_percantage not in contract yet, participants method not on this branch
+    vote_count = len(event_votes)
+    if vote_count >= event.min_votes:  # and (
+        # vote_count / event.participants()) >= event.min_consensus_percantage:
         consensus_reached, consensus_votes = check_consensus(event, event_votes)
-
         if consensus_reached:
             logger.info("Consensus reached")
             # FIXME this is a mock, should change
@@ -135,26 +141,31 @@ def vote(data):
     return success_response
 
 
+def generate_ordered_answers(answers):
+    # Order each dictionary and sort dictionaries by a key
+    return sorted([OrderedDict(sorted(answer.items(), key=lambda t: t[0]))
+                   for answer in answers], key=lambda x: x[ANSWER_KEY])
+
+
 def check_consensus(event, votes):
     answers_combinations = {}
     for vote in votes:
-        # TODO implement
-        ordered_answer = vote.answers
-        # ....
-
+        ordered_answer = generate_ordered_answers(vote.answers)
         answers_repr = ordered_answer.__repr__()
         # store in vote for when adding to consensus_votes
         vote.ordered_answer_repr = answers_repr
-        answers_combinations[answers_repr] = answers_combinations.get(answers_repr, 0) + 1
 
+        answers_combinations[answers_repr] = answers_combinations.get(answers_repr, 0) + 1
     consensus_candidate = max(answers_combinations, key=answers_combinations.get)
     cc_vote_count = answers_combinations[consensus_candidate]
 
-    # TODO add more checks
-    if cc_vote_count < event.min_consensus_votes:
+    if cc_vote_count < event.min_consensus_votes and cc_vote_count / len(
+            votes) < event.consensus_ratio:
+        logger.info('Not enough consensus votes!')
         return False, []
 
-    consensus_votes = [v for v in votes if vote.ordered_answer_repr == consensus_candidate]
-    # TODO order consensus_votes by timestamp, probably
+    consensus_votes = sorted(
+        [vote for vote in votes if vote.ordered_answer_repr == consensus_candidate],
+        key=lambda v: v.timestamp)
+    # Consensus reached
     return True, consensus_votes
-
