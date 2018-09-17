@@ -5,8 +5,9 @@ from database import events
 logger = logging.getLogger('flask.app')
 
 JOIN_EVENT = 'JoinEvent'
+STATE_TRANSITION = 'StateTransition'
 ERROR = 'Error'
-EVENTS = [JOIN_EVENT, ERROR]
+EVENTS = [JOIN_EVENT, STATE_TRANSITION, ERROR]
 
 
 def init_event_filters(w3, contract_abi, event_id):
@@ -39,6 +40,8 @@ def filter_events(w3):
 def process_entries(w3, event_name, event_id, entries):
     if event_name == JOIN_EVENT:
         process_join_events(w3, event_id, entries)
+    elif event_name == STATE_TRANSITION:
+        process_state_transition(w3, event_id, entries)
     elif event_name == ERROR:
         process_error_events(event_id, entries)
     else:
@@ -49,6 +52,13 @@ def process_join_events(w3, event_id, entries):
     logger.info('Adding %d %s entries for %s event', len(entries), JOIN_EVENT, event_id)
     participants = [w3.eth.getTransaction(entry['transactionHash'])['from'] for entry in entries]
     events.Participants.create(event_id, participants)
+
+
+def process_state_transition(w3, event_id, entries):
+    event = events.Event.get(event_id)
+    entry = entries[0]
+    event.state = entry['args']['newState']
+    event.update()
 
 
 def process_error_events(event_id, entries):

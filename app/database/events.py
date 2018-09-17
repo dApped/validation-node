@@ -63,6 +63,7 @@ class Event:
 
     def update(self):
         ''' Update event in the database'''
+        # TODO Roman: This should in transaction
         redis_db.set(self.key(self.event_id), self.to_json())
 
     def create(self):
