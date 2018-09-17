@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 import os
 
-from web3 import Web3, HTTPProvider, utils
+from web3 import Web3, HTTPProvider
 
-from database.events import Event
+from database.events import Event, Rewards
+
 provider = os.getenv('ETH_RPC_PROVIDER')
-web3 = Web3(HTTPProvider(provider))
+w3 = Web3(HTTPProvider(provider))
 
 
 def determine_rewards(event_id, consensus_votes):
-    #addresses = [vote.user_id for vote in consensus_votes]
-    #token_rewards = [10 for vote in consensus_votes]
-    #eth_rewards = [0.1 for vote in consensus_votes]
+    # addresses = [vote.user_id for vote in consensus_votes]
+    # token_rewards = [10 for vote in consensus_votes]
+    # eth_rewards = [0.1 for vote in consensus_votes]
 
     event_instance = Event.instance(event_id)
 
@@ -20,25 +21,16 @@ def determine_rewards(event_id, consensus_votes):
     # TODO support multiple distribution functions, for now assume linear
     in_consensus_votes_num = len(consensus_votes)
 
-    eth_reward_gwei = utils.toWei(total_eth_balance/in_consensus_votes_num)
-    token_reward_gwei = utils.toWei(total_token_balance / in_consensus_votes_num)
+    eth_reward_gwei = Web3.toWei(total_eth_balance / in_consensus_votes_num)
+    token_reward_gwei = Web3.toWei(total_token_balance / in_consensus_votes_num)
 
+    rewards_dict = {
+        vote.user_id: {'eth': eth_reward_gwei, 'token': token_reward_gwei}
+        for vote in consensus_votes
+    }
+    Rewards.create(event_id, rewards_dict)
 
-    rewards = []
-    for vote in consensus_votes:
-        r = {vote.user_id : {'eth': eth_reward_gwei, 'token': token_reward_gwei}}
-        rewards.append(r)
-
-
-
-    # TODO store in REDIS
-    rewards = [{'address': a, 'token': t, 'eth': e} for a, t, e in
-               zip(addresses, token_rewards, eth_rewards)]
-
-
-
-
-    return addresses, token_rewards, eth_rewards
+    return rewards_dict
 
 
 def set_consensus_rewards(event_id, rewards):
