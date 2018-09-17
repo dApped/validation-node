@@ -118,3 +118,5 @@ class Filters:
     def get_list(event_id):
         key = Filters.key(event_id)
         return redis_db.lrange(key, 0, -1)
+
+class Rewards:
