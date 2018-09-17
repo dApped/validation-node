@@ -10,17 +10,11 @@ w3 = Web3(HTTPProvider(provider))
 
 
 def determine_rewards(event_id, consensus_votes):
-    # addresses = [vote.user_id for vote in consensus_votes]
-    # token_rewards = [10 for vote in consensus_votes]
-    # eth_rewards = [0.1 for vote in consensus_votes]
-
-    event_instance = Event.instance(event_id)
+    event_instance = Event.instance(w3, event_id)
 
     [total_eth_balance, total_token_balance] = event_instance.functions.getBalance().call()
 
-    # TODO support multiple distribution functions, for now assume linear
     in_consensus_votes_num = len(consensus_votes)
-
     eth_reward_gwei = Web3.toWei(total_eth_balance / in_consensus_votes_num)
     token_reward_gwei = Web3.toWei(total_token_balance / in_consensus_votes_num)
 
