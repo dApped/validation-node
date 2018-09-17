@@ -61,11 +61,11 @@ def call_event_contract_for_metadata(contract_abi, event_id):
     consensus_rules = contract_instance.functions.getConsensusRules().call()
     min_votes, min_consensus_votes, consensus_ratio, max_users = consensus_rules
 
-    event = database_events.Event(event_id, owner, token_address, node_addresses,
-                                  leftovers_recoverable_after, application_start_time,
-                                  application_end_time, event_start_time, event_end_time,
-                                  event_name, data_feed_hash, state, is_master_node, min_votes,
-                                  min_consensus_votes, consensus_ratio, max_users)
+    event = database_events.VerityEvent(event_id, owner, token_address, node_addresses,
+                                        leftovers_recoverable_after, application_start_time,
+                                        application_end_time, event_start_time, event_end_time,
+                                        event_name, data_feed_hash, state, is_master_node,
+                                        min_votes, min_consensus_votes, consensus_ratio, max_users)
     return event
 
 
@@ -103,7 +103,7 @@ def vote(data):
     current_timestamp = int(time.time())
     event_id = data['event_id']
     user_id = data['user_id']
-    event = database_events.Event.get(event_id)
+    event = database_events.VerityEvent.get(event_id)
     # consensus already reached, no more voting possible
 
     if event.is_consensus_reached():
