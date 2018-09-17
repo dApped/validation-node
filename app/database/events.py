@@ -124,6 +124,8 @@ class Filters:
 
 class Rewards:
     PREFIX = 'rewards'
+    ETH_KEY = 'eth'
+    TOKEN_KEY = 'token'
 
     @staticmethod
     def key(event_id):
@@ -136,7 +138,21 @@ class Rewards:
         redis_db.set(key, rewards_json)
 
     @staticmethod
+    def transform_dict_to_lists(rewards):
+        user_ids = list(rewards.keys())
+        eth_rewards, token_rewards = [], []
+        for user_id in user_ids:
+            eth_rewards.append(rewards[user_id][Rewards.ETH_KEY])
+            token_rewards.append(rewards[user_id][Rewards.TOKEN_KEY])
+        return user_ids, eth_rewards, token_rewards
+
+    @staticmethod
     def get(event_id):
         key = Rewards.key(event_id)
         rewards_json = redis_db.get(key)
         return json.loads(rewards_json)
+
+    @staticmethod
+    def get_lists(event_id):
+        rewards = Rewards.get(event_id)
+        return Rewards.transform_dict_to_lists(rewards)
