@@ -59,13 +59,14 @@ def call_event_contract_for_metadata(contract_abi, event_id):
     state = contract_instance.functions.getState().call()
     is_master_node = contract_instance.functions.isMasterNode().call()
     consensus_rules = contract_instance.functions.getConsensusRules().call()
-    min_votes, min_consensus_votes, consensus_ratio, max_users = consensus_rules
+    (min_total_votes, min_consensus_votes, min_consensus_ratio, min_participant_ratio,
+     max_participants) = consensus_rules
 
-    event = database_events.Event(event_id, owner, token_address, node_addresses,
-                                  leftovers_recoverable_after, application_start_time,
-                                  application_end_time, event_start_time, event_end_time,
-                                  event_name, data_feed_hash, state, is_master_node, min_votes,
-                                  min_consensus_votes, consensus_ratio, max_users)
+    event = database_events.Event(
+        event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
+        application_start_time, application_end_time, event_start_time, event_end_time, event_name,
+        data_feed_hash, state, is_master_node, min_total_votes, min_consensus_votes,
+        min_consensus_ratio, min_participant_ratio, max_participants)
     return event
 
 
@@ -120,7 +121,7 @@ def vote(data):
     # 3. check if consensus reached
     # TODO min_consensus_percantage not in contract yet, participants method not on this branch
     vote_count = len(event_votes)
-    if vote_count >= event.min_votes:  # and (
+    if vote_count >= event.min_total_votes:  # and (
         # vote_count / event.participants()) >= event.min_consensus_percantage:
         consensus_reached, consensus_votes = check_consensus(event, event_votes)
         if consensus_reached:
@@ -129,11 +130,12 @@ def vote(data):
             event.state = 3
             event.update()
 
-            event_rewards = rewards.determine_rewards(consensus_votes)  # event.distribution_function)
+            event_rewards = rewards.determine_rewards(
+                consensus_votes)  # event.distribution_function)
 
             if event.is_master_node:
                 logger.info("Node is master node. Setting rewards")
-                rewards.set_consensus_rewards(event_id)
+                rewards.set_consensus_rewards(event_id, event_rewards)
             else:
                 logger.info("Not master node..waiting for rewards to be set")
                 # filter for rewards set
@@ -152,10 +154,10 @@ def check_consensus(event, votes):
     cons_vote_count = len(answers_combinations[consensus_candidate])
 
     consensus_ratio = cons_vote_count / len(votes)
-    if cons_vote_count < event.min_consensus_votes or consensus_ratio * 100 < event.consensus_ratio:
+    if cons_vote_count < event.min_consensus_votes or consensus_ratio * 100 < event.min_consensus_ratio:
         logger.info('Not enough consensus votes!')
         return False, []
 
-    consensus_votes = sorted([answers_combinations[consensus_candidate]],key=lambda v: v.timestamp)
+    consensus_votes = sorted([answers_combinations[consensus_candidate]], key=lambda v: v.timestamp)
     # Consensus reached
     return True, consensus_votes

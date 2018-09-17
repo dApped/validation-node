@@ -13,8 +13,8 @@ class Event:
 
     def __init__(self, event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
                  application_start_time, application_end_time, event_start_time, event_end_time,
-                 event_name, data_feed_hash, state, is_master_node, min_votes, min_consensus_votes,
-                 consensus_ratio, max_users):
+                 event_name, data_feed_hash, state, is_master_node, min_total_votes,
+                 min_consensus_votes, min_consensus_ratio, min_participant_ratio, max_participants):
         self.event_id = event_id  #TODO Roman: make event_id immutable
         self.owner = owner
         self.token_address = token_address
@@ -28,10 +28,11 @@ class Event:
         self.data_feed_hash = data_feed_hash
         self.state = state
         self.is_master_node = is_master_node
-        self.min_votes = min_votes
+        self.min_total_votes = min_total_votes
         self.min_consensus_votes = min_consensus_votes
-        self.consensus_ratio = consensus_ratio
-        self.max_users = max_users
+        self.min_consensus_ratio = min_consensus_ratio
+        self.min_participant_ratio = min_participant_ratio
+        self.max_participants = max_participants
 
     @staticmethod
     def key(event_id):
@@ -118,5 +119,3 @@ class Filters:
     def get_list(event_id):
         key = Filters.key(event_id)
         return redis_db.lrange(key, 0, -1)
-
-class Rewards:
