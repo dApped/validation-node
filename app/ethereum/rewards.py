@@ -4,14 +4,14 @@ from web3 import HTTPProvider, Web3
 
 import common
 from database import events as database_events
-from database.events import Event, Rewards
+from database.events import Rewards, VerityEvent
 
 provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
 
 
 def determine_rewards(event_id, consensus_votes):
-    event_instance = Event.instance(w3, event_id)
+    event_instance = VerityEvent.instance(w3, event_id)
 
     [total_eth_balance, total_token_balance] = event_instance.functions.getBalance().call()
 

@@ -8,8 +8,7 @@ from database.database import redis_db
 logger = logging.getLogger('flask.app')
 
 
-
-class Event:
+class VerityEvent:
     IDS_KEY = 'event_ids'
     PREFIX = 'event'
 
@@ -38,7 +37,7 @@ class Event:
 
     @staticmethod
     def key(event_id):
-        return '%s_%s' % (Event.PREFIX, event_id)
+        return '%s_%s' % (VerityEvent.PREFIX, event_id)
 
     def to_json(self):
         return json.dumps(self.__dict__)
@@ -58,9 +57,9 @@ class Event:
     @staticmethod
     def get(event_id):
         ''' Get event from the database'''
-        event_json = redis_db.get(Event.key(event_id))
+        event_json = redis_db.get(VerityEvent.key(event_id))
         if event_json:
-            return Event.from_json(event_json)
+            return VerityEvent.from_json(event_json)
         return None
 
     @staticmethod
@@ -85,7 +84,7 @@ class Event:
 
     @staticmethod
     def get_ids_list():
-        return redis_db.lrange(Event.IDS_KEY, 0, -1)
+        return redis_db.lrange(VerityEvent.IDS_KEY, 0, -1)
 
 
 class Participants:
