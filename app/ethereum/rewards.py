@@ -1,21 +1,32 @@
 # -*- coding: utf-8 -*-
 import os
 
-from web3 import Web3, HTTPProvider
+from web3 import Web3, HTTPProvider, utils
 
+from database.events import Event
 provider = os.getenv('ETH_RPC_PROVIDER')
 web3 = Web3(HTTPProvider(provider))
 
 
-def determine_rewards(consensus_votes, distribution_function='linear'):
+def determine_rewards(event_id, consensus_votes):
     #addresses = [vote.user_id for vote in consensus_votes]
     #token_rewards = [10 for vote in consensus_votes]
     #eth_rewards = [0.1 for vote in consensus_votes]
 
+    event_instance = Event.instance(event_id)
+
+    [total_eth_balance, total_token_balance] = event_instance.functions.getBalance().call()
+
+    # TODO support multiple distribution functions, for now assume linear
+    in_consensus_votes_num = len(consensus_votes)
+
+    eth_reward_gwei = utils.toWei(total_eth_balance/in_consensus_votes_num)
+    token_reward_gwei = utils.toWei(total_token_balance / in_consensus_votes_num)
+
+
     rewards = []
     for vote in consensus_votes:
-        r = {vote.user_id : {'token': t, 'eth': e}}
-
+        r = {vote.user_id : {'eth': eth_reward_gwei, 'token': token_reward_gwei}}
         rewards.append(r)
 
 

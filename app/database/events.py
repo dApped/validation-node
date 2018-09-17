@@ -1,10 +1,16 @@
 import json
 import logging
+import os
 
+from web3 import HTTPProvider, Web3
+
+import common
 from database import votes
 from database.database import redis_db
 
 logger = logging.getLogger('flask.app')
+provider = os.getenv('ETH_RPC_PROVIDER')
+w3 = Web3(HTTPProvider(provider))
 
 
 class Event:
@@ -15,7 +21,7 @@ class Event:
                  application_start_time, application_end_time, event_start_time, event_end_time,
                  event_name, data_feed_hash, state, is_master_node, min_total_votes,
                  min_consensus_votes, min_consensus_ratio, min_participant_ratio, max_participants):
-        self.event_id = event_id  #TODO Roman: make event_id immutable
+        self.event_id = event_id  # TODO Roman: make event_id immutable
         self.owner = owner
         self.token_address = token_address
         self.node_addresses = node_addresses
@@ -61,6 +67,11 @@ class Event:
             return Event.from_json(event_json)
         return None
 
+    @staticmethod
+    def instance(event_id):
+        contract_abi = common.verity_event_contract_abi()
+        return w3.eth.contract(address=event_id, abi=contract_abi)
+
     def update(self):
         ''' Update event in the database'''
         # TODO Roman: This should in transaction
@@ -74,7 +85,7 @@ class Event:
         pipeline.execute()
 
     def participants(self):
-        return Participants.get_set(self.event_address)
+        return Participants.get_set(self.event_id)
 
     @staticmethod
     def get_ids_list():

@@ -130,8 +130,7 @@ def vote(data):
             event.state = 3
             event.update()
 
-            event_rewards = rewards.determine_rewards(
-                consensus_votes)  # event.distribution_function)
+            event_rewards = rewards.determine_rewards(event_id, consensus_votes)
 
             if event.is_master_node:
                 logger.info("Node is master node. Setting rewards")
