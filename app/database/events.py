@@ -131,3 +131,23 @@ class Filters:
     def get_list(event_id):
         key = Filters.key(event_id)
         return redis_db.lrange(key, 0, -1)
+
+
+class Rewards:
+    PREFIX = 'rewards'
+
+    @staticmethod
+    def key(event_id):
+        return '%s_%s' % (Rewards.PREFIX, event_id)
+
+    @staticmethod
+    def create(event_id, rewards_dict):
+        key = Rewards.key(event_id)
+        rewards_json = json.dumps(rewards_dict)
+        redis_db.set(key, rewards_json)
+
+    @staticmethod
+    def get(event_id):
+        key = Rewards.key(event_id)
+        rewards_json = redis_db.get(key)
+        return json.loads(rewards_json)
