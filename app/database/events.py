@@ -1,16 +1,12 @@
 import json
 import logging
-import os
-
-from web3 import HTTPProvider, Web3
 
 import common
 from database import votes
 from database.database import redis_db
 
 logger = logging.getLogger('flask.app')
-provider = os.getenv('ETH_RPC_PROVIDER')
-w3 = Web3(HTTPProvider(provider))
+
 
 
 class Event:
@@ -68,7 +64,7 @@ class Event:
         return None
 
     @staticmethod
-    def instance(event_id):
+    def instance(w3, event_id):
         contract_abi = common.verity_event_contract_abi()
         return w3.eth.contract(address=event_id, abi=contract_abi)
 
