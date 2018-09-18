@@ -5,11 +5,9 @@ from ethereum.provider import EthProvider
 
 
 def determine_rewards(event_id, consensus_votes):
-
     w3 = EthProvider().web3()
 
     event_instance = VerityEvent.instance(w3, event_id)
-
     w3.eth.defaultAccount = w3.eth.accounts[0]
     [total_eth_balance, total_token_balance] = event_instance.functions.getBalance().call()
 
@@ -31,7 +29,6 @@ def determine_rewards(event_id, consensus_votes):
 
 
 def set_consensus_rewards(event_id):
-
     w3 = EthProvider().web3()
 
     user_ids, eth_rewards, token_rewards = database_events.Rewards.get_lists(event_id)
