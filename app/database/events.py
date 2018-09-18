@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 
@@ -178,6 +179,10 @@ class Rewards:
         redis_db.set(key, rewards_json)
 
     @staticmethod
+    def reward_dict(eth_reward, token_reward):
+        return {Rewards.ETH_KEY: eth_reward, Rewards.TOKEN_KEY: token_reward}
+
+    @staticmethod
     def transform_dict_to_lists(rewards):
         user_ids = list(rewards.keys())
         eth_rewards, token_rewards = [], []
@@ -196,3 +201,9 @@ class Rewards:
     def get_lists(event_id):
         rewards = Rewards.get(event_id)
         return Rewards.transform_dict_to_lists(rewards)
+
+    @staticmethod
+    def hash(user_ids, eth_rewards, token_rewards):
+        value = '%s%s%s' % (user_ids, eth_rewards, token_rewards)
+        value = value.encode('utf8')
+        return hashlib.sha256(value).hexdigest()

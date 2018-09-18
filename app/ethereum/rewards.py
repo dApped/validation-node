@@ -1,3 +1,4 @@
+import logging
 import os
 
 from web3 import HTTPProvider, Web3
@@ -8,6 +9,8 @@ from database.events import Rewards, VerityEvent
 
 provider = os.getenv('ETH_RPC_PROVIDER')
 w3 = Web3(HTTPProvider(provider))
+
+logger = logging.getLogger('flask.app')
 
 
 def determine_rewards(event_id, consensus_votes):
@@ -23,10 +26,7 @@ def determine_rewards(event_id, consensus_votes):
 
     # TODO calculate rewards without floats
     rewards_dict = {
-        vote.user_id: {
-            'eth': 1,
-            'token': 2,
-        }
+        vote.user_id: database_events.Rewards.reward_dict(1, 2)
         for vote in consensus_votes
     }
     Rewards.create(event_id, rewards_dict)
@@ -35,11 +35,22 @@ def determine_rewards(event_id, consensus_votes):
 
 
 def set_consensus_rewards(event_id):
+    logger.info('Setting rewards for %s started', event_id)
     user_ids, eth_rewards, token_rewards = database_events.Rewards.get_lists(event_id)
     contract_abi = common.verity_event_contract_abi()
 
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     contract_instance.functions.setRewards(user_ids, eth_rewards, token_rewards).transact()
+    logger.info('Setting rewards for %s done', event_id)
+
+    mark_rewards_set(contract_instance, event_id, user_ids, eth_rewards, token_rewards)
+
+
+def mark_rewards_set(contract_instance, event_id, user_ids, eth_rewards, token_rewards):
+    logger.info('Marking rewards for %s started', event_id)
+    rewards_hash = database_events.Rewards.hash(user_ids, eth_rewards, token_rewards)
+    contract_instance.functions.markRewardsSet(rewards_hash).transact()
+    logger.info('Marking rewards for %s done', event_id)
 
 
 def validate_rewards(event_id):
