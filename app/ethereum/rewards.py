@@ -31,8 +31,6 @@ def determine_rewards(event_id, consensus_votes):
     }
     Rewards.create(event_id, rewards_dict)
 
-    return rewards_dict
-
 
 def set_consensus_rewards(event_id):
     logger.info('Setting rewards for %s started', event_id)
