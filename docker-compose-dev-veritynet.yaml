@@ -2,7 +2,7 @@ version: "3"
 services:
   # NODE 1
   redis1:
-    image: redis
+    image: redis:4.0.11
     #ports: ['6379:6379']
   node1:
     build: ./app
@@ -26,7 +26,7 @@ services:
       - redis1
   # NODE 2
   redis2:
-    image: redis
+    image: redis:4.0.11
   node2:
     build: ./app
     entrypoint:
@@ -49,7 +49,7 @@ services:
       - redis2
   # NODE 3
   redis3:
-    image: redis
+    image: redis:4.0.11
   node3:
     build: ./app
     entrypoint:
