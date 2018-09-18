@@ -73,7 +73,7 @@ Environmental variables get pulled from `.env` file. You can create one from `en
 cp env .env
 ```
 
-### Running in dev mode
+### Running a single node in dev mode
 
 Make sure you have set
 ```bash
@@ -102,5 +102,14 @@ Both support live reloads, so no need to restart those commands after making cod
 **Development branch only supports option 2.
 
 
+## Dev Verity Validation Node Network
 
+If you wish to run mini verity validation node network with 3 nodes simply run:
 
+```bash
+docker-compose -f docker-compose-dev-veritynet.yaml up
+```
+
+Nodes are exposed on localhost ports `81`, `82` and `83`.
+Each has its own eth address which is assigned from locally available addresses. When using ganache dev chain you get 10.
+We reserve address `[1,2,3]` for each of the nodes respectively.
