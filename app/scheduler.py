@@ -1,10 +1,11 @@
 import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from pytz import utc
 
-from events import events, filters
-
-scheduler = BackgroundScheduler()
+from events import filters
+from ethereum.provider import EthProvider
+scheduler = BackgroundScheduler(timezone=utc)
 
 logger = logging.getLogger('flask.app')
 
@@ -12,7 +13,8 @@ logger = logging.getLogger('flask.app')
 def init():
     logger.info('Scheduler Init started')
 
-    scheduler.add_job(filters.filter_events, 'interval', seconds=5, args=[events.w3])
+    w3 = EthProvider().web3()
+    scheduler.add_job(filters.filter_events, 'interval', seconds=5, args=[w3])
 
     try:
         scheduler.start()

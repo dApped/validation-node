@@ -1,16 +1,13 @@
-import os
-
-from web3 import HTTPProvider, Web3
-
 import common
 from database import events as database_events
 from database.events import Rewards, VerityEvent
-
-provider = os.getenv('ETH_RPC_PROVIDER')
-w3 = Web3(HTTPProvider(provider))
+from ethereum.provider import EthProvider
 
 
 def determine_rewards(event_id, consensus_votes):
+
+    w3 = EthProvider().web3()
+
     event_instance = VerityEvent.instance(w3, event_id)
 
     w3.eth.defaultAccount = w3.eth.accounts[0]
@@ -34,6 +31,9 @@ def determine_rewards(event_id, consensus_votes):
 
 
 def set_consensus_rewards(event_id):
+
+    w3 = EthProvider().web3()
+
     user_ids, eth_rewards, token_rewards = database_events.Rewards.get_lists(event_id)
     contract_abi = common.verity_event_contract_abi()
 
