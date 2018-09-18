@@ -94,7 +94,7 @@ def _is_vote_valid(timestamp, user_id, event):
         return False, user_error_response
 
     # 2. Check user has registered for event
-    user_registered = database_events.Participants.exists(event.event_address, user_id)
+    user_registered = database_events.Participants.exists(event.event_id, user_id)
     if not user_registered:
         return False, user_error_response
     return True, success_response
@@ -105,9 +105,10 @@ def vote(data):
     event_id = data['event_id']
     user_id = data['user_id']
     event = database_events.VerityEvent.get(event_id)
+    event_metadata = event.metadata()
     # consensus already reached, no more voting possible
 
-    if event.is_consensus_reached():
+    if event_metadata.is_consensus_reached:
         logger.info("Consensus already reached, no more voting")
         return user_error_response
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
@@ -126,15 +127,15 @@ def vote(data):
         consensus_reached, consensus_votes = check_consensus(event, event_votes)
         if consensus_reached:
             logger.info("Consensus reached")
-            # FIXME this is a mock, should change
-            event.state = 3
-            event.update()
 
-            event_rewards = rewards.determine_rewards(event_id, consensus_votes)
+            event_metadata.is_consensus_reached = consensus_reached
+            event_metadata.update()
+
+            rewards.determine_rewards(event_id, consensus_votes)
 
             if event.is_master_node:
                 logger.info("Node is master node. Setting rewards")
-                rewards.set_consensus_rewards(event_id, event_rewards)
+                rewards.set_consensus_rewards(event_id)
             else:
                 logger.info("Not master node..waiting for rewards to be set")
                 # filter for rewards set

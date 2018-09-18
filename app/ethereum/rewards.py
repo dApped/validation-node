@@ -18,13 +18,14 @@ def determine_rewards(event_id, consensus_votes):
 
     in_consensus_votes_num = len(consensus_votes)
 
-    eth_reward_single = total_eth_balance / in_consensus_votes_num
-    token_reward_single = total_token_balance / in_consensus_votes_num
+    # eth_reward_single = total_eth_balance / in_consensus_votes_num
+    # token_reward_single = total_token_balance / in_consensus_votes_num
 
+    # TODO calculate rewards without floats
     rewards_dict = {
         vote.user_id: {
-            'eth': eth_reward_single,
-            'token': token_reward_single
+            'eth': 1,
+            'token': 2,
         }
         for vote in consensus_votes
     }
