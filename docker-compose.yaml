@@ -1,8 +1,5 @@
 version: "3"
 services:
-  #ganache:
-  #  image: trufflesuite/ganache-cli:latest
-  #  ports: ['8545:8545']
   redis:
     image: redis
     ports: ['6379:6379']
