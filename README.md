@@ -84,8 +84,10 @@ in your `.env` file.
 
 For development you are going to want to have a local blockchain. We use [Ganache](https://truffleframework.com/ganache). You can download it from their site or run it as a Docker container
 ```bash
-docker run -d -p 8545:8545 trufflesuite/ganache-cli
+docker run -d -p 8545:8545 trufflesuite/ganache-cli -a 20
 ```
+
+The `-a <NUMBER>` specifies the number of accounts to generate at startup. For more options see their [github page](https://github.com/trufflesuite/ganache-cli)
 
 Now you can start the app on 2 different ways:
 
