@@ -1,4 +1,5 @@
 import functools
+import logging
 import os
 from datetime import datetime
 
@@ -18,6 +19,7 @@ os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
 # EB looks for an 'application' callable by default.
 application = Flask(__name__)
 logger = application.logger
+logging.getLogger().setLevel(logging.INFO)
 
 
 def init():
@@ -50,8 +52,7 @@ def limit_remote_addr():
     # forbidden for a vietnamese bot
     blacklist = ['14.165.36.165', '104.199.227.129']
 
-    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ[
-            'HTTP_X_FORWARDED_FOR'] in blacklist:
+    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ['HTTP_X_FORWARDED_FOR'] in blacklist:
         logger.debug('Vietnamese bot detected!')
         abort(403)
     if request.environ['REMOTE_ADDR'] in blacklist:

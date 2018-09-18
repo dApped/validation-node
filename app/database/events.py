@@ -1,21 +1,33 @@
+import hashlib
 import json
 import logging
 
+import common
 from database import votes
 from database.database import redis_db
 
 logger = logging.getLogger('flask.app')
 
 
-class VerityEvent:
+class JsonSerializable:
+    def to_json(self):
+        return json.dumps(self.__dict__)
+
+    @classmethod
+    def from_json(cls, json_data):
+        dict_data = json.loads(json_data)
+        return cls(**dict_data)
+
+
+class VerityEvent(JsonSerializable):
     IDS_KEY = 'event_ids'
     PREFIX = 'event'
 
     def __init__(self, event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
                  application_start_time, application_end_time, event_start_time, event_end_time,
-                 event_name, data_feed_hash, state, is_master_node, min_votes, min_consensus_votes,
-                 consensus_ratio, max_users):
-        self.event_id = event_id  #TODO Roman: make event_id immutable
+                 event_name, data_feed_hash, state, is_master_node, min_total_votes,
+                 min_consensus_votes, min_consensus_ratio, min_participant_ratio, max_participants):
+        self.event_id = event_id  # TODO Roman: make event_id immutable
         self.owner = owner
         self.token_address = token_address
         self.node_addresses = node_addresses
@@ -28,40 +40,35 @@ class VerityEvent:
         self.data_feed_hash = data_feed_hash
         self.state = state
         self.is_master_node = is_master_node
-        self.min_votes = min_votes
+        self.min_total_votes = min_total_votes
         self.min_consensus_votes = min_consensus_votes
-        self.consensus_ratio = consensus_ratio
-        self.max_users = max_users
+        self.min_consensus_ratio = min_consensus_ratio
+        self.min_participant_ratio = min_participant_ratio
+        self.max_participants = max_participants
 
     @staticmethod
     def key(event_id):
         return '%s_%s' % (VerityEvent.PREFIX, event_id)
 
-    def to_json(self):
-        return json.dumps(self.__dict__)
-
-    @classmethod
-    def from_json(cls, json_data):
-        dict_data = json.loads(json_data)
-        return cls(**dict_data)
-
     def votes(self):
         return votes.Vote.get_list(self.event_id)
-
-    def is_consensus_reached(self):
-        # TODO figure out how state behaves, for now it is always 4
-        return self.state > 1
 
     @staticmethod
     def get(event_id):
         ''' Get event from the database'''
         event_json = redis_db.get(VerityEvent.key(event_id))
-        if event_json:
-            return VerityEvent.from_json(event_json)
-        return None
+        if not event_json:
+            return None
+        return VerityEvent.from_json(event_json)
+
+    @staticmethod
+    def instance(w3, event_id):
+        contract_abi = common.verity_event_contract_abi()
+        return w3.eth.contract(address=event_id, abi=contract_abi)
 
     def update(self):
         ''' Update event in the database'''
+        # TODO Roman: This should in transaction
         redis_db.set(self.key(self.event_id), self.to_json())
 
     def create(self):
@@ -72,11 +79,47 @@ class VerityEvent:
         pipeline.execute()
 
     def participants(self):
-        return Participants.get_set(self.event_address)
+        return Participants.get_set(self.event_id)
+
+    def metadata(self):
+        return VerityEventMetadata.get_or_create(self.event_id)
 
     @staticmethod
     def get_ids_list():
         return redis_db.lrange(VerityEvent.IDS_KEY, 0, -1)
+
+
+class VerityEventMetadata(JsonSerializable):
+    PREFIX = 'metadata'
+
+    def __init__(self, event_id, is_consensus_reached):
+        self.event_id = event_id
+        self.is_consensus_reached = is_consensus_reached
+
+    @staticmethod
+    def key(event_id):
+        return '%s_%s' % (VerityEventMetadata.PREFIX, event_id)
+
+    @staticmethod
+    def get(event_id):
+        event_meta_json = redis_db.get(VerityEventMetadata.key(event_id))
+        if not event_meta_json:
+            return None
+        return VerityEventMetadata.from_json(event_meta_json)
+
+    def create(self):
+        redis_db.set(self.key(self.event_id), self.to_json())
+
+    @staticmethod
+    def get_or_create(event_id):
+        event_metadata = VerityEventMetadata.get(event_id)
+        if not event_metadata:
+            event_metadata = VerityEventMetadata(event_id, is_consensus_reached=False)
+            event_metadata.create()
+        return event_metadata
+
+    def update(self):
+        self.create()
 
 
 class Participants:
@@ -118,3 +161,49 @@ class Filters:
     def get_list(event_id):
         key = Filters.key(event_id)
         return redis_db.lrange(key, 0, -1)
+
+
+class Rewards:
+    PREFIX = 'rewards'
+    ETH_KEY = 'eth'
+    TOKEN_KEY = 'token'
+
+    @staticmethod
+    def key(event_id):
+        return '%s_%s' % (Rewards.PREFIX, event_id)
+
+    @staticmethod
+    def create(event_id, rewards_dict):
+        key = Rewards.key(event_id)
+        rewards_json = json.dumps(rewards_dict)
+        redis_db.set(key, rewards_json)
+
+    @staticmethod
+    def reward_dict(eth_reward, token_reward):
+        return {Rewards.ETH_KEY: eth_reward, Rewards.TOKEN_KEY: token_reward}
+
+    @staticmethod
+    def transform_dict_to_lists(rewards):
+        user_ids = list(rewards.keys())
+        eth_rewards, token_rewards = [], []
+        for user_id in user_ids:
+            eth_rewards.append(rewards[user_id][Rewards.ETH_KEY])
+            token_rewards.append(rewards[user_id][Rewards.TOKEN_KEY])
+        return user_ids, eth_rewards, token_rewards
+
+    @staticmethod
+    def get(event_id):
+        key = Rewards.key(event_id)
+        rewards_json = redis_db.get(key)
+        return json.loads(rewards_json)
+
+    @staticmethod
+    def get_lists(event_id):
+        rewards = Rewards.get(event_id)
+        return Rewards.transform_dict_to_lists(rewards)
+
+    @staticmethod
+    def hash(user_ids, eth_rewards, token_rewards):
+        value = '%s%s%s' % (user_ids, eth_rewards, token_rewards)
+        value = value.encode('utf8')
+        return hashlib.sha256(value).hexdigest()
