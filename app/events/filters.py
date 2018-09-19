@@ -1,13 +1,16 @@
 import logging
 
 from database import events
+from ethereum import rewards
 
 logger = logging.getLogger('flask.app')
 
 STATE_TRANSITION_FILTER = 'StateTransition'
 JOIN_EVENT_FILTER = 'JoinEvent'
 ERROR_EVENT_FILTER = 'Error'
-EVENT_FILTERS = [JOIN_EVENT_FILTER, STATE_TRANSITION_FILTER, ERROR_EVENT_FILTER]
+VALIDATION_STARTED_FILTER = 'ValidationStarted'
+EVENT_FILTERS = [JOIN_EVENT_FILTER, STATE_TRANSITION_FILTER, ERROR_EVENT_FILTER,
+                 VALIDATION_STARTED_FILTER]
 
 
 def init_event_filters(w3, contract_abi, event_id):
@@ -44,6 +47,8 @@ def process_entries(w3, filter_name, event_id, entries):
         process_state_transition(w3, event_id, entries)
     elif filter_name == ERROR_EVENT_FILTER:
         process_error_events(event_id, entries)
+    elif filter_name == VALIDATION_STARTED_FILTER:
+        process_validation_started(event_id, entries)
     else:
         logger.error('Unknown event name for event_id %s, %s', event_id, filter_name)
 
@@ -58,9 +63,16 @@ def process_state_transition(_, event_id, entries):
     event = events.VerityEvent.get(event_id)
     entry = entries[0]
     event.state = entry['args']['newState']
+    logger.info('Event %s state transition detected. New state %d', event_id, event.state)
     event.update()
 
 
 def process_error_events(event_id, entries):
     for entry in entries:
         logger.error('event_id: %s, %s', event_id, entry)
+
+
+def process_validation_started(event_id, entries):
+    # TODO get latest validation round from entries
+    # rewards.validate_rewards(event_id, validation_round)
+    pass

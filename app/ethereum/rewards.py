@@ -49,10 +49,17 @@ def mark_rewards_set(contract_instance, event_id, user_ids, eth_rewards, token_r
     logger.info('Marking rewards for %s done', event_id)
 
 
-def validate_rewards(event_id):
-    """
-    TODO
-    Validates rewards set
-    Sends 'ok' or 'nok' to conract
-    """
-    pass
+def validate_rewards(event_id, validation_round):
+    w3 = EthProvider().web3()
+    contract_abi = common.verity_event_contract_abi()
+    contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
+
+    # TODO read from redis if rewards have been set
+    # read rewards from BC, compare with others
+    rewards_match = True
+    if rewards_match:
+        logger.info('Rewards match. Approving rewards for round %d', validation_round)
+        contract_instance.functions.approveRewards(validation_round).transact()
+    else:
+        logger.info('Rewards DO NOT match. Rejecting rewards for round %d', validation_round)
+        contract_instance.functions.approveRewards(validation_round).transact()

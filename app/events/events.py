@@ -111,39 +111,34 @@ def vote(data):
     user_id = data['user_id']
     event = database_events.VerityEvent.get(event_id)
     event_metadata = event.metadata()
-    # consensus already reached, no more voting possible
 
+    # consensus already reached, no more voting possible
     if event_metadata.is_consensus_reached:
         logger.info("Consensus already reached, no more voting")
         return user_error_response
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
         logger.info("VOTE NOT VALID BUT CONTINUE ANYWAY")
-        return response
+        # return response
 
     logger.info("Valid vote")
     database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).create()
     event_votes = event.votes()
-    # 3. check if consensus reached
-    # TODO min_consensus_percantage not in contract yet, participants method not on this branch
+    # check if consensus reached
     vote_count = len(event_votes)
-    if vote_count >= event.min_total_votes:  # and (
-        # vote_count / event.participants()) >= event.min_consensus_percantage:
+    participant_ratio = (vote_count / len(event.participants())) * 100
+    if vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio:
         consensus_reached, consensus_votes = check_consensus(event, event_votes)
         if consensus_reached:
             logger.info("Consensus reached")
-
             event_metadata.is_consensus_reached = consensus_reached
             event_metadata.update()
 
             rewards.determine_rewards(event_id, consensus_votes)
-
             if event.is_master_node:
                 scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[event_id])
             else:
                 logger.info("Not master node..waiting for rewards to be set")
-                # filter for rewards set
-                # confirm/not confirm set rewards
     return success_response
 
 
@@ -156,12 +151,10 @@ def check_consensus(event, votes):
 
     consensus_candidate = max(answers_combinations, key=lambda x: len(answers_combinations[x]))
     cons_vote_count = len(answers_combinations[consensus_candidate])
-
     consensus_ratio = cons_vote_count / len(votes)
     if cons_vote_count < event.min_consensus_votes or consensus_ratio * 100 < event.min_consensus_ratio:
         logger.info('Not enough consensus votes!')
         return False, []
 
     consensus_votes = sorted(answers_combinations[consensus_candidate], key=lambda v: v.timestamp)
-    # Consensus reached
     return True, consensus_votes
