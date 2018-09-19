@@ -4,6 +4,7 @@ import pickle
 import time
 from collections import defaultdict
 
+import scheduler
 from database import events as database_events
 from database import votes as database_votes
 from ethereum import rewards
@@ -93,12 +94,13 @@ def _is_vote_valid(timestamp, user_id, event):
     # TODO check request data format, maybe use schema validator
 
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
-        logger.info("Voting is not active")
+        logger.info("Voting is not active %s", event.event_id)
         return False, user_error_response
 
     # 2. Check user has registered for event
-    user_registered = database_events.Participants.exists(event.event_address, user_id)
+    user_registered = database_events.Participants.exists(event.event_id, user_id)
     if not user_registered:
+        logger.info("User %s is not registered %s", user_id, event.event_id)
         return False, user_error_response
     return True, success_response
 
@@ -108,15 +110,16 @@ def vote(data):
     event_id = data['event_id']
     user_id = data['user_id']
     event = database_events.VerityEvent.get(event_id)
+    event_metadata = event.metadata()
     # consensus already reached, no more voting possible
 
-    if event.is_consensus_reached():
+    if event_metadata.is_consensus_reached:
         logger.info("Consensus already reached, no more voting")
         return user_error_response
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
         logger.info("VOTE NOT VALID BUT CONTINUE ANYWAY")
-        # return response
+        return response
 
     logger.info("Valid vote")
     database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).create()
@@ -129,15 +132,14 @@ def vote(data):
         consensus_reached, consensus_votes = check_consensus(event, event_votes)
         if consensus_reached:
             logger.info("Consensus reached")
-            # FIXME this is a mock, should change
-            event.state = 3
-            event.update()
 
-            event_rewards = rewards.determine_rewards(event_id, consensus_votes)
+            event_metadata.is_consensus_reached = consensus_reached
+            event_metadata.update()
+
+            rewards.determine_rewards(event_id, consensus_votes)
 
             if event.is_master_node:
-                logger.info("Node is master node. Setting rewards")
-                rewards.set_consensus_rewards(event_id)
+                scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[event_id])
             else:
                 logger.info("Not master node..waiting for rewards to be set")
                 # filter for rewards set

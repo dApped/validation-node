@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 
@@ -8,7 +9,17 @@ from database.database import redis_db
 logger = logging.getLogger('flask.app')
 
 
-class VerityEvent:
+class JsonSerializable:
+    def to_json(self):
+        return json.dumps(self.__dict__)
+
+    @classmethod
+    def from_json(cls, json_data):
+        dict_data = json.loads(json_data)
+        return cls(**dict_data)
+
+
+class VerityEvent(JsonSerializable):
     IDS_KEY = 'event_ids'
     PREFIX = 'event'
 
@@ -39,28 +50,16 @@ class VerityEvent:
     def key(event_id):
         return '%s_%s' % (VerityEvent.PREFIX, event_id)
 
-    def to_json(self):
-        return json.dumps(self.__dict__)
-
-    @classmethod
-    def from_json(cls, json_data):
-        dict_data = json.loads(json_data)
-        return cls(**dict_data)
-
     def votes(self):
         return votes.Vote.get_list(self.event_id)
-
-    def is_consensus_reached(self):
-        # TODO figure out how state behaves, for now it is always 4
-        return self.state > 1
 
     @staticmethod
     def get(event_id):
         ''' Get event from the database'''
         event_json = redis_db.get(VerityEvent.key(event_id))
-        if event_json:
-            return VerityEvent.from_json(event_json)
-        return None
+        if not event_json:
+            return None
+        return VerityEvent.from_json(event_json)
 
     @staticmethod
     def instance(w3, event_id):
@@ -82,9 +81,45 @@ class VerityEvent:
     def participants(self):
         return Participants.get_set(self.event_id)
 
+    def metadata(self):
+        return VerityEventMetadata.get_or_create(self.event_id)
+
     @staticmethod
     def get_ids_list():
         return redis_db.lrange(VerityEvent.IDS_KEY, 0, -1)
+
+
+class VerityEventMetadata(JsonSerializable):
+    PREFIX = 'metadata'
+
+    def __init__(self, event_id, is_consensus_reached):
+        self.event_id = event_id
+        self.is_consensus_reached = is_consensus_reached
+
+    @staticmethod
+    def key(event_id):
+        return '%s_%s' % (VerityEventMetadata.PREFIX, event_id)
+
+    @staticmethod
+    def get(event_id):
+        event_meta_json = redis_db.get(VerityEventMetadata.key(event_id))
+        if not event_meta_json:
+            return None
+        return VerityEventMetadata.from_json(event_meta_json)
+
+    def create(self):
+        redis_db.set(self.key(self.event_id), self.to_json())
+
+    @staticmethod
+    def get_or_create(event_id):
+        event_metadata = VerityEventMetadata.get(event_id)
+        if not event_metadata:
+            event_metadata = VerityEventMetadata(event_id, is_consensus_reached=False)
+            event_metadata.create()
+        return event_metadata
+
+    def update(self):
+        self.create()
 
 
 class Participants:
@@ -144,6 +179,10 @@ class Rewards:
         redis_db.set(key, rewards_json)
 
     @staticmethod
+    def reward_dict(eth_reward, token_reward):
+        return {Rewards.ETH_KEY: eth_reward, Rewards.TOKEN_KEY: token_reward}
+
+    @staticmethod
     def transform_dict_to_lists(rewards):
         user_ids = list(rewards.keys())
         eth_rewards, token_rewards = [], []
@@ -162,3 +201,9 @@ class Rewards:
     def get_lists(event_id):
         rewards = Rewards.get(event_id)
         return Rewards.transform_dict_to_lists(rewards)
+
+    @staticmethod
+    def hash(user_ids, eth_rewards, token_rewards):
+        value = '%s%s%s' % (user_ids, eth_rewards, token_rewards)
+        value = value.encode('utf8')
+        return hashlib.sha256(value).hexdigest()
