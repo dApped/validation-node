@@ -64,7 +64,7 @@ should output ```<PATH_TO_VIRTUALENV>/<VENV_NAME>/lib/python3.7/site-packages/pi
 Then install dependencies by running
 ```bash
 pip install -r app/requirements.txt
-````
+```
 
 ### Environment variables
 
@@ -82,10 +82,19 @@ FLASK_DEBUG=1
 ```
 in your `.env` file.
 
-For development you are going to want to have a local blockchain. We use [Ganache](https://truffleframework.com/ganache). You can download it from their site or run it as a Docker container
+For development you are going to want to have a local blockchain. We use [Parity](https://github.com/paritytech/parity-ethereum/releases/tag/v1.11.11). 
+Download and install it.
+
+Run this command multiple times to create multiple accounts (leave password empty): 
 ```bash
-docker run -d -p 8545:8545 trufflesuite/ganache-cli
+parity --chain dev account new
 ```
+
+Run the blockchain:
+```bash
+parity --chain dev --jsonrpc-apis="eth,net,web3,personal,web3" --geth
+```
+
 
 Now you can start the app on 2 different ways:
 
