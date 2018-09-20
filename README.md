@@ -86,6 +86,7 @@ For development you are going to want to have a local blockchain. We use [Parity
 Download and install it.
 
 Run this command multiple times to create multiple accounts (leave password empty): 
+
 ```bash
 parity --chain dev account new
 ```
