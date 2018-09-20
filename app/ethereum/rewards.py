@@ -71,7 +71,8 @@ def validate_rewards(event_id, validation_round):
     else:
         logger.info('Rewards DO NOT match for event %s. Rejecting rewards for round %d', event_id,
                     validation_round)
-        event_contract.functions.approveRewards(validation_round).transact()
+        alt_hash = Rewards.hash(Rewards.transform_dict_to_lists(node_rewards_dict))
+        event_contract.functions.rejectRewards(validation_round, alt_hash).transact()
 
 
 def do_rewards_match(node_rewards, contract_rewards):
