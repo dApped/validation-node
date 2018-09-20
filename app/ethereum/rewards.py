@@ -63,14 +63,16 @@ def validate_rewards(event_id, validation_round):
                                                             contract_reward_token)
     node_rewards_dict = Rewards.get(event_id)
 
-    rewards_match = compare_rewards(node_rewards_dict, contract_rewards_dict)
+    rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
     if rewards_match:
-        logger.info('Rewards match. Approving rewards for round %d', validation_round)
+        logger.info('Rewards match for event %s. Approving rewards for round %d', event_id,
+                    validation_round)
         event_contract.functions.approveRewards(validation_round).transact()
     else:
-        logger.info('Rewards DO NOT match. Rejecting rewards for round %d', validation_round)
+        logger.info('Rewards DO NOT match for event %s. Rejecting rewards for round %d', event_id,
+                    validation_round)
         event_contract.functions.approveRewards(validation_round).transact()
 
 
-def compare_rewards(node_rewards, contract_rewards):
+def do_rewards_match(node_rewards, contract_rewards):
     return node_rewards == contract_rewards
