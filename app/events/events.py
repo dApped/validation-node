@@ -64,12 +64,13 @@ def call_event_contract_for_metadata(contract_abi, event_id):
     consensus_rules = contract_instance.functions.getConsensusRules().call()
     (min_total_votes, min_consensus_votes, min_consensus_ratio, min_participant_ratio,
      max_participants) = consensus_rules
-
+    validation_round = contract_instance.functions.rewardsValidationRound().call()
     event = database_events.VerityEvent(
         event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
         application_start_time, application_end_time, event_start_time, event_end_time, event_name,
         data_feed_hash, state, is_master_node, min_total_votes, min_consensus_votes,
-        min_consensus_ratio, min_participant_ratio, max_participants)
+        min_consensus_ratio, min_participant_ratio, max_participants,
+        validation_round)
     return event
 
 

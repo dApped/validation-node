@@ -26,7 +26,8 @@ class VerityEvent(JsonSerializable):
     def __init__(self, event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
                  application_start_time, application_end_time, event_start_time, event_end_time,
                  event_name, data_feed_hash, state, is_master_node, min_total_votes,
-                 min_consensus_votes, min_consensus_ratio, min_participant_ratio, max_participants):
+                 min_consensus_votes, min_consensus_ratio, min_participant_ratio, max_participants,
+                 rewards_validation_round):
         self.event_id = event_id  # TODO Roman: make event_id immutable
         self.owner = owner
         self.token_address = token_address
@@ -45,6 +46,7 @@ class VerityEvent(JsonSerializable):
         self.min_consensus_ratio = min_consensus_ratio
         self.min_participant_ratio = min_participant_ratio
         self.max_participants = max_participants
+        self.rewards_validation_round = rewards_validation_round
 
     @staticmethod
     def key(event_id):
