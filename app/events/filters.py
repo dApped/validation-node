@@ -111,7 +111,7 @@ def process_validation_round_restart(w3, event_id, entries):
 
     # if node is master node, set consensus rewards
     if is_master_node:
-        # TODO should this be a scheduler job
+        # TODO if this blocks other filters, use scheduler
         rewards.set_consensus_rewards(event_id)
 
 
