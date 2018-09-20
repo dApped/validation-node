@@ -73,6 +73,7 @@ def process_error_events(event_id, entries):
 
 
 def process_validation_started(event_id, entries):
-    # TODO get latest validation round from entries
-    # rewards.validate_rewards(event_id, validation_round)
+    entry = entries[0]
+    validation_round = entry['args']['validationRound']
+    rewards.validate_rewards(event_id, validation_round)
     pass
