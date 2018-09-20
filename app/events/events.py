@@ -4,16 +4,14 @@ import pickle
 import time
 from collections import defaultdict
 
-from web3 import HTTPProvider, Web3
-
 import scheduler
 from database import events as database_events
 from database import votes as database_votes
 from ethereum import rewards
+from ethereum.provider import EthProvider
 from events import filters
 
 provider = os.getenv('ETH_RPC_PROVIDER')
-w3 = Web3(HTTPProvider(provider))
 
 logger = logging.getLogger('flask.app')
 
@@ -21,6 +19,7 @@ logger = logging.getLogger('flask.app')
 def get_all():
     # TODO: Remove test method
     logger.info('Reading all events from blockchain')
+    w3 = EthProvider().web3()
     return w3.eth.accounts
 
 
@@ -33,11 +32,13 @@ def call_event_contract_for_event_ids():
 
 def read_node_id():
     ''' Returns the node address'''
-    # TODO set node_id from environment
-    return w3.eth.accounts[0]
+    # TODO in production set from somewhere. Do we need this?
+    w3 = EthProvider().web3()
+    return w3.eth.defaultAccount
 
 
 def is_node_registered_on_event(contract_abi, node_id, event_id):
+    w3 = EthProvider().web3()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     node_ids = contract_instance.functions.getEventResolvers().call()
     node_ids = set(node_ids)
@@ -45,6 +46,7 @@ def is_node_registered_on_event(contract_abi, node_id, event_id):
 
 
 def call_event_contract_for_metadata(contract_abi, event_id):
+    w3 = EthProvider().web3()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
 
     owner = contract_instance.functions.owner().call()
@@ -72,6 +74,7 @@ def call_event_contract_for_metadata(contract_abi, event_id):
 
 
 def init_event(contract_abi, node_id, event_id):
+    w3 = EthProvider().web3()
     if not is_node_registered_on_event(contract_abi, node_id, event_id):
         logger.info('Node %s is not included in %s event', node_id, event_id)
         return

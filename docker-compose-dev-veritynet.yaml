@@ -1,0 +1,72 @@
+version: "3"
+services:
+  # NODE 1
+  redis1:
+    image: redis:4.0.11
+    #ports: ['6379:6379']
+  node1:
+    build: ./app
+    entrypoint:
+      - gunicorn
+      - -b :5000
+      - --reload
+      - application
+    environment:
+      REDIS_URL: 'redis1'
+      ETH_RPC_PROVIDER: 'HTTP://host.docker.internal:8545'
+      FLASK_ENV: ${FLASK_ENV}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      FLASK_APP: ./application.py
+      DEV_NODE_ACCOUNT_IDX: 1
+    ports: ['81:5000']
+    volumes: ['./app:/app']
+    depends_on:
+      - redis1
+    links:
+      - redis1
+  # NODE 2
+  redis2:
+    image: redis:4.0.11
+  node2:
+    build: ./app
+    entrypoint:
+      - gunicorn
+      - -b :5000
+      - --reload
+      - application
+    environment:
+      REDIS_URL: 'redis2'
+      ETH_RPC_PROVIDER: 'HTTP://host.docker.internal:8545'
+      FLASK_ENV: ${FLASK_ENV}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      FLASK_APP: ./application.py
+      DEV_NODE_ACCOUNT_IDX: 2
+    ports: ['82:5000']
+    volumes: ['./app:/app']
+    depends_on:
+      - redis2
+    links:
+      - redis2
+  # NODE 3
+  redis3:
+    image: redis:4.0.11
+  node3:
+    build: ./app
+    entrypoint:
+      - gunicorn
+      - -b :5000
+      - --reload
+      - application
+    environment:
+      REDIS_URL: 'redis3'
+      ETH_RPC_PROVIDER: 'HTTP://host.docker.internal:8545'
+      FLASK_ENV: ${FLASK_ENV}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      FLASK_APP: ./application.py
+      DEV_NODE_ACCOUNT_IDX: 3
+    ports: ['83:5000']
+    volumes: ['./app:/app']
+    depends_on:
+      - redis3
+    links:
+      - redis3

@@ -1,5 +1,5 @@
-#FROM python:3.7
-FROM python:3.7-alpine
+FROM python:3.7
+#FROM python:3.7-alpine
 
 EXPOSE 5000
 
@@ -8,16 +8,16 @@ WORKDIR app
 COPY ./ /app/
 
 # If building from alpine image
-RUN apk update
+#RUN apk update
 
 # apk has named gunicorn as py-gunicorn
 # TODO check if all are really necessary and if we prebuild this
-RUN apk add bash gcc linux-headers make musl-dev python3-dev py-setuptools
+#RUN apk add bash gcc linux-headers make musl-dev python3-dev py-setuptools
 
 # when running non-alpine images
-#RUN apt-get update
+RUN apt-get update
 # apk has named gunicorn as py-gunicorn
-#RUN apt-get install -y python3-dev
+RUN apt-get install -y python3-dev
 
 RUN pip3 install -r requirements.txt
 

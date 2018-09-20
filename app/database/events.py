@@ -179,7 +179,7 @@ class Rewards:
         redis_db.set(key, rewards_json)
 
     @staticmethod
-    def reward_dict(eth_reward, token_reward):
+    def reward_dict(eth_reward=0, token_reward=0):
         return {Rewards.ETH_KEY: eth_reward, Rewards.TOKEN_KEY: token_reward}
 
     @staticmethod
