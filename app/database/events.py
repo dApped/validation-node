@@ -60,7 +60,7 @@ class VerityEvent(JsonSerializable):
     def get(event_id):
         ''' Get event from the database'''
         event_json = redis_db.get(VerityEvent.key(event_id))
-        if not event_json:
+        if event_json is None:
             return None
         return VerityEvent.from_json(event_json)
 
@@ -106,7 +106,7 @@ class VerityEventMetadata(JsonSerializable):
     @staticmethod
     def get(event_id):
         event_meta_json = redis_db.get(VerityEventMetadata.key(event_id))
-        if not event_meta_json:
+        if event_meta_json is None:
             return None
         return VerityEventMetadata.from_json(event_meta_json)
 
@@ -116,7 +116,7 @@ class VerityEventMetadata(JsonSerializable):
     @staticmethod
     def get_or_create(event_id):
         event_metadata = VerityEventMetadata.get(event_id)
-        if not event_metadata:
+        if event_metadata is None:
             event_metadata = VerityEventMetadata(event_id, is_consensus_reached=False)
             event_metadata.create()
         return event_metadata
@@ -204,11 +204,15 @@ class Rewards:
     def get(event_id):
         key = Rewards.key(event_id)
         rewards_json = redis_db.get(key)
+        if rewards_json is None:
+            return None
         return json.loads(rewards_json)
 
     @staticmethod
     def get_lists(event_id):
         rewards = Rewards.get(event_id)
+        if rewards is None:
+            return None
         return Rewards.transform_dict_to_lists(rewards)
 
     @staticmethod
