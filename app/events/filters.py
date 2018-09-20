@@ -13,8 +13,10 @@ STATE_TRANSITION_FILTER = 'StateTransition'
 JOIN_EVENT_FILTER = 'JoinEvent'
 ERROR_EVENT_FILTER = 'Error'
 VALIDATION_STARTED_FILTER = 'ValidationStarted'
+VALIDATION_RESTARTED_FILTER = 'ValidationRestart'
+
 EVENT_FILTERS = [JOIN_EVENT_FILTER, STATE_TRANSITION_FILTER, ERROR_EVENT_FILTER,
-                 VALIDATION_STARTED_FILTER]
+                 VALIDATION_STARTED_FILTER, VALIDATION_RESTARTED_FILTER]
 
 
 def log_entry_formatters(contract_abi):
@@ -37,7 +39,7 @@ def init_event_filters(w3, contract_abi, event_id):
         entries = filter_.get_all_entries()
         if not entries:
             continue
-        process_entries(filter_name, event_id, entries)
+        process_entries(w3, filter_name, event_id, entries)
 
 
 def filter_events(w3, formatters):
@@ -54,7 +56,7 @@ def filter_events(w3, formatters):
             process_entries(filter_name, event_id, entries)
 
 
-def process_entries(filter_name, event_id, entries):
+def process_entries(w3, filter_name, event_id, entries):
     if filter_name == JOIN_EVENT_FILTER:
         process_join_events(event_id, entries)
     elif filter_name == STATE_TRANSITION_FILTER:
@@ -62,7 +64,9 @@ def process_entries(filter_name, event_id, entries):
     elif filter_name == ERROR_EVENT_FILTER:
         process_error_events(event_id, entries)
     elif filter_name == VALIDATION_STARTED_FILTER:
-        process_validation_started(event_id, entries)
+        process_validation_start(event_id, entries)
+    elif filter_name == VALIDATION_RESTARTED_FILTER:
+        process_validation_round_restart(w3, event_id, entries)
     else:
         logger.error('Unknown event name for event_id %s, %s', event_id, filter_name)
 
@@ -81,18 +85,34 @@ def process_state_transition(event_id, entries):
     event.update()
 
 
-def process_validation_started(event_id, entries):
+def process_validation_start(event_id, entries):
     entry = entries[0]
     event = events.VerityEvent.get(event_id)
 
     validation_round = entry['args']['validationRound']
-    logger.info(validation_round)
     event.rewards_validation_round = validation_round
-    # TODO maybe dont pass rewards_validation_round, but let validate_rewards read it from redis
     event.update()
-    # Only non masters validate rewards
+
     if not event.is_master_node:
         rewards.validate_rewards(event_id, validation_round)
+
+
+def process_validation_round_restart(w3, event_id, entries):
+    entry = entries[0]
+    event = events.VerityEvent.get(event_id)
+
+    validation_round = entry['args']['validationRound']
+    # validation round starts from 1, instead of 0
+    is_master_node = w3.eth.defaultAccount == event.node_addresses[validation_round - 1]
+
+    event.rewards_validation_round = validation_round
+    event.is_master_node = is_master_node
+    event.update()
+
+    # if node is master node, set consensus rewards
+    if is_master_node:
+        # TODO should this be a scheduler job
+        rewards.set_consensus_rewards(event_id)
 
 
 def process_error_events(event_id, entries):
