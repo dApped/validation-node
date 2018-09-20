@@ -192,6 +192,12 @@ class Rewards:
         return user_ids, eth_rewards, token_rewards
 
     @staticmethod
+    def transform_lists_to_dict(user_ids, eth_rewards, token_rewards):
+        return {user_id: Rewards.reward_dict(eth_reward=eth_r,
+                                             token_reward=token_r) for
+                user_id, eth_r, token_r in zip(user_ids, eth_rewards, token_rewards)}
+
+    @staticmethod
     def get(event_id):
         key = Rewards.key(event_id)
         rewards_json = redis_db.get(key)
