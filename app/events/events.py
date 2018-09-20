@@ -52,24 +52,22 @@ def call_event_contract_for_metadata(contract_abi, event_id):
     owner = contract_instance.functions.owner().call()
     token_address = contract_instance.functions.tokenAddress().call()
     node_addresses = contract_instance.functions.getEventResolvers().call()
-    leftovers_recoverable_after = contract_instance.functions.leftoversRecoverableAfter().call()
-    application_start_time = contract_instance.functions.applicationStartTime().call()
-    application_end_time = contract_instance.functions.applicationEndTime().call()
-    event_start_time = contract_instance.functions.eventStartTime().call()
-    event_end_time = contract_instance.functions.eventEndTime().call()
+    (application_start_time, application_end_time, event_start_time, event_end_time,
+     leftovers_recoverable_after) = contract_instance.functions.getEventTimes().call()
     event_name = contract_instance.functions.eventName().call()
     data_feed_hash = contract_instance.functions.dataFeedHash().call()
     state = contract_instance.functions.getState().call()
     is_master_node = contract_instance.functions.isMasterNode().call()
     consensus_rules = contract_instance.functions.getConsensusRules().call()
     (min_total_votes, min_consensus_votes, min_consensus_ratio, min_participant_ratio,
-     max_participants) = consensus_rules
-
+     max_participants, rewards_distribution_function) = consensus_rules
+    validation_round = contract_instance.functions.rewardsValidationRound().call()
     event = database_events.VerityEvent(
         event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
         application_start_time, application_end_time, event_start_time, event_end_time, event_name,
         data_feed_hash, state, is_master_node, min_total_votes, min_consensus_votes,
-        min_consensus_ratio, min_participant_ratio, max_participants)
+        min_consensus_ratio, min_participant_ratio, max_participants, rewards_distribution_function,
+        validation_round)
     return event
 
 
@@ -111,8 +109,8 @@ def vote(data):
     user_id = data['user_id']
     event = database_events.VerityEvent.get(event_id)
     event_metadata = event.metadata()
-    # consensus already reached, no more voting possible
 
+    # consensus already reached, no more voting possible
     if event_metadata.is_consensus_reached:
         logger.info("Consensus already reached, no more voting")
         return user_error_response
@@ -124,26 +122,21 @@ def vote(data):
     logger.info("Valid vote")
     database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).create()
     event_votes = event.votes()
-    # 3. check if consensus reached
-    # TODO min_consensus_percantage not in contract yet, participants method not on this branch
+    # check if consensus reached
     vote_count = len(event_votes)
-    if vote_count >= event.min_total_votes:  # and (
-        # vote_count / event.participants()) >= event.min_consensus_percantage:
+    participant_ratio = (vote_count / len(event.participants())) * 100
+    if vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio:
         consensus_reached, consensus_votes = check_consensus(event, event_votes)
         if consensus_reached:
             logger.info("Consensus reached")
-
             event_metadata.is_consensus_reached = consensus_reached
             event_metadata.update()
 
             rewards.determine_rewards(event_id, consensus_votes)
-
             if event.is_master_node:
                 scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[event_id])
             else:
                 logger.info("Not master node..waiting for rewards to be set")
-                # filter for rewards set
-                # confirm/not confirm set rewards
     return success_response
 
 
@@ -156,12 +149,10 @@ def check_consensus(event, votes):
 
     consensus_candidate = max(answers_combinations, key=lambda x: len(answers_combinations[x]))
     cons_vote_count = len(answers_combinations[consensus_candidate])
-
     consensus_ratio = cons_vote_count / len(votes)
     if cons_vote_count < event.min_consensus_votes or consensus_ratio * 100 < event.min_consensus_ratio:
         logger.info('Not enough consensus votes!')
         return False, []
 
     consensus_votes = sorted(answers_combinations[consensus_candidate], key=lambda v: v.timestamp)
-    # Consensus reached
     return True, consensus_votes

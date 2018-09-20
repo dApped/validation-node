@@ -103,7 +103,7 @@ parity --chain dev account list
 
 Run the blockchain:
 ```bash
-parity --chain dev --jsonrpc-apis="eth,net,web3,personal,web3" --geth
+parity --chain dev --jsonrpc-apis="eth,net,web3,personal,web3" --jsonrpc-interface '0.0.0.0' --geth
 ```
 
 Now you can start the app on 2 different ways:

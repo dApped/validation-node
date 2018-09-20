@@ -20,7 +20,6 @@ def determine_rewards(event_id, consensus_votes):
     user_ether_reward_in_wei = int(w3.toWei(total_ether_balance, 'ether') / in_consensus_votes_num)
     user_token_reward_in_wei = int(w3.toWei(total_token_balance, 'ether') / in_consensus_votes_num)
 
-    # TODO calculate rewards without floats
     rewards_dict = {
         vote.user_id: database_events.Rewards.reward_dict(eth_reward=user_ether_reward_in_wei,
                                                           token_reward=user_token_reward_in_wei)
@@ -49,10 +48,32 @@ def mark_rewards_set(contract_instance, event_id, user_ids, eth_rewards, token_r
     logger.info('Marking rewards for %s done', event_id)
 
 
-def validate_rewards(event_id):
-    """
-    TODO
-    Validates rewards set
-    Sends 'ok' or 'nok' to conract
-    """
-    pass
+def validate_rewards(event_id, validation_round):
+    w3 = EthProvider().web3()
+    event_contract_abi = common.verity_event_contract_abi()
+    event_contract = w3.eth.contract(address=event_id, abi=event_contract_abi)
+
+    contract_reward_user_ids = event_contract.functions.getRewardsIndex().call()
+    # TODO should batch calls to getRewards if a lot of users due to gas limit
+    [contract_reward_ether, contract_reward_token] = event_contract.functions.getRewards(
+        contract_reward_user_ids).call()
+
+    contract_rewards_dict = Rewards.transform_lists_to_dict(contract_reward_user_ids,
+                                                            contract_reward_ether,
+                                                            contract_reward_token)
+    node_rewards_dict = Rewards.get(event_id)
+
+    rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
+    if rewards_match:
+        logger.info('Rewards match for event %s. Approving rewards for round %d', event_id,
+                    validation_round)
+        event_contract.functions.approveRewards(validation_round).transact()
+    else:
+        logger.info('Rewards DO NOT match for event %s. Rejecting rewards for round %d', event_id,
+                    validation_round)
+        alt_hash = Rewards.hash(Rewards.transform_dict_to_lists(node_rewards_dict))
+        event_contract.functions.rejectRewards(validation_round, alt_hash).transact()
+
+
+def do_rewards_match(node_rewards, contract_rewards):
+    return node_rewards == contract_rewards
