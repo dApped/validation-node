@@ -3,7 +3,6 @@ services:
   # NODE 1
   redis1:
     image: redis:4.0.11
-    #ports: ['6379:6379']
   node1:
     build: ./app
     entrypoint:

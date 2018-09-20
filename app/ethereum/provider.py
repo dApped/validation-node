@@ -19,8 +19,15 @@ class EthProvider:
             node_id = 1
         self.NODE_ACCOUNT_IDX = node_id
 
+    @staticmethod
+    def unlock_accounts(w3):
+        for account_address in w3.personal.listAccounts:
+            w3.personal.unlockAccount(account_address, "")
+
     def web3(self):
         w3 = Web3(HTTPProvider(self.ETH_RPC_PROVIDER))
+        EthProvider.unlock_accounts(w3)
         w3.eth.defaultAccount = w3.eth.accounts[self.NODE_ACCOUNT_IDX]
         logger.debug('MY ETH ACCOUNT %s' % w3.eth.defaultAccount)
         return w3
+

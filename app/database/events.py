@@ -27,7 +27,7 @@ class VerityEvent(JsonSerializable):
                  application_start_time, application_end_time, event_start_time, event_end_time,
                  event_name, data_feed_hash, state, is_master_node, min_total_votes,
                  min_consensus_votes, min_consensus_ratio, min_participant_ratio, max_participants,
-                 rewards_validation_round):
+                 rewards_distribution_function, rewards_validation_round):
         self.event_id = event_id  # TODO Roman: make event_id immutable
         self.owner = owner
         self.token_address = token_address
@@ -46,6 +46,7 @@ class VerityEvent(JsonSerializable):
         self.min_consensus_ratio = min_consensus_ratio
         self.min_participant_ratio = min_participant_ratio
         self.max_participants = max_participants
+        self.rewards_distribution_function = rewards_distribution_function
         self.rewards_validation_round = rewards_validation_round
 
     @staticmethod

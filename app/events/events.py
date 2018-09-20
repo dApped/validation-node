@@ -52,24 +52,21 @@ def call_event_contract_for_metadata(contract_abi, event_id):
     owner = contract_instance.functions.owner().call()
     token_address = contract_instance.functions.tokenAddress().call()
     node_addresses = contract_instance.functions.getEventResolvers().call()
-    leftovers_recoverable_after = contract_instance.functions.leftoversRecoverableAfter().call()
-    application_start_time = contract_instance.functions.applicationStartTime().call()
-    application_end_time = contract_instance.functions.applicationEndTime().call()
-    event_start_time = contract_instance.functions.eventStartTime().call()
-    event_end_time = contract_instance.functions.eventEndTime().call()
+    (application_start_time, application_end_time, event_start_time, event_end_time,
+     leftovers_recoverable_after) = contract_instance.functions.getEventTimes().call()
     event_name = contract_instance.functions.eventName().call()
     data_feed_hash = contract_instance.functions.dataFeedHash().call()
     state = contract_instance.functions.getState().call()
     is_master_node = contract_instance.functions.isMasterNode().call()
     consensus_rules = contract_instance.functions.getConsensusRules().call()
     (min_total_votes, min_consensus_votes, min_consensus_ratio, min_participant_ratio,
-     max_participants) = consensus_rules
+     max_participants, rewards_distribution_function) = consensus_rules
     validation_round = contract_instance.functions.rewardsValidationRound().call()
     event = database_events.VerityEvent(
         event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
         application_start_time, application_end_time, event_start_time, event_end_time, event_name,
         data_feed_hash, state, is_master_node, min_total_votes, min_consensus_votes,
-        min_consensus_ratio, min_participant_ratio, max_participants,
+        min_consensus_ratio, min_participant_ratio, max_participants, rewards_distribution_function,
         validation_round)
     return event
 

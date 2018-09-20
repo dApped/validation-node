@@ -84,10 +84,15 @@ def process_state_transition(event_id, entries):
 def process_validation_started(event_id, entries):
     entry = entries[0]
     event = events.VerityEvent.get(event_id)
-    event.rewards_validation_round = entry['args']['validationRound']
+
+    validation_round = entry['args']['validationRound']
+    logger.info(validation_round)
+    event.rewards_validation_round = validation_round
     # TODO maybe dont pass rewards_validation_round, but let validate_rewards read it from redis
     event.update()
-    rewards.validate_rewards(event_id, event.rewards_validation_round)
+    # Only non masters validate rewards
+    if not event.is_master_node:
+        rewards.validate_rewards(event_id, validation_round)
 
 
 def process_error_events(event_id, entries):
