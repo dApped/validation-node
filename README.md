@@ -82,13 +82,24 @@ FLASK_DEBUG=1
 ```
 in your `.env` file.
 
-For development you are going to want to have a local blockchain. We use [Parity](https://github.com/paritytech/parity-ethereum/releases/tag/v1.11.11). 
-Download and install it.
+For development you are going to want to have a local blockchain. We use Parity.
+
+
+Install parity with brew:
+```bash
+brew tap paritytech/paritytech
+brew install parity
+```
 
 Run this command multiple times to create multiple accounts (leave password empty): 
 
 ```bash
 parity --chain dev account new
+```
+
+List all accounts
+```bash
+parity --chain dev account list
 ```
 
 Run the blockchain:
