@@ -19,7 +19,30 @@ class JsonSerializable:
         return cls(**dict_data)
 
 
-class VerityEvent(JsonSerializable):
+class EventIdKey:
+    @classmethod
+    def key(cls, event_id):
+        return '%s_%s' % (cls.PREFIX, event_id)
+
+
+class GetKey:
+    @classmethod
+    def get(cls, event_id):
+        key = cls.key(event_id)
+        event_json = redis_db.get(key)
+        if event_json is None:
+            return None
+        return cls.from_json(event_json)
+
+
+class DeleteKey:
+    @classmethod
+    def delete(cls, event_id):
+        key = cls.key(event_id)
+        redis_db.delete(key)
+
+
+class VerityEvent(JsonSerializable, EventIdKey, GetKey, DeleteKey):
     IDS_KEY = 'event_ids'
     PREFIX = 'event'
 
@@ -49,20 +72,8 @@ class VerityEvent(JsonSerializable):
         self.rewards_distribution_function = rewards_distribution_function
         self.rewards_validation_round = rewards_validation_round
 
-    @staticmethod
-    def key(event_id):
-        return '%s_%s' % (VerityEvent.PREFIX, event_id)
-
     def votes(self):
         return votes.Vote.get_list(self.event_id)
-
-    @staticmethod
-    def get(event_id):
-        ''' Get event from the database'''
-        event_json = redis_db.get(VerityEvent.key(event_id))
-        if event_json is None:
-            return None
-        return VerityEvent.from_json(event_json)
 
     @staticmethod
     def instance(w3, event_id):
@@ -92,23 +103,12 @@ class VerityEvent(JsonSerializable):
         return redis_db.lrange(VerityEvent.IDS_KEY, 0, -1)
 
 
-class VerityEventMetadata(JsonSerializable):
+class VerityEventMetadata(JsonSerializable, EventIdKey, GetKey, DeleteKey):
     PREFIX = 'metadata'
 
     def __init__(self, event_id, is_consensus_reached):
         self.event_id = event_id
         self.is_consensus_reached = is_consensus_reached
-
-    @staticmethod
-    def key(event_id):
-        return '%s_%s' % (VerityEventMetadata.PREFIX, event_id)
-
-    @staticmethod
-    def get(event_id):
-        event_meta_json = redis_db.get(VerityEventMetadata.key(event_id))
-        if event_meta_json is None:
-            return None
-        return VerityEventMetadata.from_json(event_meta_json)
 
     def create(self):
         redis_db.set(self.key(self.event_id), self.to_json())
@@ -125,12 +125,8 @@ class VerityEventMetadata(JsonSerializable):
         self.create()
 
 
-class Participants:
+class Participants(EventIdKey, DeleteKey):
     PREFIX = 'join_event'
-
-    @staticmethod
-    def key(event_id):
-        return '%s_%s' % (Participants.PREFIX, event_id)
 
     @staticmethod
     def create(event_id, user_ids):
@@ -148,12 +144,8 @@ class Participants:
         return redis_db.sismember(key, user_id)
 
 
-class Filters:
+class Filters(EventIdKey, DeleteKey):
     PREFIX = 'filters'
-
-    @staticmethod
-    def key(event_id):
-        return '%s_%s' % (Filters.PREFIX, event_id)
 
     @staticmethod
     def create(event_id, filter_id):
@@ -166,14 +158,10 @@ class Filters:
         return redis_db.lrange(key, 0, -1)
 
 
-class Rewards:
+class Rewards(EventIdKey, DeleteKey):
     PREFIX = 'rewards'
     ETH_KEY = 'eth'
     TOKEN_KEY = 'token'
-
-    @staticmethod
-    def key(event_id):
-        return '%s_%s' % (Rewards.PREFIX, event_id)
 
     @staticmethod
     def create(event_id, rewards_dict):
@@ -196,9 +184,10 @@ class Rewards:
 
     @staticmethod
     def transform_lists_to_dict(user_ids, eth_rewards, token_rewards):
-        return {user_id: Rewards.reward_dict(eth_reward=eth_r,
-                                             token_reward=token_r) for
-                user_id, eth_r, token_r in zip(user_ids, eth_rewards, token_rewards)}
+        return {
+            user_id: Rewards.reward_dict(eth_reward=eth_r, token_reward=token_r)
+            for user_id, eth_r, token_r in zip(user_ids, eth_rewards, token_rewards)
+        }
 
     @staticmethod
     def get(event_id):
