@@ -9,7 +9,24 @@ from database.database import redis_db
 logger = logging.getLogger('flask.app')
 
 
-class JsonSerializable:
+class BaseEvent:
+    @classmethod
+    def key(cls, event_id):
+        return '%s_%s' % (cls.PREFIX, event_id)
+
+    @classmethod
+    def get(cls, event_id):
+        key = cls.key(event_id)
+        event_json = redis_db.get(key)
+        if event_json is None:
+            return None
+        return cls.from_json(event_json)
+
+    @classmethod
+    def delete(cls, pipeline, event_id):
+        key = cls.key(event_id)
+        pipeline.delete(key)
+
     def to_json(self):
         return json.dumps(self.__dict__)
 
@@ -19,30 +36,7 @@ class JsonSerializable:
         return cls(**dict_data)
 
 
-class EventIdKey:
-    @classmethod
-    def key(cls, event_id):
-        return '%s_%s' % (cls.PREFIX, event_id)
-
-
-class GetKey:
-    @classmethod
-    def get(cls, event_id):
-        key = cls.key(event_id)
-        event_json = redis_db.get(key)
-        if event_json is None:
-            return None
-        return cls.from_json(event_json)
-
-
-class DeleteKey:
-    @classmethod
-    def delete(cls, pipeline, event_id):
-        key = cls.key(event_id)
-        pipeline.delete(key)
-
-
-class VerityEvent(JsonSerializable, EventIdKey, GetKey, DeleteKey):
+class VerityEvent(BaseEvent):
     IDS_KEY = 'event_ids'
     PREFIX = 'event'
 
@@ -118,7 +112,7 @@ class VerityEvent(JsonSerializable, EventIdKey, GetKey, DeleteKey):
         Filters.uninstall(w3, filter_ids)
 
 
-class VerityEventMetadata(JsonSerializable, EventIdKey, GetKey, DeleteKey):
+class VerityEventMetadata(BaseEvent):
     PREFIX = 'metadata'
 
     def __init__(self, event_id, is_consensus_reached):
@@ -140,7 +134,7 @@ class VerityEventMetadata(JsonSerializable, EventIdKey, GetKey, DeleteKey):
         self.create()
 
 
-class Participants(EventIdKey, DeleteKey):
+class Participants(BaseEvent):
     PREFIX = 'join_event'
 
     @staticmethod
@@ -159,7 +153,7 @@ class Participants(EventIdKey, DeleteKey):
         return redis_db.sismember(key, user_id)
 
 
-class Filters(EventIdKey, DeleteKey):
+class Filters(BaseEvent):
     PREFIX = 'filters'
 
     @staticmethod
@@ -178,7 +172,7 @@ class Filters(EventIdKey, DeleteKey):
             w3.eth.uninstallFilter(filter_id)
 
 
-class Rewards(EventIdKey, DeleteKey):
+class Rewards(BaseEvent):
     PREFIX = 'rewards'
     ETH_KEY = 'eth'
     TOKEN_KEY = 'token'
