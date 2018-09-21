@@ -37,9 +37,9 @@ class GetKey:
 
 class DeleteKey:
     @classmethod
-    def delete(cls, event_id):
+    def delete(cls, pipeline, event_id):
         key = cls.key(event_id)
-        redis_db.delete(key)
+        pipeline.delete(key)
 
 
 class VerityEvent(JsonSerializable, EventIdKey, GetKey, DeleteKey):
@@ -102,6 +102,21 @@ class VerityEvent(JsonSerializable, EventIdKey, GetKey, DeleteKey):
     def get_ids_list():
         return redis_db.lrange(VerityEvent.IDS_KEY, 0, -1)
 
+    @classmethod
+    def delete_event(cls, w3, event_id):
+        filter_ids = Filters.get_list(event_id)
+
+        pipeline = redis_db.pipeline()
+        pipeline.lrem(cls.IDS_KEY, 1, event_id)
+        VerityEvent.delete(pipeline, event_id)
+        VerityEventMetadata.delete(pipeline, event_id)
+        Participants.delete(pipeline, event_id)
+        Filters.delete(pipeline, event_id)
+        Rewards.delete(pipeline, event_id)
+        pipeline.execute()
+
+        Filters.uninstall(w3, filter_ids)
+
 
 class VerityEventMetadata(JsonSerializable, EventIdKey, GetKey, DeleteKey):
     PREFIX = 'metadata'
@@ -156,6 +171,11 @@ class Filters(EventIdKey, DeleteKey):
     def get_list(event_id):
         key = Filters.key(event_id)
         return redis_db.lrange(key, 0, -1)
+
+    @classmethod
+    def uninstall(cls, w3, filter_ids):
+        for filter_id in filter_ids:
+            w3.eth.uninstallFilter(filter_id)
 
 
 class Rewards(EventIdKey, DeleteKey):
