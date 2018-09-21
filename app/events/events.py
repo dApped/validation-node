@@ -49,6 +49,12 @@ def call_event_contract_for_metadata(contract_abi, event_id):
     w3 = EthProvider().web3()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
 
+    state = contract_instance.functions.getState().call()
+    if state > 1:
+        logger.info('Skipping event %s with state: %d. It is not in waiting or application state',
+                    event_id, state)
+        return None
+
     owner = contract_instance.functions.owner().call()
     token_address = contract_instance.functions.tokenAddress().call()
     node_addresses = contract_instance.functions.getEventResolvers().call()
@@ -56,7 +62,6 @@ def call_event_contract_for_metadata(contract_abi, event_id):
      leftovers_recoverable_after) = contract_instance.functions.getEventTimes().call()
     event_name = contract_instance.functions.eventName().call()
     data_feed_hash = contract_instance.functions.dataFeedHash().call()
-    state = contract_instance.functions.getState().call()
     is_master_node = contract_instance.functions.isMasterNode().call()
     consensus_rules = contract_instance.functions.getConsensusRules().call()
     (min_total_votes, min_consensus_votes, min_consensus_ratio, min_participant_ratio,
@@ -78,8 +83,11 @@ def init_event(contract_abi, node_id, event_id):
         return
     logger.info('Initializing %s event', event_id)
     event = call_event_contract_for_metadata(contract_abi, event_id)
+    if not event:
+        return
     event.create()
     filters.init_event_filters(w3, contract_abi, event.event_id)
+    logger.info('%s event initialized', event_id)
 
 
 #### Maybe move this to some common later?
