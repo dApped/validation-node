@@ -53,7 +53,7 @@ def filter_events(w3, formatters):
             entries = filter_.get_new_entries()
             if not entries:
                 continue
-            process_entries(filter_name, event_id, entries)
+            process_entries(w3, filter_name, event_id, entries)
 
 
 def process_entries(w3, filter_name, event_id, entries):
