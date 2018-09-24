@@ -17,7 +17,6 @@ class EthProvider:
         try:
             # TODO should probably have encrypted private key with passphrase here
             node_address = Account.privateKeyToAccount(os.getenv('NODE_PRIVATE_KEY'))
-            # eth.defaultAccount needs to be address string
             w3.eth.defaultAccount = node_address.address
             logger.debug('MY ETH ACCOUNT %s' % w3.eth.defaultAccount)
         except Exception as e:

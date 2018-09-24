@@ -23,12 +23,6 @@ def call_event_contract_for_event_ids():
     return event_addresses
 
 
-def read_node_id(w3):
-    ''' Returns the node address'''
-    # TODO in production set from somewhere. Do we need this?
-    return w3.eth.defaultAccount
-
-
 def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     node_ids = contract_instance.functions.getEventResolvers().call()
