@@ -8,6 +8,7 @@ from flask import Flask, abort, jsonify, request
 import common
 import scheduler
 from database import database
+from ethereum.provider import NODE_WEB3
 from events import events
 
 project_root = os.path.dirname(os.path.realpath(__file__))
@@ -31,10 +32,10 @@ def init():
     event_ids = events.call_event_contract_for_event_ids()
     logger.info('Event ids %s', event_ids)
 
-    node_id = events.read_node_id()
+    node_id = NODE_WEB3.eth.defaultAccount
     contract_abi = common.verity_event_contract_abi()
     for event_id in event_ids:
-        events.init_event(contract_abi, node_id, event_id)
+        events.init_event(NODE_WEB3, contract_abi, node_id, event_id)
 
     logger.info('Validation Node Init done')
 

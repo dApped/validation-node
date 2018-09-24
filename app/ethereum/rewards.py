@@ -28,8 +28,7 @@ def determine_rewards(event_id, consensus_votes):
     Rewards.create(event_id, rewards_dict)
 
 
-def set_consensus_rewards(event_id):
-    w3 = EthProvider().web3()
+def set_consensus_rewards(w3, event_id):
     logger.info('Started setting rewards for %s', event_id)
     user_ids, eth_rewards, token_rewards = database_events.Rewards.get_lists(event_id)
     contract_abi = common.verity_event_contract_abi()
@@ -48,8 +47,7 @@ def mark_rewards_set(contract_instance, event_id, user_ids, eth_rewards, token_r
     logger.info('Finished marking rewards for %s', event_id)
 
 
-def validate_rewards(event_id, validation_round):
-    w3 = EthProvider().web3()
+def validate_rewards(w3, event_id, validation_round):
     event_contract_abi = common.verity_event_contract_abi()
     event_contract = w3.eth.contract(address=event_id, abi=event_contract_abi)
 

@@ -8,7 +8,7 @@ import scheduler
 from database import events as database_events
 from database import votes as database_votes
 from ethereum import rewards
-from ethereum.provider import EthProvider
+from ethereum.provider import NODE_WEB3
 from events import filters
 
 provider = os.getenv('ETH_RPC_PROVIDER')
@@ -24,23 +24,14 @@ def call_event_contract_for_event_ids():
     return event_addresses
 
 
-def read_node_id():
-    ''' Returns the node address'''
-    # TODO read Node Id from somewhere
-    w3 = EthProvider().web3()
-    return w3.eth.defaultAccount
-
-
-def is_node_registered_on_event(contract_abi, node_id, event_id):
-    w3 = EthProvider().web3()
+def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     node_ids = contract_instance.functions.getEventResolvers().call()
     node_ids = set(node_ids)
     return node_id in node_ids
 
 
-def call_event_contract_for_metadata(contract_abi, event_id):
-    w3 = EthProvider().web3()
+def call_event_contract_for_metadata(w3, contract_abi, event_id):
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
 
     state = contract_instance.functions.getState().call()
@@ -70,13 +61,13 @@ def call_event_contract_for_metadata(contract_abi, event_id):
     return event
 
 
-def init_event(contract_abi, node_id, event_id):
-    w3 = EthProvider().web3()
-    if not is_node_registered_on_event(contract_abi, node_id, event_id):
+def init_event(w3, contract_abi, node_id, event_id):
+    if not is_node_registered_on_event(w3, contract_abi, node_id, event_id):
         logger.info('Node %s is not included in %s event', node_id, event_id)
         return
     logger.info('Initializing %s event', event_id)
-    event = call_event_contract_for_metadata(contract_abi, event_id)
+
+    event = call_event_contract_for_metadata(w3, contract_abi, event_id)
     if not event:
         return
     event.create()
@@ -151,7 +142,7 @@ def vote(json_data, ip_address):
 
             rewards.determine_rewards(event_id, consensus_votes)
             if event.is_master_node:
-                scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[event_id])
+                scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
             else:
                 logger.info("Not master node..waiting for rewards to be set")
     return success_response
