@@ -90,12 +90,8 @@ def hello():
 def vote():
     json_data = request.get_json()
     headers = request.headers
-
-    # check if json is right format and add ip addres to the json
-    if 'data' in json_data and 'HTTP_X_FORWARDED_FOR' in request.environ:
-        json_data['data']['ip_address'] = request.environ['HTTP_X_FORWARDED_FOR']
-    result = events.vote(json_data['data'])
-    return result
+    ip_address = request.environ.get('HTTP_X_FORWARDED_FOR')
+    return events.vote(json_data, ip_address)
 
 
 # run the app.

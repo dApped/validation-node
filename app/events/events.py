@@ -84,7 +84,7 @@ def init_event(contract_abi, node_id, event_id):
     logger.info('%s event initialized', event_id)
 
 
-#### Maybe move this to some common later?
+# TODO: Maybe move this to some common later?
 success_response = {'status': 200}
 user_error_response = {'status': 400}
 node_error_response = {'status': 500}
@@ -105,8 +105,21 @@ def _is_vote_valid(timestamp, user_id, event):
     return True, success_response
 
 
-def vote(data):
+def is_vote_payload_valid(data):
+    if 'data' not in data:
+        return False
+    for param in {'user_id', 'event_id', 'answers'}:
+        if param not in data['data']:
+            return False
+    return True
+
+
+def vote(json_data, ip_address):
     current_timestamp = int(time.time())
+    if not is_vote_payload_valid(json_data):
+        return user_error_response
+
+    data = json_data['data']
     event_id = data['event_id']
     user_id = data['user_id']
     event = database_events.VerityEvent.get(event_id)
