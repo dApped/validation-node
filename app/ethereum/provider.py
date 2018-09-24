@@ -1,5 +1,6 @@
 import logging
 import os
+
 from eth_account.account import Account
 from web3 import HTTPProvider, Web3
 
@@ -16,6 +17,7 @@ class EthProvider:
             # TODO should probably have encrypted private key with passphrase here
             node_address = Account.privateKeyToAccount(os.getenv('NODE_PRIVATE_KEY'))
             w3.eth.defaultAccount = node_address.address
+            w3.personal.unlockAccount(w3.eth.defaultAccount, os.getenv('PRIVATE_KEY_PASSWORD'))
             logger.debug('MY ETH ACCOUNT %s' % w3.eth.defaultAccount)
         except Exception as e:
             logger.error(e)
