@@ -8,8 +8,9 @@ from flask import Flask, abort, jsonify, request
 import common
 import scheduler
 from database import database
-from events import events
 from ethereum.provider import NODE_WEB3
+from events import events
+
 project_root = os.path.dirname(os.path.realpath(__file__))
 os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
 
@@ -20,8 +21,6 @@ os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
 application = Flask(__name__)
 logger = application.logger
 logging.getLogger().setLevel(logging.INFO)
-
-
 
 
 def init():
@@ -54,7 +53,8 @@ def limit_remote_addr():
     # forbidden for a vietnamese bot
     blacklist = ['14.165.36.165', '104.199.227.129']
 
-    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ['HTTP_X_FORWARDED_FOR'] in blacklist:
+    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ[
+        'HTTP_X_FORWARDED_FOR'] in blacklist:
         logger.debug('Vietnamese bot detected!')
         abort(403)
     if request.environ['REMOTE_ADDR'] in blacklist:
