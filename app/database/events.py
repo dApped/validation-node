@@ -45,7 +45,7 @@ class VerityEvent(BaseEvent):
                  event_name, data_feed_hash, state, is_master_node, min_total_votes,
                  min_consensus_votes, min_consensus_ratio, min_participant_ratio, max_participants,
                  rewards_distribution_function, rewards_validation_round):
-        self.event_id = event_id  # TODO Roman: make event_id immutable
+        self.event_id = event_id
         self.owner = owner
         self.token_address = token_address
         self.node_addresses = node_addresses
@@ -76,7 +76,6 @@ class VerityEvent(BaseEvent):
 
     def update(self):
         ''' Update event in the database'''
-        # TODO Roman: This should in transaction
         redis_db.set(self.key(self.event_id), self.to_json())
 
     def create(self):

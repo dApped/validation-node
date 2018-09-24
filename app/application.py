@@ -52,7 +52,8 @@ def limit_remote_addr():
     # forbidden for a vietnamese bot
     blacklist = ['14.165.36.165', '104.199.227.129']
 
-    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ['HTTP_X_FORWARDED_FOR'] in blacklist:
+    if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ[
+            'HTTP_X_FORWARDED_FOR'] in blacklist:
         logger.debug('Vietnamese bot detected!')
         abort(403)
     if request.environ['REMOTE_ADDR'] in blacklist:
@@ -69,7 +70,6 @@ def apply_headers(response):
     return response
 
 
-# @limiter.request_filter
 # TODO check why this is here
 def ip_whitelist():
     return request.remote_addr == os.getenv('IP_WHITELIST')
@@ -80,17 +80,9 @@ def ip_whitelist():
 
 
 @application.route('/', methods=['GET'])
-# @limiter.limit('10/minute')
 def hello():
     application.logger.debug('Root resource requested' + str(datetime.utcnow()))
     return "Nothing to see here, verity dev", 200
-
-
-@application.route('/events', methods=['GET'])
-@return_json
-def get_events():
-    logger.info('GET /events')
-    return events.get_all()
 
 
 @application.route('/vote', methods=['POST'])
@@ -98,12 +90,8 @@ def get_events():
 def vote():
     json_data = request.get_json()
     headers = request.headers
-
-    # check if json is right format and add ip addres to the json
-    if 'data' in json_data and 'HTTP_X_FORWARDED_FOR' in request.environ:
-        json_data['data']['ip_address'] = request.environ['HTTP_X_FORWARDED_FOR']
-    result = events.vote(json_data['data'])
-    return result
+    ip_address = request.environ.get('HTTP_X_FORWARDED_FOR')
+    return events.vote(json_data, ip_address)
 
 
 # run the app.

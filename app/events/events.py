@@ -16,15 +16,9 @@ provider = os.getenv('ETH_RPC_PROVIDER')
 logger = logging.getLogger('flask.app')
 
 
-def get_all():
-    # TODO: Remove test method
-    logger.info('Reading all events from blockchain')
-    w3 = EthProvider().web3()
-    return w3.eth.accounts
-
-
 def call_event_contract_for_event_ids():
-    # TODO Roman: Remove this mock
+    # TODO: Fetch events from event registry
+    logger.info('Reading all events from blockchain')
     f = open(os.path.join(os.path.join(os.getenv('DATA_DIR'), 'event_addresses.pkl')), 'rb')
     event_addresses = pickle.load(f)
     return event_addresses
@@ -32,7 +26,7 @@ def call_event_contract_for_event_ids():
 
 def read_node_id():
     ''' Returns the node address'''
-    # TODO in production set from somewhere. Do we need this?
+    # TODO read Node Id from somewhere
     w3 = EthProvider().web3()
     return w3.eth.defaultAccount
 
@@ -90,7 +84,7 @@ def init_event(contract_abi, node_id, event_id):
     logger.info('%s event initialized', event_id)
 
 
-#### Maybe move this to some common later?
+# TODO: Maybe move this to some common later?
 success_response = {'status': 200}
 user_error_response = {'status': 400}
 node_error_response = {'status': 500}
@@ -111,13 +105,28 @@ def _is_vote_valid(timestamp, user_id, event):
     return True, success_response
 
 
-def vote(data):
+def is_vote_payload_valid(data):
+    if 'data' not in data:
+        return False
+    for param in {'user_id', 'event_id', 'answers'}:
+        if param not in data['data']:
+            return False
+    return True
+
+
+def vote(json_data, ip_address):
     current_timestamp = int(time.time())
+    if not is_vote_payload_valid(json_data):
+        return user_error_response
+
+    data = json_data['data']
     event_id = data['event_id']
     user_id = data['user_id']
     event = database_events.VerityEvent.get(event_id)
-    event_metadata = event.metadata()
+    if not event:
+        return user_error_response
 
+    event_metadata = event.metadata()
     # consensus already reached, no more voting possible
     if event_metadata.is_consensus_reached:
         logger.info("Consensus already reached, no more voting")

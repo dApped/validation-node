@@ -7,7 +7,6 @@ logger = logging.getLogger('flask.app')
 
 
 class EthProvider:
-
     def __init__(self):
         self.ETH_RPC_PROVIDER = os.getenv('ETH_RPC_PROVIDER')
         # TODO while nodes don't get their own wallet or they 'outside' wallet
@@ -28,6 +27,5 @@ class EthProvider:
         w3 = Web3(HTTPProvider(self.ETH_RPC_PROVIDER))
         EthProvider.unlock_accounts(w3)
         w3.eth.defaultAccount = w3.eth.accounts[self.NODE_ACCOUNT_IDX]
-        logger.debug('MY ETH ACCOUNT %s' % w3.eth.defaultAccount)
+        logger.debug('My eth account %s', w3.eth.defaultAccount)
         return w3
-
