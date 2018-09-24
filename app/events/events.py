@@ -123,8 +123,10 @@ def vote(json_data, ip_address):
     event_id = data['event_id']
     user_id = data['user_id']
     event = database_events.VerityEvent.get(event_id)
-    event_metadata = event.metadata()
+    if not event:
+        return user_error_response
 
+    event_metadata = event.metadata()
     # consensus already reached, no more voting possible
     if event_metadata.is_consensus_reached:
         logger.info("Consensus already reached, no more voting")
