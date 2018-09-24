@@ -39,14 +39,6 @@ def init():
     logger.info('Validation Node Init done')
 
 
-def return_json(resp):
-    @functools.wraps(resp)
-    def wrapped_resp(**values):
-        return jsonify(resp(**values))
-
-    return wrapped_resp
-
-
 @application.before_request
 def limit_remote_addr():
     # forbidden for a vietnamese bot
@@ -86,16 +78,14 @@ def hello():
 
 
 @application.route('/vote', methods=['POST'])
-@return_json
 def vote():
     json_data = request.get_json()
     headers = request.headers
     ip_address = request.environ.get('HTTP_X_FORWARDED_FOR')
-    return events.vote(json_data, ip_address)
+    response = events.vote(json_data, ip_address)
+    return jsonify(response), response['status']
 
 
-# run the app.
-# if init in main it does not get executed by gunicorn
-init()
+init()  # if init in main it does not get executed by gunicorn
 if __name__ == '__main__':
     application.run(debug=os.getenv('FLASK_DEBUG'))
