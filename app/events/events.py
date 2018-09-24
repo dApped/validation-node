@@ -16,15 +16,9 @@ provider = os.getenv('ETH_RPC_PROVIDER')
 logger = logging.getLogger('flask.app')
 
 
-def get_all():
-    # TODO: Remove test method
-    logger.info('Reading all events from blockchain')
-    w3 = EthProvider().web3()
-    return w3.eth.accounts
-
-
 def call_event_contract_for_event_ids():
-    # TODO Roman: Remove this mock
+    # TODO: Fetch events from event registry
+    logger.info('Reading all events from blockchain')
     f = open(os.path.join(os.path.join(os.getenv('DATA_DIR'), 'event_addresses.pkl')), 'rb')
     event_addresses = pickle.load(f)
     return event_addresses
@@ -32,7 +26,7 @@ def call_event_contract_for_event_ids():
 
 def read_node_id():
     ''' Returns the node address'''
-    # TODO in production set from somewhere. Do we need this?
+    # TODO read Node Id from somewhere
     w3 = EthProvider().web3()
     return w3.eth.defaultAccount
 

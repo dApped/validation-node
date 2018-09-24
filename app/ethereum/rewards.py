@@ -21,8 +21,8 @@ def determine_rewards(event_id, consensus_votes):
     user_token_reward_in_wei = int(w3.toWei(total_token_balance, 'ether') / in_consensus_votes_num)
 
     rewards_dict = {
-        vote.user_id: database_events.Rewards.reward_dict(eth_reward=user_ether_reward_in_wei,
-                                                          token_reward=user_token_reward_in_wei)
+        vote.user_id: database_events.Rewards.reward_dict(
+            eth_reward=user_ether_reward_in_wei, token_reward=user_token_reward_in_wei)
         for vote in consensus_votes
     }
     Rewards.create(event_id, rewards_dict)
@@ -55,12 +55,11 @@ def validate_rewards(event_id, validation_round):
 
     contract_reward_user_ids = event_contract.functions.getRewardsIndex().call()
     # TODO should batch calls to getRewards if a lot of users due to gas limit
-    [contract_reward_ether, contract_reward_token] = event_contract.functions.getRewards(
-        contract_reward_user_ids).call()
+    (contract_reward_ether,
+     contract_reward_token) = event_contract.functions.getRewards(contract_reward_user_ids).call()
 
-    contract_rewards_dict = Rewards.transform_lists_to_dict(contract_reward_user_ids,
-                                                            contract_reward_ether,
-                                                            contract_reward_token)
+    contract_rewards_dict = Rewards.transform_lists_to_dict(
+        contract_reward_user_ids, contract_reward_ether, contract_reward_token)
     node_rewards_dict = Rewards.get(event_id)
 
     rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
