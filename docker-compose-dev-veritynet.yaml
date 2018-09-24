@@ -16,7 +16,8 @@ services:
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
-      DEV_NODE_ACCOUNT_IDX: 1
+      NODE_ADDRESS: '***REMOVED***'
+      NODE_PRIVATE_KEY: '***REMOVED***'
     ports: ['81:5000']
     volumes: ['./app:/app']
     depends_on:
@@ -39,7 +40,8 @@ services:
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
-      DEV_NODE_ACCOUNT_IDX: 2
+      NODE_ADDRESS: '***REMOVED***'
+      NODE_PRIVATE_KEY: '***REMOVED***'
     ports: ['82:5000']
     volumes: ['./app:/app']
     depends_on:
@@ -62,7 +64,8 @@ services:
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
-      DEV_NODE_ACCOUNT_IDX: 3
+      NODE_ADDRESS: '***REMOVED***'
+      NODE_PRIVATE_KEY: '***REMOVED***'
     ports: ['83:5000']
     volumes: ['./app:/app']
     depends_on:
