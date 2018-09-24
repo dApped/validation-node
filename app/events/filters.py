@@ -53,7 +53,7 @@ def filter_events(w3, formatters):
             entries = filter_.get_new_entries()
             if not entries:
                 continue
-            process_entries(filter_name, event_id, entries)
+            process_entries(w3, filter_name, event_id, entries)
 
 
 def process_entries(w3, filter_name, event_id, entries):
@@ -64,7 +64,7 @@ def process_entries(w3, filter_name, event_id, entries):
     elif filter_name == ERROR_EVENT_FILTER:
         process_error_events(event_id, entries)
     elif filter_name == VALIDATION_STARTED_FILTER:
-        process_validation_start(event_id, entries)
+        process_validation_start(w3, event_id, entries)
     elif filter_name == VALIDATION_RESTARTED_FILTER:
         process_validation_round_restart(w3, event_id, entries)
     else:
@@ -85,7 +85,7 @@ def process_state_transition(event_id, entries):
     event.update()
 
 
-def process_validation_start(event_id, entries):
+def process_validation_start(w3, event_id, entries):
     entry = entries[0]
     event = events.VerityEvent.get(event_id)
 
@@ -94,7 +94,7 @@ def process_validation_start(event_id, entries):
     event.update()
 
     if not event.is_master_node:
-        rewards.validate_rewards(event_id, validation_round)
+        rewards.validate_rewards(w3, event_id, validation_round)
 
 
 def process_validation_round_restart(w3, event_id, entries):

@@ -15,6 +15,8 @@ services:
       ETH_RPC_PROVIDER: 'HTTP://host.docker.internal:8545'
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
+      NODE_ADDRESS: ${NODE_ADDRESS}
+      NODE_PRIVATE_KEY: ${NODE_PRIVATE_KEY}
       FLASK_APP: ./application.py
     ports: ['80:5000']
     volumes: ['./app:/app']

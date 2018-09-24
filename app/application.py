@@ -9,7 +9,7 @@ import common
 import scheduler
 from database import database
 from events import events
-
+from ethereum.provider import NODE_WEB3
 project_root = os.path.dirname(os.path.realpath(__file__))
 os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
 
@@ -22,6 +22,8 @@ logger = application.logger
 logging.getLogger().setLevel(logging.INFO)
 
 
+
+
 def init():
     logger.info('Validation Node Init started')
 
@@ -31,10 +33,10 @@ def init():
     event_ids = events.call_event_contract_for_event_ids()
     logger.info('Event ids %s', event_ids)
 
-    node_id = events.read_node_id()
+    node_id = events.read_node_id(NODE_WEB3)
     contract_abi = common.verity_event_contract_abi()
     for event_id in event_ids:
-        events.init_event(contract_abi, node_id, event_id)
+        events.init_event(NODE_WEB3, contract_abi, node_id, event_id)
 
     logger.info('Validation Node Init done')
 
@@ -84,13 +86,6 @@ def ip_whitelist():
 def hello():
     application.logger.debug('Root resource requested' + str(datetime.utcnow()))
     return "Nothing to see here, verity dev", 200
-
-
-@application.route('/events', methods=['GET'])
-@return_json
-def get_events():
-    logger.info('GET /events')
-    return events.get_all()
 
 
 @application.route('/vote', methods=['POST'])
