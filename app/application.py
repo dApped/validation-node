@@ -1,4 +1,3 @@
-import functools
 import logging
 import os
 from datetime import datetime
@@ -9,7 +8,7 @@ import common
 import scheduler
 from database import database
 from ethereum.provider import NODE_WEB3
-from events import events
+from events import event_registry_filter, events
 
 project_root = os.path.dirname(os.path.realpath(__file__))
 os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
@@ -25,18 +24,13 @@ logging.getLogger().setLevel(logging.INFO)
 
 def init():
     logger.info('Validation Node Init started')
-
     database.flush_database()
+    event_registry_abi = common.event_registry_contract_abi()
+    verity_event_abi = common.verity_event_contract_abi()
+    event_registry_address = common.event_registry_address()
+    event_registry_filter.init_event_registry_filter(NODE_WEB3, event_registry_abi,
+                                                     verity_event_abi, event_registry_address)
     scheduler.init()
-
-    event_ids = events.call_event_contract_for_event_ids()
-    logger.info('Event ids %s', event_ids)
-
-    node_id = NODE_WEB3.eth.defaultAccount
-    contract_abi = common.verity_event_contract_abi()
-    for event_id in event_ids:
-        events.init_event(NODE_WEB3, contract_abi, node_id, event_id)
-
     logger.info('Validation Node Init done')
 
 

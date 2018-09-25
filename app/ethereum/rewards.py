@@ -3,22 +3,21 @@ import logging
 import common
 from database import events as database_events
 from database.events import Rewards, VerityEvent
-from ethereum.provider import EthProvider
+from ethereum.provider import NODE_WEB3
 
 logger = logging.getLogger('flask.app')
 
 
 def determine_rewards(event_id, consensus_votes):
-    w3 = EthProvider().web3()
-
-    event_instance = VerityEvent.instance(w3, event_id)
-    w3.eth.defaultAccount = w3.eth.accounts[0]
+    event_instance = VerityEvent.instance(NODE_WEB3, event_id)
     [total_ether_balance, total_token_balance] = event_instance.functions.getBalance().call()
 
     in_consensus_votes_num = len(consensus_votes)
 
-    user_ether_reward_in_wei = int(w3.toWei(total_ether_balance, 'ether') / in_consensus_votes_num)
-    user_token_reward_in_wei = int(w3.toWei(total_token_balance, 'ether') / in_consensus_votes_num)
+    user_ether_reward_in_wei = int(
+        NODE_WEB3.toWei(total_ether_balance, 'ether') / in_consensus_votes_num)
+    user_token_reward_in_wei = int(
+        NODE_WEB3.toWei(total_token_balance, 'ether') / in_consensus_votes_num)
 
     rewards_dict = {
         vote.user_id: database_events.Rewards.reward_dict(
