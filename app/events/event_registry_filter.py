@@ -1,3 +1,4 @@
+import os
 import logging
 
 from database import events as database_events
@@ -18,6 +19,7 @@ def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     node_ids = contract_instance.functions.getEventResolvers().call()
     node_ids = set(node_ids)
+    print(node_id, node_ids)
     return node_id in node_ids
 
 
@@ -52,7 +54,7 @@ def call_event_contract_for_metadata(w3, contract_abi, event_id):
 
 
 def init_event(w3, contract_abi, event_id):
-    node_id = w3.eth.defaultAccount
+    node_id = os.getenv('NODE_ADDRESS')
     if not is_node_registered_on_event(w3, contract_abi, node_id, event_id):
         logger.info('Node %s is not included in %s event', node_id, event_id)
         return
