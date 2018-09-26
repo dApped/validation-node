@@ -15,7 +15,8 @@ class EthProvider:
         w3 = Web3(HTTPProvider(self.ETH_RPC_PROVIDER))
         try:
             # TODO should probably have encrypted private key with passphrase here
-            node_address = Account.privateKeyToAccount(os.getenv('NODE_PRIVATE_KEY'))
+            node_address = Web3.toChecksumAddress(
+                Account.privateKeyToAccount(os.getenv('NODE_PRIVATE_KEY')))
             w3.eth.defaultAccount = node_address.address
             w3.personal.unlockAccount(w3.eth.defaultAccount, os.getenv('PRIVATE_KEY_PASSWORD'))
             logger.debug('MY ETH ACCOUNT %s' % w3.eth.defaultAccount)
