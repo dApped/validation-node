@@ -60,7 +60,6 @@ def vote(json_data, ip_address):
         return user_error_response
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
-        #logger.info("VOTE NOT VALID BUT CONTINUE ANYWAY")
         return response
 
     logger.info("Valid vote")
