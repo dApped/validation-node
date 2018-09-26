@@ -50,6 +50,7 @@ def vote(json_data, ip_address):
     user_id = data['user_id']
     event = database_events.VerityEvent.get(event_id)
     if not event:
+        logger.info('NO EVENT')
         return user_error_response
 
     event_metadata = event.metadata()
@@ -60,7 +61,7 @@ def vote(json_data, ip_address):
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
         logger.info("VOTE NOT VALID BUT CONTINUE ANYWAY")
-        return response
+        #return response
 
     logger.info("Valid vote")
     database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).create()

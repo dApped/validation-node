@@ -12,7 +12,8 @@ services:
       - application
     environment:
       REDIS_URL: 'redis1'
-      ETH_RPC_PROVIDER: 'HTTP://host.docker.internal:8545'
+      ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
+      #'HTTP://host.docker.internal:8545'
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
@@ -36,7 +37,8 @@ services:
       - application
     environment:
       REDIS_URL: 'redis2'
-      ETH_RPC_PROVIDER: 'HTTP://host.docker.internal:8545'
+      ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
+      #'HTTP://host.docker.internal:8545'
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
@@ -60,7 +62,8 @@ services:
       - application
     environment:
       REDIS_URL: 'redis3'
-      ETH_RPC_PROVIDER: 'HTTP://host.docker.internal:8545'
+      ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
+      #'HTTP://host.docker.internal:8545'
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
