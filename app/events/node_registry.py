@@ -2,9 +2,9 @@ import logging
 import os
 import time
 
+import common
 from database import database
 from ethereum.provider import NODE_WEB3
-import common
 
 logger = logging.getLogger('flask.app')
 
