@@ -3,8 +3,7 @@ import time
 from collections import defaultdict
 
 import scheduler
-from database import events as database_events
-from database import votes as database_votes
+from database import database
 from ethereum import rewards
 from ethereum.provider import NODE_WEB3
 
@@ -24,7 +23,7 @@ def _is_vote_valid(timestamp, user_id, event):
         return False, user_error_response
 
     # 2. Check user has registered for event
-    user_registered = database_events.Participants.exists(event.event_id, user_id)
+    user_registered = database.Participants.exists(event.event_id, user_id)
     if not user_registered:
         logger.info("User %s is not registered %s", user_id, event.event_id)
         return False, user_error_response
@@ -48,7 +47,7 @@ def vote(json_data, ip_address):
     data = json_data['data']
     event_id = data['event_id']
     user_id = data['user_id']
-    event = database_events.VerityEvent.get(event_id)
+    event = database.VerityEvent.get(event_id)
     if not event:
         return user_error_response
 
@@ -63,7 +62,7 @@ def vote(json_data, ip_address):
         return response
 
     logger.info("Valid vote")
-    database_votes.Vote(user_id, event_id, current_timestamp, data['answers']).create()
+    database.Vote(user_id, event_id, current_timestamp, data['answers']).create()
     event_votes = event.votes()
     # check if consensus reached
     vote_count = len(event_votes)
