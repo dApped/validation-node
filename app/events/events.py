@@ -49,7 +49,7 @@ def vote(json_data, ip_address):
     user_id = data['user_id']
     event = database.VerityEvent.get(event_id)
     if not event:
-        logger.info('NO EVENT')
+        logger.info('Event %s not found', event_id)
         return user_error_response
 
     event_metadata = event.metadata()

@@ -30,21 +30,15 @@ def set_consensus_rewards(w3, event_id):
     logger.info('Started setting rewards for %s', event_id)
     user_ids, eth_rewards, token_rewards = database.Rewards.get_lists(event_id)
     contract_abi = common.verity_event_contract_abi()
-
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
-
     set_rewards_fun = contract_instance.functions.setRewards(user_ids, eth_rewards, token_rewards)
-
     common.function_transact(w3, set_rewards_fun)
-
     logger.info('Finished setting rewards for %s', event_id)
-
     mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards)
 
 
 def mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards):
     logger.info('Started marking rewards for %s', event_id)
-
     rewards_hash = database.Rewards.hash(user_ids, eth_rewards, token_rewards)
     mark_rewards_set_fun = contract_instance.functions.markRewardsSet(rewards_hash)
     common.function_transact(w3, mark_rewards_set_fun)
@@ -54,7 +48,6 @@ def mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, tok
 def validate_rewards(w3, event_id, validation_round):
     event_contract_abi = common.verity_event_contract_abi()
     event_contract = w3.eth.contract(address=event_id, abi=event_contract_abi)
-
     contract_reward_user_ids = event_contract.functions.getRewardsIndex().call()
     # TODO should batch calls to getRewards if a lot of users due to gas limit
     (contract_reward_ether,
@@ -63,7 +56,6 @@ def validate_rewards(w3, event_id, validation_round):
     contract_rewards_dict = database.Rewards.transform_lists_to_dict(
         contract_reward_user_ids, contract_reward_ether, contract_reward_token)
     node_rewards_dict = database.Rewards.get(event_id)
-
     rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
     if rewards_match:
         logger.info('Rewards match for event %s. Approving rewards for round %d', event_id,
@@ -73,8 +65,8 @@ def validate_rewards(w3, event_id, validation_round):
     else:
         logger.info('Rewards DO NOT match for event %s. Rejecting rewards for round %d', event_id,
                     validation_round)
-
-        alt_hash = database.Rewards.hash(database.Rewards.transform_dict_to_lists(node_rewards_dict))
+        alt_hash = database.Rewards.hash(
+            database.Rewards.transform_dict_to_lists(node_rewards_dict))
         reject_fun = event_contract.functions.rejectRewards(validation_round, alt_hash)
         common.function_transact(w3, reject_fun)
 
