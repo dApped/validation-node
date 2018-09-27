@@ -33,11 +33,8 @@ def init():
 
 
 def create_app():
-    #from pathlib import Path
-    #env_path = Path('..') / '.env'
     load_dotenv(dotenv_path='.env')
 
-    #import ipdb; ipdb.set_trace()
     project_root = os.path.dirname(os.path.realpath(__file__))
     os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
 
