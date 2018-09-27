@@ -12,9 +12,9 @@ BEFORE_EVENT_START = 60 * 10  # 10 minutes
 
 def register_node_ip(node_registry_abi, node_registry_address, node_ip):
     node_addresses = [os.getenv('NODE_ADDRESS')]
-    registered_ips = get_node_ips(node_registry_abi, node_registry_address, node_addresses)
+    node_ips = get_node_ips(node_registry_abi, node_registry_address, node_addresses)
 
-    if node_ip != registered_ips[0]:
+    if not node_ips or node_ip != node_ips[0]:
         logger.info('Registering Node IP: %s', node_ip)
         contract_instance = NODE_WEB3.eth.contract(
             address=node_registry_address, abi=node_registry_abi)
@@ -28,6 +28,8 @@ def get_node_ips(node_registry_abi, node_registry_address, node_addresses):
     node_ips = []
     for node_address in node_addresses:
         node_ip = contract_instance.functions.nodeIp(node_address).call()
+        if not node_ip:
+            continue
         node_ips.append(node_ip)
     return node_ips
 
