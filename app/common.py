@@ -19,10 +19,7 @@ def event_registry_contract_abi():
 
 
 def event_registry_address():
-    f = open(os.path.join(os.path.join(os.getenv('DATA_DIR'), 'contract_addresses.pkl')), 'rb')
-    contract_addresses = pickle.load(f)
-    # TODO read from environment, this is ropsten
-    return Web3.toChecksumAddress('0x9718274d370b8bc15f08d7cf675df21a02848692')
+    return Web3.toChecksumAddress(os.getenv('EVENT_REGISTRY_ADDRESS'))
 
 
 def function_transact(w3, contract_function):
