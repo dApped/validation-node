@@ -2,36 +2,51 @@ import logging
 import os
 from datetime import datetime
 
+from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, request
 
 import common
 import scheduler
 from database import database
 from ethereum.provider import NODE_WEB3
-from events import event_registry_filter, events
-
-project_root = os.path.dirname(os.path.realpath(__file__))
-os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
+from events import event_registry_filter, events, node_registry
 
 # ------------------------------------------------------------------------------
 # Flask Setup ------------------------------------------------------------------
 
-# EB looks for an 'application' callable by default.
-application = Flask(__name__)
-logger = application.logger
-logging.getLogger().setLevel(logging.INFO)
-
 
 def init():
-    logger.info('Validation Node Init started')
     database.flush_database()
     event_registry_abi = common.event_registry_contract_abi()
     verity_event_abi = common.verity_event_contract_abi()
+    node_registry_abi = common.node_registry_contract_abi()
+
+    node_address = common.node_registry_address()
     event_registry_address = common.event_registry_address()
+
+    node_ip = common.public_ip()
+
+    node_registry.register_node_ip(node_registry_abi, node_address, node_ip)
     event_registry_filter.init_event_registry_filter(NODE_WEB3, event_registry_abi,
                                                      verity_event_abi, event_registry_address)
     scheduler.init()
-    logger.info('Validation Node Init done')
+
+
+def create_app():
+    load_dotenv(dotenv_path='.env')
+
+    project_root = os.path.dirname(os.path.realpath(__file__))
+    os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
+
+    app = Flask(__name__)
+    app.logger.setLevel(logging.INFO)
+
+    init()
+    return app
+
+
+application = create_app()
+logger = application.logger
 
 
 @application.before_request
@@ -81,6 +96,5 @@ def vote():
     return jsonify(response), response['status']
 
 
-init()  # if init in main it does not get executed by gunicorn
 if __name__ == '__main__':
     application.run(debug=os.getenv('FLASK_DEBUG'))
