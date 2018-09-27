@@ -1,7 +1,7 @@
-import os
 import logging
+import os
 
-from database import events as database_events
+from database import database
 from events import verity_event_filters
 
 logger = logging.getLogger('flask.app')
@@ -44,12 +44,12 @@ def call_event_contract_for_metadata(w3, contract_abi, event_id):
     (min_total_votes, min_consensus_votes, min_consensus_ratio, min_participant_ratio,
      max_participants, rewards_distribution_function) = consensus_rules
     validation_round = contract_instance.functions.rewardsValidationRound().call()
-    event = database_events.VerityEvent(
-        event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
-        application_start_time, application_end_time, event_start_time, event_end_time, event_name,
-        data_feed_hash, state, is_master_node, min_total_votes, min_consensus_votes,
-        min_consensus_ratio, min_participant_ratio, max_participants, rewards_distribution_function,
-        validation_round)
+    event = database.VerityEvent(event_id, owner, token_address, node_addresses,
+                                 leftovers_recoverable_after, application_start_time,
+                                 application_end_time, event_start_time, event_end_time, event_name,
+                                 data_feed_hash, state, is_master_node, min_total_votes,
+                                 min_consensus_votes, min_consensus_ratio, min_participant_ratio,
+                                 max_participants, rewards_distribution_function, validation_round)
     return event
 
 
@@ -72,16 +72,15 @@ def init_event_registry_filter(w3, event_registry_abi, verity_event_abi, event_r
     contract_instance = w3.eth.contract(address=event_registry_address, abi=event_registry_abi)
     filter_ = contract_instance.events[NEW_VERITY_EVENT].createFilter(
         fromBlock='earliest', toBlock='latest')
-    database_events.Filters.create(event_registry_address, filter_.filter_id)
-    logger.info('Requesting all entries for %s on %s', NEW_VERITY_EVENT,
-                event_registry_address)
+    database.Filters.create(event_registry_address, filter_.filter_id)
+    logger.info('Requesting all entries for %s on %s', NEW_VERITY_EVENT, event_registry_address)
     entries = filter_.get_all_entries()
     process_new_verity_events(w3, verity_event_abi, entries)
 
 
 def filter_event_registry(w3, event_registry_address, verity_event_abi, formatters):
     '''filter_event_registry runs in a cron job and checks for new events'''
-    filter_id = database_events.Filters.get_list(event_registry_address)[0]
+    filter_id = database.Filters.get_list(event_registry_address)[0]
     filter_ = w3.eth.filter(filter_id=filter_id)
     filter_.log_entry_formatter = formatters[NEW_VERITY_EVENT]
     entries = filter_.get_new_entries()
