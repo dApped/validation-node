@@ -5,7 +5,7 @@ import time
 from web3.utils.contracts import find_matching_event_abi
 from web3.utils.events import get_event_data
 
-from database import events as database_events
+from database import database
 from ethereum import rewards
 
 logger = logging.getLogger('flask.app')
@@ -14,11 +14,11 @@ logger = logging.getLogger('flask.app')
 def process_join_events(_, event_id, entries):
     logger.info('Adding %d %s entries for %s event', len(entries), JOIN_EVENT_FILTER, event_id)
     participants = [entry['args']['wallet'] for entry in entries]
-    database_events.Participants.create(event_id, participants)
+    database.Participants.create(event_id, participants)
 
 
 def process_state_transition(_, event_id, entries):
-    event = database_events.VerityEvent.get(event_id)
+    event = database.VerityEvent.get(event_id)
     entry = entries[0]
     event.state = entry['args']['newState']
     logger.info('Event %s state transition detected. New state %d', event_id, event.state)
@@ -27,7 +27,7 @@ def process_state_transition(_, event_id, entries):
 
 def process_validation_start(w3, event_id, entries):
     entry = entries[0]
-    event = database_events.VerityEvent.get(event_id)
+    event = database.VerityEvent.get(event_id)
 
     validation_round = entry['args']['validationRound']
     event.rewards_validation_round = validation_round
@@ -39,7 +39,7 @@ def process_validation_start(w3, event_id, entries):
 
 def process_validation_restart(w3, event_id, entries):
     entry = entries[0]
-    event = database_events.VerityEvent.get(event_id)
+    event = database.VerityEvent.get(event_id)
 
     validation_round = entry['args']['validationRound']
     # validation round starts from 1, instead of 0
@@ -87,7 +87,7 @@ def should_apply_filter(filter_name, event_id):
         return True
 
     current_timestamp = int(time.time())
-    event = database_events.VerityEvent.get(event_id)
+    event = database.VerityEvent.get(event_id)
     if (filter_name == JOIN_EVENT_FILTER
             and event.application_start_time >= current_timestamp <= event.event_start_time):
         # JoinEvent is used till event_start_time so that we capture all participants
@@ -104,7 +104,7 @@ def init_event_filters(w3, contract_abi, event_id):
         logger.info('Initializing %s filter for %s event', filter_name, event_id)
         filter_ = contract_instance.events[filter_name].createFilter(
             fromBlock='earliest', toBlock='latest')
-        database_events.Filters.create(event_id, filter_.filter_id)
+        database.Filters.create(event_id, filter_.filter_id)
         logger.info('Requesting all entries for %s on %s', filter_name, event_id)
         entries = filter_.get_all_entries()
         if not entries:
@@ -114,9 +114,9 @@ def init_event_filters(w3, contract_abi, event_id):
 
 def filter_events(w3, formatters):
     '''filter_events runs in a cron job and requests new entries for all events'''
-    event_ids = database_events.VerityEvent.get_ids_list()
+    event_ids = database.VerityEvent.get_ids_list()
     for event_id in event_ids:
-        filter_ids = database_events.Filters.get_list(event_id)
+        filter_ids = database.Filters.get_list(event_id)
         for (filter_name, filter_func), filter_id in zip(EVENT_FILTERS, filter_ids):
             if not should_apply_filter(filter_name, event_id):
                 continue
