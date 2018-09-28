@@ -2,6 +2,7 @@ import logging
 import os
 import time
 
+import common
 from database import database
 from ethereum.provider import NODE_WEB3
 
@@ -18,7 +19,8 @@ def register_node_ip(node_registry_abi, node_registry_address, node_ip):
         logger.info('Registering Node IP: %s', node_ip)
         contract_instance = NODE_WEB3.eth.contract(
             address=node_registry_address, abi=node_registry_abi)
-        trx = contract_instance.functions.registerNodeIp(node_ip).transact()
+        register_node_ip_fun = contract_instance.functions.registerNodeIp(node_ip)
+        trx = common.function_transact(NODE_WEB3, register_node_ip_fun)
         NODE_WEB3.eth.waitForTransactionReceipt(trx)
     logger.info('Node IP: %s', node_ip)
 

@@ -27,7 +27,7 @@ def call_event_contract_for_metadata(w3, contract_abi, event_id):
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
 
     state = contract_instance.functions.getState().call()
-    if state > 2:  # TODO: Change this to 1
+    if state > 1:
         logger.info('Skipping event %s with state: %d. It is not in waiting or application state',
                     event_id, state)
         return None
