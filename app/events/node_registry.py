@@ -25,11 +25,11 @@ def register_node_ip(node_registry_abi, node_registry_address, node_ip):
     logger.info('Node IP: %s', node_ip)
 
 
-def get_node_ips(node_registry_abi, node_registry_address, node_addresses):
+def get_node_ips(node_registry_abi, node_registry_address, node_ids):
     contract_instance = NODE_WEB3.eth.contract(address=node_registry_address, abi=node_registry_abi)
     node_ips = []
-    for node_address in node_addresses:
-        node_ip = contract_instance.functions.nodeIp(node_address).call()
+    for node_id in node_ids:
+        node_ip = contract_instance.functions.nodeIp(node_id).call()
         if not node_ip:
             continue
         node_ips.append(node_ip)
