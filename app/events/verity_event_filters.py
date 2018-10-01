@@ -122,7 +122,12 @@ def filter_events(w3, formatters):
                 continue
             filter_ = w3.eth.filter(filter_id=filter_id)
             filter_.log_entry_formatter = formatters[filter_name]
-            entries = filter_.get_new_entries()
+            try:
+                entries = filter_.get_new_entries()
+            except Exception as e:
+                # TODO remove this when bug is fixed
+                logger.error(event_id, filter_name)
+                logger.exception(e)
             if not entries:
                 continue
             filter_func(w3, event_id, entries)
