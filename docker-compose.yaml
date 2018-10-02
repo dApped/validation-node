@@ -2,7 +2,6 @@ version: "3"
 services:
   redis:
     image: redis:4.0.11
-    #ports: ['6379:6379']
   node:
     build: ./app
     entrypoint:
@@ -15,14 +14,14 @@ services:
       ETH_RPC_PROVIDER: 'HTTP://host.docker.internal:8545'
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
+      FLASK_APP: ./application.py
       NODE_ADDRESS: ${NODE_ADDRESS}
       NODE_PRIVATE_KEY: ${NODE_PRIVATE_KEY}
-      FLASK_APP: ./application.py
+      EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
+      NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
     ports: ['80:5000']
     volumes: ['./app:/app']
     depends_on:
       - redis
-    #  - ganache
     links:
       - redis
-    #  - ganache

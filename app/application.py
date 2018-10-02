@@ -36,7 +36,7 @@ def create_app():
     load_dotenv(dotenv_path='.env')
 
     project_root = os.path.dirname(os.path.realpath(__file__))
-    os.environ['DATA_DIR'] = os.path.join(project_root, 'data')
+    os.environ['CONTRACT_DIR'] = os.path.join(project_root, 'contracts')
 
     app = Flask(__name__)
     app.logger.setLevel(logging.INFO)
