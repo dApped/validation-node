@@ -118,7 +118,7 @@ def receive_vote(event_id, node_id, user_id, vote_json):
 
     # TODO check if vote from node_id already exists
     try:
-        database.Vote.from_json(vote_json)
+        database.Vote.from_json(vote_json).create()
     except Exception as e:
         logger.exception(e)
         return "Vote has improper formatting"
