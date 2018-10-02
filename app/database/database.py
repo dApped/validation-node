@@ -79,7 +79,10 @@ class VerityEvent(BaseEvent):
         self.rewards_distribution_function = rewards_distribution_function
         self.rewards_validation_round = rewards_validation_round
 
-    def votes(self, node_id):
+    def votes(self):
+        return {node_id: self.votes_from_node_id(node_id) for node_id in self.node_addresses}
+
+    def votes_from_node_id(self, node_id):
         return Vote.get_list(self.event_id, node_id)
 
     def votes_json(self, node_id):
@@ -244,6 +247,7 @@ class Rewards(BaseEvent):
 
 class Vote(BaseEvent):
     PREFIX = 'votes'
+    PREFIX_COMMON = 'votes_common'  # TODO delete this prefix when deleting event
     ANSWERS_SORT_KEY = 'field_name'
 
     def __init__(self, user_id, event_id, node_id, timestamp, answers, _ordered_answers=None):
@@ -258,9 +262,18 @@ class Vote(BaseEvent):
     def key(cls, event_id, node_id):
         return '%s_%s_%s' % (cls.PREFIX, event_id, node_id)
 
+    @classmethod
+    def key_common(cls, event_id):
+        return '%s_%s' % (cls.PREFIX_COMMON, event_id)
+
     def create(self):
         redis_db.rpush(self.key(self.event_id, self.node_id), self.to_json())
+        redis_db.sadd(self.key_common(self.event_id), self.user_id)
         return self
+
+    @classmethod
+    def count(cls, event_id):
+        return redis_db.scard(cls.key_common(event_id))
 
     def ordered_answers(self):
         if self._ordered_answers is not None:
