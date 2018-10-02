@@ -105,7 +105,7 @@ def send_vote(event_id, node_id, vote):
     for node_ip in metadata.node_ips:
         # TODO don't send votes to yourself
         logger.info('Sending vote from %s user to %s node for %s event', user_id, node_ip, event_id)
-        url = 'http://%s:%d/%s' % (node_ip, 5000, 'receive_vote')
+        url = 'http://%s/%s' % (node_ip, 'receive_vote')
         # TODO watch for timeouts
         requests.post(url, json=json_payload)
 

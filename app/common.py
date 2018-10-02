@@ -56,6 +56,4 @@ def function_transact(w3, contract_function):
 
 
 def public_ip():
-    # TODO enable public ip
-    # return requests.get('https://ip.42.pl/raw').text
-    return 'localhost'
+    return '%s:%s' % (os.getenv('NODE_IP'), os.getenv('NODE_PORT'))

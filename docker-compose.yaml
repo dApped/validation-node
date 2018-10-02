@@ -19,6 +19,8 @@ services:
       NODE_PRIVATE_KEY: ${NODE_PRIVATE_KEY}
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
+      NODE_IP: ${NODE_IP}
+      NODE_PORT: ${NODE_PORT}
     ports: ['80:5000']
     volumes: ['./app:/app']
     depends_on:
