@@ -23,13 +23,13 @@ def _is_vote_valid(timestamp, user_id, event):
     # TODO check request data format, maybe use schema validator
 
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
-        logger.info("Voting is not active %s", event.event_id)
+        logger.info('Voting is not active %s', event.event_id)
         return False, user_error_response
 
     # 2. Check user has registered for event
     user_registered = database.Participants.exists(event.event_id, user_id)
     if not user_registered:
-        logger.info("User %s is not registered %s", user_id, event.event_id)
+        logger.info('User %s is not registered %s', user_id, event.event_id)
         return False, user_error_response
     return True, success_response
 
@@ -59,13 +59,13 @@ def vote(json_data, ip_address):
     event_metadata = event.metadata()
     # consensus already reached, no more voting possible
     if event_metadata.is_consensus_reached:
-        logger.info("Consensus already reached, no more voting")
+        logger.info('Consensus already reached, no more voting')
         return user_error_response
     valid_vote, response = _is_vote_valid(current_timestamp, user_id, event)
     if not valid_vote:
         return response
 
-    logger.info("Valid vote")
+    logger.info('Valid vote')
     node_id = os.getenv('NODE_ADDRESS')
     vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'])
     vote.create()
@@ -81,7 +81,7 @@ def vote(json_data, ip_address):
     # if vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio:
     #     consensus_reached, consensus_votes = check_consensus(event, event_votes)
     #     if consensus_reached:
-    #         logger.info("Consensus reached")
+    #         logger.info('Consensus reached')
     #         event_metadata.is_consensus_reached = consensus_reached
     #         event_metadata.update()
 
@@ -90,7 +90,7 @@ def vote(json_data, ip_address):
     #             scheduler.scheduler.add_job(
     #                 rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
     #         else:
-    #             logger.info("Not master node..waiting for rewards to be set")
+    #             logger.info('Not master node..waiting for rewards to be set')
 
 
 def send_vote(event_id, node_id, vote):
@@ -100,7 +100,7 @@ def send_vote(event_id, node_id, vote):
 
     user_id = vote.user_id
     vote_json = vote.to_json()
-    json_payload = {'event_id': event_id, 'node_id': node_id, 'user_id': user_id, 'vote': vote_json}
+    json_payload = {'vote': vote_json}
 
     for node_ip in metadata.node_ips:
         # TODO don't send votes to yourself
@@ -110,20 +110,23 @@ def send_vote(event_id, node_id, vote):
         requests.post(url, json=json_payload)
 
 
-def receive_vote(event_id, node_id, user_id, vote_json):
+def receive_vote(vote_json):
     # TODO replace this with websocket
-    event = database.VerityEvent.get(event_id)
-    if event is None:
-        return "Event not found"
 
-    # TODO check if vote from node_id already exists
     try:
-        database.Vote.from_json(vote_json).create()
+        vote = database.Vote.from_json(vote_json)
     except Exception as e:
         logger.exception(e)
-        return "Vote has improper formatting"
-    logger.info("Stored vote from %s user for %s event from %s node", user_id, event_id, node_id)
-    return "OK"
+        return 'Vote has improper formatting'
+
+    event = database.VerityEvent.get(vote.event_id)
+    if event is None:
+        return 'Event not found'
+
+    vote.create()
+    logger.info('Stored vote from %s user for %s event from %s node', vote.user_id, vote.event_id,
+                vote.node_id)
+    return 'OK'
 
 
 def check_consensus(event, votes):
