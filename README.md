@@ -114,6 +114,8 @@ or
 ```bash
 docker run -d -p 6379:6379 redis
 ```
+Because `env` file is configured for docker use, add `127.0.0.1 host.docker.internal` in `etc/hosts`.
+
 Then run `python app/application.py` and app is exposed at Flask's default port `5000` 
 
 Both support live reloads, so no need to restart those commands after making code changes.
