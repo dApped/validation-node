@@ -79,8 +79,11 @@ class VerityEvent(BaseEvent):
         self.rewards_distribution_function = rewards_distribution_function
         self.rewards_validation_round = rewards_validation_round
 
-    def votes(self):
-        return Vote.get_list(self.event_id)
+    def votes(self, node_id):
+        return Vote.get_list(self.event_id, node_id)
+
+    def votes_json(self, node_id):
+        return Vote.get_list_json(self.event_id, node_id)
 
     @staticmethod
     def instance(w3, event_id):
@@ -243,15 +246,20 @@ class Vote(BaseEvent):
     PREFIX = 'votes'
     ANSWERS_SORT_KEY = 'field_name'
 
-    def __init__(self, user_id, event_id, timestamp, answers, _ordered_answers=None):
+    def __init__(self, user_id, event_id, node_id, timestamp, answers, _ordered_answers=None):
         self.user_id = user_id
         self.event_id = event_id
+        self.node_id = node_id
         self.timestamp = timestamp
         self.answers = answers
         self._ordered_answers = _ordered_answers
 
+    @classmethod
+    def key(cls, event_id, node_id):
+        return '%s_%s_%s' % (cls.PREFIX, event_id, node_id)
+
     def create(self):
-        redis_db.rpush(self.key(self.event_id), self.to_json())
+        redis_db.rpush(self.key(self.event_id, self.node_id), self.to_json())
         return self
 
     def ordered_answers(self):
@@ -264,7 +272,10 @@ class Vote(BaseEvent):
         return self._ordered_answers
 
     @classmethod
-    def get_list(cls, event_id):
-        key = cls.key(event_id)
-        event_votes = redis_db.lrange(key, 0, -1)
-        return [cls.from_json(vote) for vote in event_votes]
+    def get_list_json(cls, event_id, node_id):
+        key = cls.key(event_id, node_id)
+        return redis_db.lrange(key, 0, -1)
+
+    @classmethod
+    def get_list(cls, event_id, node_id):
+        return [cls.from_json(vote) for vote in cls.get_list_json(event_id, node_id)]

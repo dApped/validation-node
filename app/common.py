@@ -36,7 +36,7 @@ def function_transact(w3, contract_function):
     address = Web3.toChecksumAddress(account['address'])
     next_nonce = w3.eth.getTransactionCount(address)
 
-    gas_estimate = 5000000
+    gas_estimate = 4000000
     gas_price = Web3.toWei(10, 'gwei')
     transaction = {
         'from': address,
@@ -53,4 +53,6 @@ def function_transact(w3, contract_function):
 
 
 def public_ip():
-    return requests.get('https://ip.42.pl/raw').text
+    # TODO enable public ip
+    # return requests.get('https://ip.42.pl/raw').text
+    return 'localhost'

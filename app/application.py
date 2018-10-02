@@ -96,5 +96,23 @@ def vote():
     return jsonify(response), response['status']
 
 
+@application.route('/receive_vote', methods=['POST'])
+def receive_vote():
+    # TODO replace this with websocket
+    json_data = request.get_json()
+    headers = request.headers
+
+    if ('event_id' not in json_data or 'node_id' not in json_data or 'user_id' not in json_data
+            or 'vote' not in json_data):
+        return "Invalid request message", 400
+    event_id = json_data['event_id']
+    user_id = json_data['user_id']
+    node_id = json_data['node_id']
+    vote_json = json_data['vote']
+    logger.info('Received vote from %s node_id for %s event', node_id, event_id)
+    response = events.receive_vote(event_id, node_id, user_id, vote_json)
+    return jsonify(response), 200
+
+
 if __name__ == '__main__':
     application.run(debug=os.getenv('FLASK_DEBUG'))
