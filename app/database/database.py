@@ -124,7 +124,7 @@ class VerityEvent(BaseEvent):
         VerityEventMetadata.delete(pipeline, event_id)
         Participants.delete(pipeline, event_id)
         Filters.delete(pipeline, event_id)
-        Vote.delete_all(pipeline, event_id)
+        Vote.delete_all(pipeline, event_id, VerityEvent.get(event_id).node_addresses)
         Rewards.delete(pipeline, event_id)
         pipeline.execute()
 
@@ -273,8 +273,7 @@ class Vote(BaseEvent):
         return self
 
     @classmethod
-    def delete_all(cls, pipeline, event_id):
-        node_ids = VerityEvent.get(event_id).node_addresses
+    def delete_all(cls, pipeline, event_id, node_ids):
         for node_id in node_ids:
             pipeline.delete(cls.key(event_id, node_id))
         pipeline.delete(cls.key_common(event_id))
