@@ -69,12 +69,12 @@ def vote(json_data, ip_address):
     vote.create()
 
     scheduler.scheduler.add_job(send_vote, args=[event_id, node_id, vote])
-    if should_calculate_consensus(event, event_metadata):
+    if should_calculate_consensus(event):
         scheduler.scheduler.add_job(check_consensus, args=[event, event_metadata])
     return success_response
 
 
-def should_calculate_consensus(event, event_metadata):
+def should_calculate_consensus(event):
     vote_count = database.Vote.count(event.event_id)
     participant_ratio = (vote_count / len(event.participants())) * 100
     return vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio
@@ -117,41 +117,46 @@ def receive_vote(vote_json):
     vote.create()
     logger.info('Stored vote from %s user for %s event from %s node', vote.user_id, vote.event_id,
                 vote.node_id)
-    if should_calculate_consensus(event, event_metadata):
+    if should_calculate_consensus(event):
         scheduler.scheduler.add_job(check_consensus, args=[event, event_metadata])
     return success_response
 
 
 def check_consensus(event, event_metadata):
     event_id = event.event_id
-    consensus_reached, consensus_votes = calculate_consensus(event)
-    if consensus_reached:
+    votes_by_users = calculate_consensus(event)
+    if votes_by_users:
         logger.info('Consensus reached for %s event', event_id)
-        event_metadata.is_consensus_reached = consensus_reached
+        event_metadata.is_consensus_reached = True
         event_metadata.update()
 
-        rewards.determine_rewards(event_id, consensus_votes)
+        ether_balance, token_balance = event.instance(NODE_WEB3,
+                                                      event_id).functions.getBalance().call()
+        rewards.determine_rewards(event_id, votes_by_users, ether_balance, token_balance)
         if event.is_master_node:
             scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
         else:
-            logger.info('Not master node..waiting for rewards to be set')
+            logger.info('Not a master node for %s event. Waiting for rewards to be set', event_id)
 
 
 def calculate_consensus(event):
-    votes = list(event.votes().values())[0]  # TODO we need to combine votes from all nodes
-    answers_combinations = defaultdict(list)
-    for vote in votes:
-        vote_answers = vote.ordered_answers().__repr__()
-        # store in vote for when adding to consensus_votes
-        answers_combinations[vote_answers].append(vote)
+    votes_by_users = event.votes()
+    if len(votes_by_users) < event.min_total_votes:
+        logger.info('Not enough valid votes to calculate consensus')
+        return dict()
 
-    consensus_candidate = max(answers_combinations, key=lambda x: len(answers_combinations[x]))
-    cons_vote_count = len(answers_combinations[consensus_candidate])
-    consensus_ratio = cons_vote_count / len(votes)
-    if (cons_vote_count < event.min_consensus_votes
+    votes_by_repr = database.Vote.group_votes_by_representation(votes_by_users)
+    vote_repr = max(votes_by_repr, key=lambda x: len(votes_by_repr[x]))
+    consensus_user_ids = {vote.user_id for vote in votes_by_repr[vote_repr]}
+    consensus_votes_by_users = {
+        user_id: votes
+        for user_id, votes in votes_by_users.items() if user_id in consensus_user_ids
+    }
+
+    consensus_votes_count = len(consensus_votes_by_users)
+    consensus_ratio = consensus_votes_count / len(votes_by_users)
+    if (consensus_votes_count < event.min_consensus_votes
             or consensus_ratio * 100 < event.min_consensus_ratio):
-        logger.info('Not enough consensus votes!')
-        return False, []
-
-    consensus_votes = sorted(answers_combinations[consensus_candidate], key=lambda v: v.timestamp)
-    return True, consensus_votes
+        logger.info('Not enough consensus votes')
+        return dict()
+    return consensus_votes_by_users
