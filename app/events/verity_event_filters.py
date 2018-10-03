@@ -63,7 +63,7 @@ def process_error_event(_, event_id, entries):
         logger.error('event_id: %s, %s', event_id, entry)
 
 
-def process_dispite_triggered(w3, event_id, entries):
+def process_dispute_triggered(w3, event_id, entries):
     entry = entries[0]
     dispute_started_by = entry['args']['byAddress']
     logger.info('Dispute on event %s triggered by %s', event_id, dispute_started_by)
@@ -83,7 +83,7 @@ EVENT_FILTERS = [(JOIN_EVENT_FILTER, process_join_events),
                  (ERROR_FILTER, process_error_event),
                  (VALIDATION_STARTED_FILTER, process_validation_start),
                  (VALIDATION_RESTART_FILTER, process_validation_restart),
-                 (DISPUTE_TRIGGERED_FILTER, process_dispite_triggered)]
+                 (DISPUTE_TRIGGERED_FILTER, process_dispute_triggered)]
 
 
 def log_entry_formatters(contract_abi, filter_names):
