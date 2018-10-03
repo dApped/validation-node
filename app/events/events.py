@@ -77,9 +77,7 @@ def vote(json_data, ip_address):
 def should_calculate_consensus(event, event_metadata):
     vote_count = database.Vote.count(event.event_id)
     participant_ratio = (vote_count / len(event.participants())) * 100
-    if vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio:
-        return True
-    return False
+    return vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio
 
 
 def send_vote(event_id, node_id, vote):
