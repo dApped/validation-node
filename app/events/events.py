@@ -21,7 +21,6 @@ node_error_response = {'status': 500}
 
 def _is_vote_valid(timestamp, user_id, event):
     # TODO check request data format, maybe use schema validator
-
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
         logger.info('Voting is not active %s', event.event_id)
         return False, user_error_response
@@ -57,7 +56,6 @@ def vote(json_data, ip_address):
         return user_error_response
 
     event_metadata = event.metadata()
-    # consensus already reached, no more voting possible
     if event_metadata.is_consensus_reached:
         logger.info('Consensus already reached, no more voting')
         return user_error_response
@@ -69,28 +67,17 @@ def vote(json_data, ip_address):
     node_id = os.getenv('NODE_ADDRESS')
     vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'])
     vote.create()
-    # TODO check if consensus is reached
+
     scheduler.scheduler.add_job(send_vote, args=[event_id, node_id, vote])
+    if should_calculate_consensus(event, event_metadata):
+        scheduler.scheduler.add_job(check_consensus, args=[event, event_metadata])
     return success_response
 
-    # event_votes = event.votes(node_id)
 
-    # # check if consensus reached
-    # vote_count = len(event_votes)
-    # participant_ratio = (vote_count / len(event.participants())) * 100
-    # if vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio:
-    #     consensus_reached, consensus_votes = check_consensus(event, event_votes)
-    #     if consensus_reached:
-    #         logger.info('Consensus reached')
-    #         event_metadata.is_consensus_reached = consensus_reached
-    #         event_metadata.update()
-
-    #         rewards.determine_rewards(event_id, consensus_votes)
-    #         if event.is_master_node:
-    #             scheduler.scheduler.add_job(
-    #                 rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
-    #         else:
-    #             logger.info('Not master node..waiting for rewards to be set')
+def should_calculate_consensus(event, event_metadata):
+    vote_count = database.Vote.count(event.event_id)
+    participant_ratio = (vote_count / len(event.participants())) * 100
+    return vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio
 
 
 def send_vote(event_id, node_id, vote):
@@ -112,7 +99,6 @@ def send_vote(event_id, node_id, vote):
 
 def receive_vote(vote_json):
     # TODO replace this with websocket
-
     try:
         vote = database.Vote.from_json(vote_json)
     except Exception as e:
@@ -121,15 +107,38 @@ def receive_vote(vote_json):
 
     event = database.VerityEvent.get(vote.event_id)
     if event is None:
-        return 'Event not found'
+        return user_error_response
+
+    event_metadata = event.metadata()
+    if event_metadata.is_consensus_reached:
+        logger.info('Consensus already reached, no more voting')
+        return user_error_response
 
     vote.create()
     logger.info('Stored vote from %s user for %s event from %s node', vote.user_id, vote.event_id,
                 vote.node_id)
-    return 'OK'
+    if should_calculate_consensus(event, event_metadata):
+        scheduler.scheduler.add_job(check_consensus, args=[event, event_metadata])
+    return success_response
 
 
-def check_consensus(event, votes):
+def check_consensus(event, event_metadata):
+    event_id = event.event_id
+    consensus_reached, consensus_votes = calculate_consensus(event)
+    if consensus_reached:
+        logger.info('Consensus reached for %s event', event_id)
+        event_metadata.is_consensus_reached = consensus_reached
+        event_metadata.update()
+
+        rewards.determine_rewards(event_id, consensus_votes)
+        if event.is_master_node:
+            scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
+        else:
+            logger.info('Not master node..waiting for rewards to be set')
+
+
+def calculate_consensus(event):
+    votes = list(event.votes().values())[0]  # TODO we need to combine votes from all nodes
     answers_combinations = defaultdict(list)
     for vote in votes:
         vote_answers = vote.ordered_answers().__repr__()
