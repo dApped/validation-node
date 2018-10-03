@@ -124,6 +124,7 @@ class VerityEvent(BaseEvent):
         VerityEventMetadata.delete(pipeline, event_id)
         Participants.delete(pipeline, event_id)
         Filters.delete(pipeline, event_id)
+        Vote.delete_all(pipeline, event_id)
         Rewards.delete(pipeline, event_id)
         pipeline.execute()
 
@@ -247,7 +248,7 @@ class Rewards(BaseEvent):
 
 class Vote(BaseEvent):
     PREFIX = 'votes'
-    PREFIX_COMMON = 'votes_common'  # TODO delete this prefix when deleting event
+    PREFIX_COMMON = 'votes_common'
     ANSWERS_SORT_KEY = 'field_name'
 
     def __init__(self, user_id, event_id, node_id, timestamp, answers, _ordered_answers=None):
@@ -270,6 +271,13 @@ class Vote(BaseEvent):
         redis_db.rpush(self.key(self.event_id, self.node_id), self.to_json())
         redis_db.sadd(self.key_common(self.event_id), self.user_id)
         return self
+
+    @classmethod
+    def delete_all(cls, pipeline, event_id):
+        node_ids = VerityEvent.get(event_id).node_addresses
+        for node_id in node_ids:
+            pipeline.delete(cls.key(event_id, node_id))
+        pipeline.delete(cls.key_common(event_id))
 
     @classmethod
     def count(cls, event_id):
