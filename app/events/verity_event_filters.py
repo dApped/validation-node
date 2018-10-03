@@ -5,8 +5,11 @@ import time
 from web3.utils.contracts import find_matching_event_abi
 from web3.utils.events import get_event_data
 
+import common
 from database import database
+from database.database import VerityEvent
 from ethereum import rewards
+from events import event_registry_filter
 
 logger = logging.getLogger('flask.app')
 
@@ -60,17 +63,27 @@ def process_error_event(_, event_id, entries):
         logger.error('event_id: %s, %s', event_id, entry)
 
 
+def process_dispite_triggered(w3, event_id, entries):
+    entry = entries[0]
+    dispute_started_by = entry['args']['byAddress']
+    logger.info('Dispute on event %s triggered by %s', event_id, dispute_started_by)
+    VerityEvent.delete_all_event_data(w3, event_id)
+    event_registry_filter.init_event(w3, common.verity_event_contract_abi(), event_id)
+
+
 STATE_TRANSITION_FILTER = 'StateTransition'
 JOIN_EVENT_FILTER = 'JoinEvent'
 ERROR_FILTER = 'Error'
 VALIDATION_STARTED_FILTER = 'ValidationStarted'
 VALIDATION_RESTART_FILTER = 'ValidationRestart'
+DISPUTE_TRIGGERED_FILTER = 'DisputeTriggered'
 
 EVENT_FILTERS = [(JOIN_EVENT_FILTER, process_join_events),
                  (STATE_TRANSITION_FILTER, process_state_transition),
                  (ERROR_FILTER, process_error_event),
                  (VALIDATION_STARTED_FILTER, process_validation_start),
-                 (VALIDATION_RESTART_FILTER, process_validation_restart)]
+                 (VALIDATION_RESTART_FILTER, process_validation_restart),
+                 (DISPUTE_TRIGGERED_FILTER, process_dispite_triggered)]
 
 
 def log_entry_formatters(contract_abi, filter_names):
@@ -92,7 +105,8 @@ def should_apply_filter(filter_name, event_id):
             and event.application_start_time >= current_timestamp <= event.event_start_time):
         # JoinEvent is used till event_start_time so that we capture all participants
         return True
-    if (filter_name in {VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER}
+    if (filter_name in {VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER,
+                        DISPUTE_TRIGGERED_FILTER}
             and current_timestamp >= event.event_start_time):
         return True
     return False

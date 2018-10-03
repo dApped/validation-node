@@ -115,7 +115,7 @@ class VerityEvent(BaseEvent):
         return redis_db.lrange(VerityEvent.IDS_KEY, 0, -1)
 
     @classmethod
-    def delete_event(cls, w3, event_id):
+    def delete_all_event_data(cls, w3, event_id):
         filter_ids = Filters.get_list(event_id)
 
         pipeline = redis_db.pipeline()
