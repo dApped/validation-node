@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import redis
 
@@ -80,13 +80,9 @@ class VerityEvent(BaseEvent):
         self.rewards_validation_round = rewards_validation_round
 
     def votes(self):
-        return {node_id: self.votes_from_node_id(node_id) for node_id in self.node_addresses}
-
-    def votes_from_node_id(self, node_id):
-        return Vote.get_list(self.event_id, node_id)
-
-    def votes_json(self, node_id):
-        return Vote.get_list_json(self.event_id, node_id)
+        votes_by_users = Vote.group_votes_by_users(self.event_id, self.node_addresses)
+        votes_by_users = Vote.filter_votes_by_users(votes_by_users)
+        return votes_by_users
 
     @staticmethod
     def instance(w3, event_id):
@@ -299,3 +295,37 @@ class Vote(BaseEvent):
     @classmethod
     def get_list(cls, event_id, node_id):
         return [cls.from_json(vote) for vote in cls.get_list_json(event_id, node_id)]
+
+    @classmethod
+    def group_votes_by_users(cls, event_id, node_ids):
+        votes_by_users = defaultdict(list)
+        for node_id in node_ids:
+            votes_node = cls.get_list(event_id, node_id)
+            for vote in votes_node:
+                votes_by_users[vote.user_id].append(vote)
+        return votes_by_users
+
+    @staticmethod
+    def filter_votes_by_users(votes_by_users):
+        min_votes, max_votes = 3, 3
+        user_ids = votes_by_users.keys()
+        for user_id in user_ids:
+            if min_votes > len(votes_by_users[user_id]) > max_votes:
+                # Too little or too many votes
+                del votes_by_users[user_id]
+                continue
+            if len({vote.ordered_answers().__repr__() for vote in votes_by_users[user_id]}) != 1:
+                # answers from nodes are not the same
+                del votes_by_users[user_id]
+                continue
+        return votes_by_users
+
+    @staticmethod
+    def group_votes_by_representation(votes_by_users):
+        votes_by_repr = defaultdict(list)
+        for _, votes in votes_by_users.items():
+            if not votes:
+                continue
+            vote_repr = votes[0].ordered_answers().__repr__()
+            votes_by_repr[vote_repr].extend(votes)
+        return votes_by_repr

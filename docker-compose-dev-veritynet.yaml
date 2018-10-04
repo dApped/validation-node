@@ -20,7 +20,7 @@ services:
       NODE_PRIVATE_KEY: '***REMOVED***'
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
-      NODE_IP: 'localhost'
+      NODE_IP: 'host.docker.internal'
       NODE_PORT: 81
     ports: ['81:5000']
     volumes: ['./app:/app']
@@ -48,7 +48,7 @@ services:
       NODE_PRIVATE_KEY: '***REMOVED***'
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
-      NODE_IP: 'localhost'
+      NODE_IP: 'host.docker.internal'
       NODE_PORT: 82
     ports: ['82:5000']
     volumes: ['./app:/app']
@@ -76,7 +76,7 @@ services:
       NODE_PRIVATE_KEY: '***REMOVED***'
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
-      NODE_IP: 'localhost'
+      NODE_IP: 'host.docker.internal'
       NODE_PORT: 83
     ports: ['83:5000']
     volumes: ['./app:/app']

@@ -7,21 +7,15 @@ from ethereum.provider import NODE_WEB3
 logger = logging.getLogger('flask.app')
 
 
-def determine_rewards(event_id, consensus_votes):
-    event_instance = database.VerityEvent.instance(NODE_WEB3, event_id)
-    [total_ether_balance, total_token_balance] = event_instance.functions.getBalance().call()
-
-    in_consensus_votes_num = len(consensus_votes)
-
-    user_ether_reward_in_wei = int(
-        NODE_WEB3.toWei(total_ether_balance, 'ether') / in_consensus_votes_num)
-    user_token_reward_in_wei = int(
-        NODE_WEB3.toWei(total_token_balance, 'ether') / in_consensus_votes_num)
+def determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance):
+    votes_count = len(consensus_votes_by_users)
+    user_ether_reward_in_wei = int(NODE_WEB3.toWei(ether_balance, 'ether') / votes_count)
+    user_token_reward_in_wei = int(NODE_WEB3.toWei(token_balance, 'ether') / votes_count)
 
     rewards_dict = {
-        vote.user_id: database.Rewards.reward_dict(
+        user_id: database.Rewards.reward_dict(
             eth_reward=user_ether_reward_in_wei, token_reward=user_token_reward_in_wei)
-        for vote in consensus_votes
+        for user_id in consensus_votes_by_users
     }
     database.Rewards.create(event_id, rewards_dict)
 
@@ -65,8 +59,9 @@ def validate_rewards(w3, event_id, validation_round):
     else:
         logger.info('Rewards DO NOT match for event %s. Rejecting rewards for round %d', event_id,
                     validation_round)
-        alt_hash = database.Rewards.hash(
-            database.Rewards.transform_dict_to_lists(node_rewards_dict))
+        (user_ids, eth_rewards,
+         token_rewards) = database.Rewards.transform_dict_to_lists(node_rewards_dict)
+        alt_hash = database.Rewards.hash(user_ids, eth_rewards, token_rewards)
         reject_fun = event_contract.functions.rejectRewards(validation_round, alt_hash)
         common.function_transact(w3, reject_fun)
 
