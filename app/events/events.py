@@ -75,6 +75,7 @@ def vote(json_data, ip_address):
 
 
 def should_calculate_consensus(event):
+    '''Heuristic which checks if there is a potential for consensus (assumes all votes are valid)'''
     vote_count = database.Vote.count(event.event_id)
     participant_ratio = (vote_count / len(event.participants())) * 100
     return vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio
