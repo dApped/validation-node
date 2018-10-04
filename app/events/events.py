@@ -124,15 +124,15 @@ def receive_vote(vote_json):
 
 def check_consensus(event, event_metadata):
     event_id = event.event_id
-    votes_by_users = calculate_consensus(event)
-    if votes_by_users:
+    consensus_votes_by_users = calculate_consensus(event)
+    if consensus_votes_by_users:
         logger.info('Consensus reached for %s event', event_id)
         event_metadata.is_consensus_reached = True
         event_metadata.update()
 
         ether_balance, token_balance = event.instance(NODE_WEB3,
                                                       event_id).functions.getBalance().call()
-        rewards.determine_rewards(event_id, votes_by_users, ether_balance, token_balance)
+        rewards.determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance)
         if event.is_master_node:
             scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
         else:

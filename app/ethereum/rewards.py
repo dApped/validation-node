@@ -7,15 +7,15 @@ from ethereum.provider import NODE_WEB3
 logger = logging.getLogger('flask.app')
 
 
-def determine_rewards(event_id, votes_by_users, ether_balance, token_balance):
-    votes_count = len(votes_by_users)
+def determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance):
+    votes_count = len(consensus_votes_by_users)
     user_ether_reward_in_wei = int(NODE_WEB3.toWei(ether_balance, 'ether') / votes_count)
     user_token_reward_in_wei = int(NODE_WEB3.toWei(token_balance, 'ether') / votes_count)
 
     rewards_dict = {
         user_id: database.Rewards.reward_dict(
             eth_reward=user_ether_reward_in_wei, token_reward=user_token_reward_in_wei)
-        for user_id in votes_by_users
+        for user_id in consensus_votes_by_users
     }
     database.Rewards.create(event_id, rewards_dict)
 
