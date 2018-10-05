@@ -1,11 +1,10 @@
-import json
 import logging
 import os
 import time
-from collections import defaultdict
 
 import requests
 
+import common
 import scheduler
 from database import database
 from ethereum import rewards
@@ -86,12 +85,15 @@ def send_vote(event_id, node_id, vote):
     event = database.VerityEvent.get(event_id)
     metadata = event.metadata()
 
+    current_node_ip = common.public_ip()
+
     user_id = vote.user_id
     vote_json = vote.to_json()
     json_payload = {'vote': vote_json}
 
     for node_ip in metadata.node_ips:
-        # TODO don't send votes to yourself
+        if node_ip == current_node_ip:
+            continue
         logger.info('Sending vote from %s user to %s node for %s event', user_id, node_ip, event_id)
         url = 'http://%s/%s' % (node_ip, 'receive_vote')
         # TODO watch for timeouts
@@ -143,7 +145,9 @@ def check_consensus(event, event_metadata):
 def calculate_consensus(event):
     votes_by_users = event.votes()
     if len(votes_by_users) < event.min_total_votes:
-        logger.info('Not enough valid votes to calculate consensus')
+        logger.info(
+            'Not enough valid votes to calculate consensus for %s event. votes_by_users=%d, min_total_votes=%d',
+            event.event_id, len(votes_by_users), event.min_total_votes)
         return dict()
 
     votes_by_repr = database.Vote.group_votes_by_representation(votes_by_users)
@@ -158,6 +162,9 @@ def calculate_consensus(event):
     consensus_ratio = consensus_votes_count / len(votes_by_users)
     if (consensus_votes_count < event.min_consensus_votes
             or consensus_ratio * 100 < event.min_consensus_ratio):
-        logger.info('Not enough consensus votes')
+        logger.info(
+            'Not enough consensus votes for %s event. votes_by_users=%d, min_total_votes=%d, consensus_ratio=%d, min_consensus_ratio=%d',
+            event.event_id, len(votes_by_users), event.min_total_votes, consensus_ratio,
+            event.min_consensus_ratio)
         return dict()
     return consensus_votes_by_users
