@@ -307,17 +307,17 @@ class Vote(BaseEvent):
 
     @staticmethod
     def filter_votes_by_users(votes_by_users):
-        min_votes, max_votes = 3, 3
-        user_ids = votes_by_users.keys()
+        min_votes, max_votes = 2, 3
+        user_ids = list(votes_by_users.keys())
         for user_id in user_ids:
-            if min_votes > len(votes_by_users[user_id]) > max_votes:
-                # Too little or too many votes
+            n_votes = len(votes_by_users[user_id])
+            if n_votes < min_votes or n_votes > max_votes:
+                logger.info('Vote from %s user has too many or too little entries: %d. Skip it',
+                            user_id, n_votes)
                 del votes_by_users[user_id]
-                continue
-            if len({vote.ordered_answers().__repr__() for vote in votes_by_users[user_id]}) != 1:
+            elif len({vote.ordered_answers().__repr__() for vote in votes_by_users[user_id]}) != 1:
                 # answers from nodes are not the same
                 del votes_by_users[user_id]
-                continue
         return votes_by_users
 
     @staticmethod
