@@ -140,12 +140,11 @@ def filter_events(w3, formatters):
             filter_ = w3.eth.filter(filter_id=filter_id)
             filter_.log_entry_formatter = formatters[filter_name]
             try:
-                # logger.info('Requesting new entries for %s on %s', filter_name, event_id)
                 entries = filter_.get_new_entries()
             except Exception as e:
                 # TODO remove this when bug is fixed
                 logger.error(event_id, filter_name)
                 logger.exception(e)
-            if not entries or len(entries) == 0:
+            if not entries:
                 continue
             filter_func(w3, event_id, entries)
