@@ -22,6 +22,8 @@ def _is_vote_valid(timestamp, user_id, event):
     # TODO check request data format, maybe use schema validator
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
         logger.info('Voting is not active %s', event.event_id)
+        logger.info('Event Start Time %d, Event End Time: %d, Current: %d', event.event_start_time,
+                    event.event_end_time, timestamp)
         return False, user_error_response
 
     # 2. Check user has registered for event
@@ -91,6 +93,7 @@ def send_vote(event_id, node_id, vote):
     vote_json = vote.to_json()
     json_payload = {'vote': vote_json}
 
+    logger.info('Number of nodes %d', len(metadata.node_ips))
     for node_ip in metadata.node_ips:
         if node_ip == current_node_ip:
             continue
