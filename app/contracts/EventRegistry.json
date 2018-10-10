@@ -21,22 +21,50 @@
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getUserEvents",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "addEventToUser",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
   ],
-  "bytecode": "0x6080604052348015600f57600080fd5b506101068061001f6000396000f300608060405260043610603e5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663c4130ae081146043575b600080fd5b348015604e57600080fd5b5060556057565b005b600080546001810182559080527f290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56301805473ffffffffffffffffffffffffffffffffffffffff19163390811790915560408051918252517f7ea59f1dd19bb0d7e64ec3908e38d7fee5d3f165903640ab459a8f13116f97f69181900360200190a15600a165627a7a723058204673c774383269f431a10ec60ed2e951496fdb415cb4b4f0b26fa3ab8a21706e0029",
-  "deployedBytecode": "0x608060405260043610603e5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663c4130ae081146043575b600080fd5b348015604e57600080fd5b5060556057565b005b600080546001810182559080527f290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56301805473ffffffffffffffffffffffffffffffffffffffff19163390811790915560408051918252517f7ea59f1dd19bb0d7e64ec3908e38d7fee5d3f165903640ab459a8f13116f97f69181900360200190a15600a165627a7a723058204673c774383269f431a10ec60ed2e951496fdb415cb4b4f0b26fa3ab8a21706e0029",
-  "sourceMap": "26:228:0:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;26:228:0;;;;;;;",
-  "deployedSourceMap": "26:228:0:-;;;;;;;;;;;;;;;;;;;;;;;133:119;;8:9:-1;5:2;;;30:1;27;20:12;5:2;133:119:0;;;;;;;175:12;27:10:-1;;39:1;23:18;;45:23;;175:29:0;;;;;;;-1:-1:-1;;175:29:0;193:10;175:29;;;;;;219:26;;;;;;;;;;;;175:29;219:26;;;133:119::o",
-  "source": "pragma solidity 0.4.24;\n\n\ncontract EventRegistry {\n    address[] verityEvents;\n\n    event NewVerityEvent(address eventAddress);\n\n    function registerEvent() public {\n        verityEvents.push(msg.sender);\n        emit NewVerityEvent(msg.sender);\n    }\n}",
-  "sourcePath": "/Users/hiphop/code/verity-event/contracts/EventRegistry.sol",
+  "bytecode": "0x608060405234801561001057600080fd5b5061027e806100206000396000f3006080604052600436106100565763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630f977561811461005b578063b9d3514d146100c0578063c4130ae0146100f0575b600080fd5b34801561006757600080fd5b50610070610105565b60408051602080825283518183015283519192839290830191858101910280838360005b838110156100ac578181015183820152602001610094565b505050509050019250505060405180910390f35b3480156100cc57600080fd5b506100ee73ffffffffffffffffffffffffffffffffffffffff6004351661017d565b005b3480156100fc57600080fd5b506100ee6101cf565b3360009081526001602090815260409182902080548351818402810184019094528084526060939283018282801561017357602002820191906000526020600020905b815473ffffffffffffffffffffffffffffffffffffffff168152600190910190602001808311610148575b5050505050905090565b73ffffffffffffffffffffffffffffffffffffffff166000908152600160208181526040832080549283018155835290912001805473ffffffffffffffffffffffffffffffffffffffff191633179055565b600080546001810182559080527f290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56301805473ffffffffffffffffffffffffffffffffffffffff19163390811790915560408051918252517f7ea59f1dd19bb0d7e64ec3908e38d7fee5d3f165903640ab459a8f13116f97f69181900360200190a15600a165627a7a723058208461ffd6a8440eb754b321d749ab22aadb52656c054fe0b60ca2e3639435c2580029",
+  "deployedBytecode": "0x6080604052600436106100565763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630f977561811461005b578063b9d3514d146100c0578063c4130ae0146100f0575b600080fd5b34801561006757600080fd5b50610070610105565b60408051602080825283518183015283519192839290830191858101910280838360005b838110156100ac578181015183820152602001610094565b505050509050019250505060405180910390f35b3480156100cc57600080fd5b506100ee73ffffffffffffffffffffffffffffffffffffffff6004351661017d565b005b3480156100fc57600080fd5b506100ee6101cf565b3360009081526001602090815260409182902080548351818402810184019094528084526060939283018282801561017357602002820191906000526020600020905b815473ffffffffffffffffffffffffffffffffffffffff168152600190910190602001808311610148575b5050505050905090565b73ffffffffffffffffffffffffffffffffffffffff166000908152600160208181526040832080549283018155835290912001805473ffffffffffffffffffffffffffffffffffffffff191633179055565b600080546001810182559080527f290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56301805473ffffffffffffffffffffffffffffffffffffffff19163390811790915560408051918252517f7ea59f1dd19bb0d7e64ec3908e38d7fee5d3f165903640ab459a8f13116f97f69181900360200190a15600a165627a7a723058208461ffd6a8440eb754b321d749ab22aadb52656c054fe0b60ca2e3639435c2580029",
+  "sourceMap": "26:486:0:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;26:486:0;;;;;;;",
+  "deployedSourceMap": "26:486:0:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;305:102;;8:9:-1;5:2;;;30:1;27;20:12;5:2;305:102:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;8:100:-1;33:3;30:1;27:10;8:100;;;90:11;;;84:18;71:11;;;64:39;52:2;45:10;8:100;;;12:14;305:102:0;;;;;;;;;;;;;;;;;413:97;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;413:97:0;;;;;;;;;180:119;;8:9:-1;5:2;;;30:1;27;20:12;5:2;180:119:0;;;;305:102;389:10;378:22;;;;:10;:22;;;;;;;;;371:29;;;;;;;;;;;;;;;;;350:9;;371:29;;;378:22;371:29;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;305:102;:::o;413:97::-;469:17;;;;;;:10;:17;;;;;;;27:10:-1;;23:18;;;45:23;;469:34:0;;;;;;;;-1:-1:-1;;469:34:0;492:10;469:34;;;413:97::o;180:119::-;222:12;27:10:-1;;39:1;23:18;;45:23;;222:29:0;;;;;;;-1:-1:-1;;222:29:0;240:10;222:29;;;;;;266:26;;;;;;;;;;;;222:29;266:26;;;180:119::o",
+  "source": "pragma solidity 0.4.24;\n\n\ncontract EventRegistry {\n    address[] verityEvents;\n\n    mapping(address => address[]) userEvents;\n\n    event NewVerityEvent(address eventAddress);\n\n    function registerEvent() public {\n        verityEvents.push(msg.sender);\n        emit NewVerityEvent(msg.sender);\n    }\n\n    function getUserEvents() public view returns(address[]) {\n        return userEvents[msg.sender];\n    }\n\n    function addEventToUser(address _user) public {\n        userEvents[_user].push(msg.sender);\n    }\n}",
+  "sourcePath": "/Users/nejc/gitlab/verity/verity-contracts/verity-event/contracts/EventRegistry.sol",
   "ast": {
-    "absolutePath": "/Users/hiphop/code/verity-event/contracts/EventRegistry.sol",
+    "absolutePath": "/Users/nejc/gitlab/verity/verity-contracts/verity-event/contracts/EventRegistry.sol",
     "exportedSymbols": {
       "EventRegistry": [
-        25
+        56
       ]
     },
-    "id": 26,
+    "id": 57,
     "nodeType": "SourceUnit",
     "nodes": [
       {
@@ -55,9 +83,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 25,
+        "id": 56,
         "linearizedBaseContracts": [
-          25
+          56
         ],
         "name": "EventRegistry",
         "nodeType": "ContractDefinition",
@@ -67,7 +95,7 @@
             "id": 4,
             "name": "verityEvents",
             "nodeType": "VariableDeclaration",
-            "scope": 25,
+            "scope": 56,
             "src": "55:22:0",
             "stateVariable": true,
             "storageLocation": "default",
@@ -99,23 +127,78 @@
             "visibility": "internal"
           },
           {
+            "constant": false,
+            "id": 9,
+            "name": "userEvents",
+            "nodeType": "VariableDeclaration",
+            "scope": 56,
+            "src": "84:40:0",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_address_$_t_array$_t_address_$dyn_storage_$",
+              "typeString": "mapping(address => address[])"
+            },
+            "typeName": {
+              "id": 8,
+              "keyType": {
+                "id": 5,
+                "name": "address",
+                "nodeType": "ElementaryTypeName",
+                "src": "92:7:0",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_address",
+                  "typeString": "address"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "84:29:0",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_address_$_t_array$_t_address_$dyn_storage_$",
+                "typeString": "mapping(address => address[])"
+              },
+              "valueType": {
+                "baseType": {
+                  "id": 6,
+                  "name": "address",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "103:7:0",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  }
+                },
+                "id": 7,
+                "length": null,
+                "nodeType": "ArrayTypeName",
+                "src": "103:9:0",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                  "typeString": "address[]"
+                }
+              }
+            },
+            "value": null,
+            "visibility": "internal"
+          },
+          {
             "anonymous": false,
             "documentation": null,
-            "id": 8,
+            "id": 13,
             "name": "NewVerityEvent",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 7,
+              "id": 12,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6,
+                  "id": 11,
                   "indexed": false,
                   "name": "eventAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8,
-                  "src": "105:20:0",
+                  "scope": 13,
+                  "src": "152:20:0",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -123,10 +206,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 5,
+                    "id": 10,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "105:7:0",
+                    "src": "152:7:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -136,15 +219,15 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "104:22:0"
+              "src": "151:22:0"
             },
-            "src": "84:43:0"
+            "src": "131:43:0"
           },
           {
             "body": {
-              "id": 23,
+              "id": 28,
               "nodeType": "Block",
-              "src": "165:87:0",
+              "src": "212:87:0",
               "statements": [
                 {
                   "expression": {
@@ -154,18 +237,18 @@
                         "argumentTypes": null,
                         "expression": {
                           "argumentTypes": null,
-                          "id": 14,
+                          "id": 19,
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 2362,
-                          "src": "193:3:0",
+                          "referencedDeclaration": 2452,
+                          "src": "240:3:0",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
                             "typeString": "msg"
                           }
                         },
-                        "id": 15,
+                        "id": 20,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -173,7 +256,7 @@
                         "memberName": "sender",
                         "nodeType": "MemberAccess",
                         "referencedDeclaration": null,
-                        "src": "193:10:0",
+                        "src": "240:10:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
@@ -189,18 +272,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 11,
+                        "id": 16,
                         "name": "verityEvents",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
                         "referencedDeclaration": 4,
-                        "src": "175:12:0",
+                        "src": "222:12:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_array$_t_address_$dyn_storage",
                           "typeString": "address[] storage ref"
                         }
                       },
-                      "id": 13,
+                      "id": 18,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -208,13 +291,13 @@
                       "memberName": "push",
                       "nodeType": "MemberAccess",
                       "referencedDeclaration": null,
-                      "src": "175:17:0",
+                      "src": "222:17:0",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_arraypush_nonpayable$_t_address_$returns$_t_uint256_$",
                         "typeString": "function (address) returns (uint256)"
                       }
                     },
-                    "id": 16,
+                    "id": 21,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -222,15 +305,15 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "175:29:0",
+                    "src": "222:29:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     }
                   },
-                  "id": 17,
+                  "id": 22,
                   "nodeType": "ExpressionStatement",
-                  "src": "175:29:0"
+                  "src": "222:29:0"
                 },
                 {
                   "eventCall": {
@@ -240,18 +323,18 @@
                         "argumentTypes": null,
                         "expression": {
                           "argumentTypes": null,
-                          "id": 19,
+                          "id": 24,
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 2362,
-                          "src": "234:3:0",
+                          "referencedDeclaration": 2452,
+                          "src": "281:3:0",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
                             "typeString": "msg"
                           }
                         },
-                        "id": 20,
+                        "id": 25,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -259,7 +342,7 @@
                         "memberName": "sender",
                         "nodeType": "MemberAccess",
                         "referencedDeclaration": null,
-                        "src": "234:10:0",
+                        "src": "281:10:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
@@ -273,18 +356,18 @@
                           "typeString": "address"
                         }
                       ],
-                      "id": 18,
+                      "id": 23,
                       "name": "NewVerityEvent",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8,
-                      "src": "219:14:0",
+                      "referencedDeclaration": 13,
+                      "src": "266:14:0",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_event_nonpayable$_t_address_$returns$__$",
                         "typeString": "function (address)"
                       }
                     },
-                    "id": 21,
+                    "id": 26,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -292,20 +375,20 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "219:26:0",
+                    "src": "266:26:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 22,
+                  "id": 27,
                   "nodeType": "EmitStatement",
-                  "src": "214:31:0"
+                  "src": "261:31:0"
                 }
               ]
             },
             "documentation": null,
-            "id": 24,
+            "id": 29,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -313,39 +396,348 @@
             "name": "registerEvent",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 9,
+              "id": 14,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "155:2:0"
+              "src": "202:2:0"
             },
             "payable": false,
             "returnParameters": {
-              "id": 10,
+              "id": 15,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "165:0:0"
+              "src": "212:0:0"
             },
-            "scope": 25,
-            "src": "133:119:0",
+            "scope": 56,
+            "src": "180:119:0",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 40,
+              "nodeType": "Block",
+              "src": "361:46:0",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "baseExpression": {
+                      "argumentTypes": null,
+                      "id": 35,
+                      "name": "userEvents",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 9,
+                      "src": "378:10:0",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_mapping$_t_address_$_t_array$_t_address_$dyn_storage_$",
+                        "typeString": "mapping(address => address[] storage ref)"
+                      }
+                    },
+                    "id": 38,
+                    "indexExpression": {
+                      "argumentTypes": null,
+                      "expression": {
+                        "argumentTypes": null,
+                        "id": 36,
+                        "name": "msg",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 2452,
+                        "src": "389:3:0",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_magic_message",
+                          "typeString": "msg"
+                        }
+                      },
+                      "id": 37,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "sender",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": null,
+                      "src": "389:10:0",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "378:22:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage",
+                      "typeString": "address[] storage ref"
+                    }
+                  },
+                  "functionReturnParameters": 34,
+                  "id": 39,
+                  "nodeType": "Return",
+                  "src": "371:29:0"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 41,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getUserEvents",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 30,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "327:2:0"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 34,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 41,
+                  "src": "350:9:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 31,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "350:7:0",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 32,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "350:9:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "349:11:0"
+            },
+            "scope": 56,
+            "src": "305:102:0",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 54,
+              "nodeType": "Block",
+              "src": "459:51:0",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "expression": {
+                          "argumentTypes": null,
+                          "id": 50,
+                          "name": "msg",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 2452,
+                          "src": "492:3:0",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_magic_message",
+                            "typeString": "msg"
+                          }
+                        },
+                        "id": 51,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "sender",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": null,
+                        "src": "492:10:0",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": null,
+                        "baseExpression": {
+                          "argumentTypes": null,
+                          "id": 46,
+                          "name": "userEvents",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 9,
+                          "src": "469:10:0",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_mapping$_t_address_$_t_array$_t_address_$dyn_storage_$",
+                            "typeString": "mapping(address => address[] storage ref)"
+                          }
+                        },
+                        "id": 48,
+                        "indexExpression": {
+                          "argumentTypes": null,
+                          "id": 47,
+                          "name": "_user",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 43,
+                          "src": "480:5:0",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "nodeType": "IndexAccess",
+                        "src": "469:17:0",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_array$_t_address_$dyn_storage",
+                          "typeString": "address[] storage ref"
+                        }
+                      },
+                      "id": 49,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "push",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": null,
+                      "src": "469:22:0",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_arraypush_nonpayable$_t_address_$returns$_t_uint256_$",
+                        "typeString": "function (address) returns (uint256)"
+                      }
+                    },
+                    "id": 52,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "469:34:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "id": 53,
+                  "nodeType": "ExpressionStatement",
+                  "src": "469:34:0"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 55,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "addEventToUser",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 44,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 43,
+                  "name": "_user",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 55,
+                  "src": "437:13:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 42,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "437:7:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "436:15:0"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 45,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "459:0:0"
+            },
+            "scope": 56,
+            "src": "413:97:0",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 26,
-        "src": "26:228:0"
+        "scope": 57,
+        "src": "26:486:0"
       }
     ],
-    "src": "0:254:0"
+    "src": "0:512:0"
   },
   "legacyAST": {
-    "absolutePath": "/Users/hiphop/code/verity-event/contracts/EventRegistry.sol",
+    "absolutePath": "/Users/nejc/gitlab/verity/verity-contracts/verity-event/contracts/EventRegistry.sol",
     "exportedSymbols": {
       "EventRegistry": [
-        25
+        56
       ]
     },
-    "id": 26,
+    "id": 57,
     "nodeType": "SourceUnit",
     "nodes": [
       {
@@ -364,9 +756,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 25,
+        "id": 56,
         "linearizedBaseContracts": [
-          25
+          56
         ],
         "name": "EventRegistry",
         "nodeType": "ContractDefinition",
@@ -376,7 +768,7 @@
             "id": 4,
             "name": "verityEvents",
             "nodeType": "VariableDeclaration",
-            "scope": 25,
+            "scope": 56,
             "src": "55:22:0",
             "stateVariable": true,
             "storageLocation": "default",
@@ -408,23 +800,78 @@
             "visibility": "internal"
           },
           {
+            "constant": false,
+            "id": 9,
+            "name": "userEvents",
+            "nodeType": "VariableDeclaration",
+            "scope": 56,
+            "src": "84:40:0",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_address_$_t_array$_t_address_$dyn_storage_$",
+              "typeString": "mapping(address => address[])"
+            },
+            "typeName": {
+              "id": 8,
+              "keyType": {
+                "id": 5,
+                "name": "address",
+                "nodeType": "ElementaryTypeName",
+                "src": "92:7:0",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_address",
+                  "typeString": "address"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "84:29:0",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_address_$_t_array$_t_address_$dyn_storage_$",
+                "typeString": "mapping(address => address[])"
+              },
+              "valueType": {
+                "baseType": {
+                  "id": 6,
+                  "name": "address",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "103:7:0",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  }
+                },
+                "id": 7,
+                "length": null,
+                "nodeType": "ArrayTypeName",
+                "src": "103:9:0",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                  "typeString": "address[]"
+                }
+              }
+            },
+            "value": null,
+            "visibility": "internal"
+          },
+          {
             "anonymous": false,
             "documentation": null,
-            "id": 8,
+            "id": 13,
             "name": "NewVerityEvent",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 7,
+              "id": 12,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6,
+                  "id": 11,
                   "indexed": false,
                   "name": "eventAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8,
-                  "src": "105:20:0",
+                  "scope": 13,
+                  "src": "152:20:0",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -432,10 +879,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 5,
+                    "id": 10,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "105:7:0",
+                    "src": "152:7:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -445,15 +892,15 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "104:22:0"
+              "src": "151:22:0"
             },
-            "src": "84:43:0"
+            "src": "131:43:0"
           },
           {
             "body": {
-              "id": 23,
+              "id": 28,
               "nodeType": "Block",
-              "src": "165:87:0",
+              "src": "212:87:0",
               "statements": [
                 {
                   "expression": {
@@ -463,18 +910,18 @@
                         "argumentTypes": null,
                         "expression": {
                           "argumentTypes": null,
-                          "id": 14,
+                          "id": 19,
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 2362,
-                          "src": "193:3:0",
+                          "referencedDeclaration": 2452,
+                          "src": "240:3:0",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
                             "typeString": "msg"
                           }
                         },
-                        "id": 15,
+                        "id": 20,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -482,7 +929,7 @@
                         "memberName": "sender",
                         "nodeType": "MemberAccess",
                         "referencedDeclaration": null,
-                        "src": "193:10:0",
+                        "src": "240:10:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
@@ -498,18 +945,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 11,
+                        "id": 16,
                         "name": "verityEvents",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
                         "referencedDeclaration": 4,
-                        "src": "175:12:0",
+                        "src": "222:12:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_array$_t_address_$dyn_storage",
                           "typeString": "address[] storage ref"
                         }
                       },
-                      "id": 13,
+                      "id": 18,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -517,13 +964,13 @@
                       "memberName": "push",
                       "nodeType": "MemberAccess",
                       "referencedDeclaration": null,
-                      "src": "175:17:0",
+                      "src": "222:17:0",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_arraypush_nonpayable$_t_address_$returns$_t_uint256_$",
                         "typeString": "function (address) returns (uint256)"
                       }
                     },
-                    "id": 16,
+                    "id": 21,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -531,15 +978,15 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "175:29:0",
+                    "src": "222:29:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     }
                   },
-                  "id": 17,
+                  "id": 22,
                   "nodeType": "ExpressionStatement",
-                  "src": "175:29:0"
+                  "src": "222:29:0"
                 },
                 {
                   "eventCall": {
@@ -549,18 +996,18 @@
                         "argumentTypes": null,
                         "expression": {
                           "argumentTypes": null,
-                          "id": 19,
+                          "id": 24,
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 2362,
-                          "src": "234:3:0",
+                          "referencedDeclaration": 2452,
+                          "src": "281:3:0",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
                             "typeString": "msg"
                           }
                         },
-                        "id": 20,
+                        "id": 25,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -568,7 +1015,7 @@
                         "memberName": "sender",
                         "nodeType": "MemberAccess",
                         "referencedDeclaration": null,
-                        "src": "234:10:0",
+                        "src": "281:10:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
@@ -582,18 +1029,18 @@
                           "typeString": "address"
                         }
                       ],
-                      "id": 18,
+                      "id": 23,
                       "name": "NewVerityEvent",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8,
-                      "src": "219:14:0",
+                      "referencedDeclaration": 13,
+                      "src": "266:14:0",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_event_nonpayable$_t_address_$returns$__$",
                         "typeString": "function (address)"
                       }
                     },
-                    "id": 21,
+                    "id": 26,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -601,20 +1048,20 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "219:26:0",
+                    "src": "266:26:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 22,
+                  "id": 27,
                   "nodeType": "EmitStatement",
-                  "src": "214:31:0"
+                  "src": "261:31:0"
                 }
               ]
             },
             "documentation": null,
-            "id": 24,
+            "id": 29,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -622,30 +1069,339 @@
             "name": "registerEvent",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 9,
+              "id": 14,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "155:2:0"
+              "src": "202:2:0"
             },
             "payable": false,
             "returnParameters": {
-              "id": 10,
+              "id": 15,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "165:0:0"
+              "src": "212:0:0"
             },
-            "scope": 25,
-            "src": "133:119:0",
+            "scope": 56,
+            "src": "180:119:0",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 40,
+              "nodeType": "Block",
+              "src": "361:46:0",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "baseExpression": {
+                      "argumentTypes": null,
+                      "id": 35,
+                      "name": "userEvents",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 9,
+                      "src": "378:10:0",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_mapping$_t_address_$_t_array$_t_address_$dyn_storage_$",
+                        "typeString": "mapping(address => address[] storage ref)"
+                      }
+                    },
+                    "id": 38,
+                    "indexExpression": {
+                      "argumentTypes": null,
+                      "expression": {
+                        "argumentTypes": null,
+                        "id": 36,
+                        "name": "msg",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 2452,
+                        "src": "389:3:0",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_magic_message",
+                          "typeString": "msg"
+                        }
+                      },
+                      "id": 37,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "sender",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": null,
+                      "src": "389:10:0",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "378:22:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage",
+                      "typeString": "address[] storage ref"
+                    }
+                  },
+                  "functionReturnParameters": 34,
+                  "id": 39,
+                  "nodeType": "Return",
+                  "src": "371:29:0"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 41,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getUserEvents",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 30,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "327:2:0"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 34,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 41,
+                  "src": "350:9:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 31,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "350:7:0",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 32,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "350:9:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "349:11:0"
+            },
+            "scope": 56,
+            "src": "305:102:0",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 54,
+              "nodeType": "Block",
+              "src": "459:51:0",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "expression": {
+                          "argumentTypes": null,
+                          "id": 50,
+                          "name": "msg",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 2452,
+                          "src": "492:3:0",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_magic_message",
+                            "typeString": "msg"
+                          }
+                        },
+                        "id": 51,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "sender",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": null,
+                        "src": "492:10:0",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": null,
+                        "baseExpression": {
+                          "argumentTypes": null,
+                          "id": 46,
+                          "name": "userEvents",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 9,
+                          "src": "469:10:0",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_mapping$_t_address_$_t_array$_t_address_$dyn_storage_$",
+                            "typeString": "mapping(address => address[] storage ref)"
+                          }
+                        },
+                        "id": 48,
+                        "indexExpression": {
+                          "argumentTypes": null,
+                          "id": 47,
+                          "name": "_user",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 43,
+                          "src": "480:5:0",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "nodeType": "IndexAccess",
+                        "src": "469:17:0",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_array$_t_address_$dyn_storage",
+                          "typeString": "address[] storage ref"
+                        }
+                      },
+                      "id": 49,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "push",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": null,
+                      "src": "469:22:0",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_arraypush_nonpayable$_t_address_$returns$_t_uint256_$",
+                        "typeString": "function (address) returns (uint256)"
+                      }
+                    },
+                    "id": 52,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "469:34:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "id": 53,
+                  "nodeType": "ExpressionStatement",
+                  "src": "469:34:0"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 55,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "addEventToUser",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 44,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 43,
+                  "name": "_user",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 55,
+                  "src": "437:13:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 42,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "437:7:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "436:15:0"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 45,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "459:0:0"
+            },
+            "scope": 56,
+            "src": "413:97:0",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 26,
-        "src": "26:228:0"
+        "scope": 57,
+        "src": "26:486:0"
       }
     ],
-    "src": "0:254:0"
+    "src": "0:512:0"
   },
   "compiler": {
     "name": "solc",
@@ -653,5 +1409,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.1",
-  "updatedAt": "2018-10-04T12:59:32.388Z"
+  "updatedAt": "2018-10-10T09:00:52.407Z"
 }
