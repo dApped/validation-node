@@ -310,7 +310,7 @@ class Vote(BaseEvent):
 
     @staticmethod
     def filter_votes_by_users(votes_by_users):
-        min_votes, max_votes = 2, 3
+        min_votes, max_votes = 3, 3
         user_ids = list(votes_by_users.keys())
         for user_id in user_ids:
             n_votes = len(votes_by_users[user_id])

@@ -45,6 +45,7 @@ def process_validation_restart(w3, event_id, entries):
     event = database.VerityEvent.get(event_id)
 
     validation_round = entry['args']['validationRound']
+    logger.info('Validation round %d restart', validation_round)
     # validation round starts from 1, instead of 0
     is_master_node = w3.eth.defaultAccount == event.node_addresses[validation_round - 1]
 
@@ -54,8 +55,11 @@ def process_validation_restart(w3, event_id, entries):
 
     # if node is master node, set consensus rewards
     if is_master_node:
+        logger.info('Validation round %d I am Master node', validation_round)
         # TODO if this blocks other filters, use scheduler
         rewards.set_consensus_rewards(w3, event_id)
+    else:
+        logger.info('Validation round %d I am NOT Master node', validation_round)
 
 
 def process_error_event(_, event_id, entries):
@@ -141,10 +145,10 @@ def filter_events(w3, formatters):
             filter_.log_entry_formatter = formatters[filter_name]
             try:
                 entries = filter_.get_new_entries()
+                if not entries:
+                    continue
+                filter_func(w3, event_id, entries)
             except Exception as e:
                 # TODO remove this when bug is fixed
                 logger.error(event_id, filter_name)
                 logger.exception(e)
-            if not entries:
-                continue
-            filter_func(w3, event_id, entries)
