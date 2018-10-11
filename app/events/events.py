@@ -2,9 +2,8 @@ import logging
 import os
 import time
 
-import requests
+from websocket import QUEUE
 
-import common
 import scheduler
 from database import database
 from ethereum import rewards
@@ -69,7 +68,10 @@ def vote(json_data, ip_address):
     vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'])
     vote.create()
 
-    scheduler.scheduler.add_job(send_vote, args=[event_id, node_id, vote])
+    logger.info('node_ips %s', event_metadata.node_ips)
+    # scheduler.scheduler.add_job(send_vote, args=[event_id, node_id, vote])
+    QUEUE.sync_q.put({'node_ips': event_metadata.node_ips, 'vote': vote})
+    QUEUE.sync_q.join()
     if should_calculate_consensus(event):
         scheduler.scheduler.add_job(check_consensus, args=[event, event_metadata])
     return success_response
@@ -80,52 +82,6 @@ def should_calculate_consensus(event):
     vote_count = database.Vote.count(event.event_id)
     participant_ratio = (vote_count / len(event.participants())) * 100
     return vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio
-
-
-def send_vote(event_id, node_id, vote):
-    # TODO replace this with websocket
-    event = database.VerityEvent.get(event_id)
-    metadata = event.metadata()
-
-    current_node_ip = common.public_ip()
-
-    user_id = vote.user_id
-    vote_json = vote.to_json()
-    json_payload = {'vote': vote_json}
-
-    logger.info('Number of nodes %d', len(metadata.node_ips))
-    for node_ip in metadata.node_ips:
-        if node_ip == current_node_ip:
-            continue
-        logger.info('Sending vote from %s user to %s node for %s event', user_id, node_ip, event_id)
-        url = 'http://%s/%s' % (node_ip, 'receive_vote')
-        # TODO watch for timeouts
-        requests.post(url, json=json_payload)
-
-
-def receive_vote(vote_json):
-    # TODO replace this with websocket
-    try:
-        vote = database.Vote.from_json(vote_json)
-    except Exception as e:
-        logger.exception(e)
-        return 'Vote has improper formatting'
-
-    event = database.VerityEvent.get(vote.event_id)
-    if event is None:
-        return user_error_response
-
-    event_metadata = event.metadata()
-    if event_metadata.is_consensus_reached:
-        logger.info('Consensus already reached, no more voting')
-        return user_error_response
-
-    vote.create()
-    logger.info('Stored vote from %s user for %s event from %s node', vote.user_id, vote.event_id,
-                vote.node_id)
-    if should_calculate_consensus(event):
-        scheduler.scheduler.add_job(check_consensus, args=[event, event_metadata])
-    return success_response
 
 
 def check_consensus(event, event_metadata):

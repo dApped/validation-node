@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+import websocket
 from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, request
 
@@ -30,6 +31,7 @@ def init():
     event_registry_filter.init_event_registry_filter(NODE_WEB3, event_registry_abi,
                                                      verity_event_abi, event_registry_address)
     scheduler.init()
+    websocket.init()
 
 
 def create_app():
