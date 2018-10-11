@@ -70,38 +70,49 @@ def vote(json_data, ip_address):
 
     QUEUE.sync_q.put({'node_ips': event_metadata.node_ips, 'vote': vote})
     # QUEUE.sync_q.join() # TODO check if we need to block
-    if should_calculate_consensus(event):
+
+    vote_count = database.Vote.count(event.event_id)
+    if should_calculate_consensus(event, vote_count):
         scheduler.scheduler.add_job(check_consensus, args=[event, event_metadata])
     return success_response
 
 
-def should_calculate_consensus(event):
+def should_calculate_consensus(event, vote_count):
     '''Heuristic which checks if there is a potential for consensus (assumes all votes are valid)'''
-    vote_count = database.Vote.count(event.event_id)
     participant_ratio = (vote_count / len(event.participants())) * 100
     return vote_count >= event.min_total_votes and participant_ratio >= event.min_participant_ratio
 
 
+
+
 def check_consensus(event, event_metadata):
     event_id = event.event_id
-    consensus_votes_by_users = calculate_consensus(event)
-    if consensus_votes_by_users:
-        logger.info('Consensus reached for %s event', event_id)
-        event_metadata.is_consensus_reached = True
-        event_metadata.update()
-
-        ether_balance, token_balance = event.instance(NODE_WEB3,
-                                                      event_id).functions.getBalance().call()
-        rewards.determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance)
-        if event.is_master_node:
-            scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
-        else:
-            logger.info('Not a master node for %s event. Waiting for rewards to be set', event_id)
-
-
-def calculate_consensus(event):
     votes_by_users = event.votes()
-    if len(votes_by_users) < event.min_total_votes:
+    vote_count = len(votes_by_users)
+
+    if not should_calculate_consensus(event, vote_count):
+        logger.info('Should not calculate consensus for %s event', event_id)
+        return
+    consensus_votes_by_users = calculate_consensus(event, votes_by_users)
+    if not consensus_votes_by_users:
+        logger.info('Consensus not reached for %s event', event_id)
+        return
+    logger.info('Consensus reached for %s event', event_id)
+    event_metadata.is_consensus_reached = True
+    event_metadata.update()
+
+    ether_balance, token_balance = event.instance(NODE_WEB3,
+                                                  event_id).functions.getBalance().call()
+    rewards.determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance)
+    if event.is_master_node:
+        scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
+    else:
+        logger.info('Not a master node for %s event. Waiting for rewards to be set.', event_id)
+
+
+def calculate_consensus(event, votes_by_users):
+    vote_count = len(votes_by_users)
+    if vote_count < event.min_total_votes:
         logger.info(
             'Not enough valid votes to calculate consensus for %s event. votes_by_users=%d, min_total_votes=%d',
             event.event_id, len(votes_by_users), event.min_total_votes)
