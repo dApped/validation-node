@@ -133,25 +133,26 @@ def check_consensus(event, event_metadata):
     event_id = event.event_id
     votes_by_users = event.votes()
     vote_count = len(votes_by_users)
-    if should_calculate_consensus(event, vote_count):
-        logger.info('Should calculate consensus for event %s', event_id)
-        consensus_votes_by_users = calculate_consensus(event, votes_by_users)
-        if consensus_votes_by_users:
-            logger.info('Consensus reached for %s event', event_id)
-            event_metadata.is_consensus_reached = True
-            event_metadata.update()
 
-            ether_balance, token_balance = event.instance(NODE_WEB3,
-                                                          event_id).functions.getBalance().call()
-            rewards.determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance)
-            if event.is_master_node:
-                scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
-            else:
-                logger.info('Not a master node for %s event. Waiting for rewards to be set', event_id)
-        else:
-            logger.info('Consensus not reached for %s event', event_id)
-    else:
+    if not should_calculate_consensus(event, vote_count):
         logger.info('Should not calculate consensus for %s event', event_id)
+        return
+    consensus_votes_by_users = calculate_consensus(event, votes_by_users)
+    if not consensus_votes_by_users:
+        logger.info('Consensus not reached for %s event', event_id)
+        return
+    logger.info('Consensus reached for %s event', event_id)
+    event_metadata.is_consensus_reached = True
+    event_metadata.update()
+
+    ether_balance, token_balance = event.instance(NODE_WEB3,
+                                                  event_id).functions.getBalance().call()
+    rewards.determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance)
+    if event.is_master_node:
+        scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
+    else:
+        logger.info('Not a master node for %s event. Waiting for rewards to be set.', event_id)
+
 
 def calculate_consensus(event, votes_by_users):
     vote_count = len(votes_by_users)
