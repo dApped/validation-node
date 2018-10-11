@@ -310,7 +310,7 @@ class Vote(BaseEvent):
 
     @staticmethod
     def filter_votes_by_users(votes_by_users):
-        min_votes, max_votes = 3, 3
+        min_votes, max_votes = 2, 3
         user_ids = list(votes_by_users.keys())
         for user_id in user_ids:
             n_votes = len(votes_by_users[user_id])
@@ -320,6 +320,7 @@ class Vote(BaseEvent):
                 del votes_by_users[user_id]
             elif len({vote.ordered_answers().__repr__() for vote in votes_by_users[user_id]}) != 1:
                 # answers from nodes are not the same
+                logger.info('User %s voted differently on different nodes', user_id)
                 del votes_by_users[user_id]
         return votes_by_users
 
