@@ -21,10 +21,9 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: ${NODE_IP}
       NODE_PORT: ${NODE_PORT}
-      WEBSOCKET_PORT: ${WEBSOCKET_PORT}
     ports: 
       - '80:5000'
-      - '8086:8086'
+      - '8086:8765'
     volumes: ['./app:/app']
     depends_on:
       - redis
