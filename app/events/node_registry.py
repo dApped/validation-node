@@ -42,10 +42,9 @@ def update_node_ips(node_registry_abi, node_registry_address):
     for event_id in event_ids:
         event = database.VerityEvent.get(event_id)
         metadata = event.metadata()
-        # before_event_start_time = event.event_start_time - BEFORE_EVENT_START
-        # if (before_event_start_time <= current_timestamp < event.event_start_time
-        #         and not metadata.node_ips):
-        if not metadata.node_ips:
+        before_event_start_time = event.event_start_time - BEFORE_EVENT_START
+        if (before_event_start_time <= current_timestamp < event.event_start_time
+                and not metadata.node_ips):
             metadata.node_ips = get_node_ips(node_registry_abi, node_registry_address,
                                              event.node_addresses)
             metadata.update()
