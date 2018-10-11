@@ -23,6 +23,7 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       NODE_PORT: 81
+      WERKZEUG_RUN_MAIN: 'true'
     ports: 
         - '81:5000'
         - '8186:8765'
@@ -53,6 +54,7 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       NODE_PORT: 82
+      WERKZEUG_RUN_MAIN: 'true'
     ports: 
         - '82:5000'
         - '8286:8765'
@@ -83,6 +85,7 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       NODE_PORT: 83
+      WERKZEUG_RUN_MAIN: 'true'
     ports:
         - '83:5000'
         - '8386:8765'

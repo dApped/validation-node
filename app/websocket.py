@@ -141,9 +141,10 @@ def loop_in_thread(event_loop):
 
 
 def init():
-    # if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
-    #     # prevent flask running the the code twice
-    #     return
+    logger.info('werzeug %s', os.environ.get("WERKZEUG_RUN_MAIN"))
+    if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        # prevent flask running the the code twice
+        return
     logger.info('Websocket Init started')
     t = threading.Thread(target=loop_in_thread, args=(LOOP, ))
     t.start()
