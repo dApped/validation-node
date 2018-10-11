@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 services:
   # NODE 1
   redis1:
@@ -21,12 +21,11 @@ services:
       NODE_PRIVATE_KEY: '0x9d988d3dec4376a04eadf0b86474c2e1885dc05889e68cba849f937587dcaa49'
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
-      NODE_IP: host.docker.internal
+      NODE_IP: 'host.docker.internal'
       NODE_PORT: 81
-      WEBSOCKET_PORT: 8186
     ports: 
         - '81:5000'
-        - '8186:8186'
+        - '8186:8765'
     volumes: ['./app:/app']
     depends_on:
       - redis1
@@ -52,12 +51,11 @@ services:
       NODE_PRIVATE_KEY: '0x5265b30cf1c938fb0ed2a82d1b7c66ec2c7c27b6c402882123c31b9ee8d2fbd0'
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
-      NODE_IP: host.docker.internal
+      NODE_IP: 'host.docker.internal'
       NODE_PORT: 82
-      WEBSOCKET_PORT: 8286
     ports: 
         - '82:5000'
-        - '8286:8286'
+        - '8286:8765'
     volumes: ['./app:/app']
     depends_on:
       - redis2
@@ -83,12 +81,11 @@ services:
       NODE_PRIVATE_KEY: '0x4a178bb7d23b904ea6c3dce9f8fb496ec6178f969780db3f9f22fd230cf1b867'
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
-      NODE_IP: host.docker.internal
+      NODE_IP: 'host.docker.internal'
       NODE_PORT: 83
-      WEBSOCKET_PORT: 8386
     ports:
         - '83:5000'
-        - '8386:8386'
+        - '8386:8765'
     volumes: ['./app:/app']
     depends_on:
       - redis3

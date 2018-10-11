@@ -68,10 +68,8 @@ def vote(json_data, ip_address):
     vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'])
     vote.create()
 
-    logger.info('node_ips %s', event_metadata.node_ips)
-    # scheduler.scheduler.add_job(send_vote, args=[event_id, node_id, vote])
     QUEUE.sync_q.put({'node_ips': event_metadata.node_ips, 'vote': vote})
-    QUEUE.sync_q.join()
+    # QUEUE.sync_q.join() # TODO check if we need to block
     if should_calculate_consensus(event):
         scheduler.scheduler.add_job(check_consensus, args=[event, event_metadata])
     return success_response

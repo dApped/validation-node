@@ -20,7 +20,6 @@ class Common:
 
     @staticmethod
     def key(host, port):
-        logger.info('Get websocket key for %s %s', host, port)
         return '%s:%s' % (host, port)
 
     @classmethod
@@ -38,9 +37,7 @@ class Common:
 
     @classmethod
     async def get_or_create_websocket_connection(cls, websocket_address):
-        logger.info('websockets %s', cls.WEBSOCKETS)
         if websocket_address not in cls.WEBSOCKETS:
-            logger.info('connect to %s', websocket_address)
             await cls.connect_to_websocket(websocket_address)
         return cls.WEBSOCKETS[websocket_address]
 
@@ -48,8 +45,9 @@ class Common:
     async def get_or_create_websocket_connections(cls, node_ips):
         websockets_nodes = []
         for node_ip in node_ips:
+            if os.getenv('NODE_PORT') in node_ip:  # TODO improve this in production
+                continue
             websocket_address = node_ip + '86'  # TODO remove this in production
-            logger.info('websocket_address %s', websocket_address)
             websocket = await cls.get_or_create_websocket_connection(websocket_address)
             websockets_nodes.append(websocket)
         return websockets_nodes
@@ -80,7 +78,7 @@ class Producer(Common):
                 logger.error('Message does not have required properties: %s', message)
                 continue
             await cls.producer(message)
-            async_q.task_done()
+            # async_q.task_done() TODO if we need to block we also need to confirm the task
 
 
 class Consumer(Common):
@@ -137,8 +135,7 @@ class Consumer(Common):
 
 def loop_in_thread(event_loop):
     asyncio.set_event_loop(event_loop)
-    event_loop.run_until_complete(
-        websockets.serve(Consumer.consumer_handler, '127.0.0.1', os.getenv('WEBSOCKET_PORT')))
+    event_loop.run_until_complete(websockets.serve(Consumer.consumer_handler, '0.0.0.0', 8765))
     event_loop.run_until_complete(Producer.producer_handler(QUEUE.async_q))
     event_loop.run_forever()
 
