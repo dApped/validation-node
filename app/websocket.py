@@ -60,8 +60,7 @@ class Producer(Common):
 
     @staticmethod
     def create_message(vote):
-        message_send = {}
-        message_send['vote'] = vote.to_json()
+        message_send = {'vote': vote.to_json()}
         return json.dumps(message_send)
 
     @classmethod
@@ -90,9 +89,7 @@ class Consumer(Common):
 
     @staticmethod
     def is_message_valid(message):
-        if 'vote' in message:
-            return True
-        return False
+        return 'vote' in message
 
     @staticmethod
     def json_to_vote(vote_json):
