@@ -134,14 +134,13 @@ class Consumer(Common):
                     continue
                 vote = cls.json_to_vote(message['vote'])
                 if vote is None:
-                    logger.error("Vote %s is not valid", vote)
+                    logger.error("Vote %s from node is not valid", vote.node_id)
                     continue
                 if not await cls.event_exists(vote.event_id):
                     logger.error("Event %s does not exist", vote.event_id)
                     continue
                 await cls.create_vote(vote)
                 cls.should_calculate_consensus(vote.event_id)
-
         finally:
             cls.unregister(websocket)
 
