@@ -7,7 +7,9 @@ import threading
 import janus
 import websockets
 
+import scheduler
 from database import database
+from events import consensus
 
 LOOP = asyncio.get_event_loop()
 QUEUE = janus.Queue(loop=LOOP)
@@ -65,6 +67,8 @@ class Producer(Common):
     @classmethod
     async def producer(cls, message):
         node_ips = message['node_ips']
+        if not node_ips:
+            logger.warning('Node ips are not set')
         websockets_nodes = await cls.get_or_create_websocket_connections(node_ips)
         if websockets_nodes:
             message_json = cls.create_message(message['vote'])
@@ -78,7 +82,7 @@ class Producer(Common):
                 logger.error('Message does not have required properties: %s', message)
                 continue
             await cls.producer(message)
-            # async_q.task_done() TODO if we need to block we also need to confirm the task
+            # async_q.task_done()  # TODO if we need to block we also need to confirm the task
 
 
 class Consumer(Common):
@@ -110,6 +114,14 @@ class Consumer(Common):
         logger.info('Created vote from %s user for %s event from %s node', vote.user_id,
                     vote.event_id, vote.node_id)
 
+    @staticmethod
+    def should_calculate_consensus(event_id):
+        event = database.VerityEvent.get(event_id)
+        vote_count = database.Vote.count(event_id)
+        if consensus.should_calculate_consensus(event, vote_count):
+            event_metadata = event.metadata()
+            scheduler.scheduler.add_job(consensus.check_consensus, args=[event, event_metadata])
+
     @classmethod
     async def consumer_handler(cls, websocket, _):
         cls.register(websocket)
@@ -128,7 +140,8 @@ class Consumer(Common):
                     logger.error("Event %s does not exist", vote.event_id)
                     continue
                 await cls.create_vote(vote)
-                # TODO check consensus
+                cls.should_calculate_consensus(vote.event_id)
+
         finally:
             cls.unregister(websocket)
 
@@ -141,7 +154,6 @@ def loop_in_thread(event_loop):
 
 
 def init():
-    logger.info('werzeug %s', os.environ.get("WERKZEUG_RUN_MAIN"))
     if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
         # prevent flask running the the code twice
         return
