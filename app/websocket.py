@@ -49,7 +49,7 @@ class Common:
         for node_ip in node_ips:
             if os.getenv('NODE_PORT') in node_ip:  # TODO improve this in production
                 continue
-            websocket_address = node_ip + '86'  # TODO remove this in production
+            websocket_address = '%s86' % node_ip  # TODO remove this in production
             websocket = await cls.get_or_create_websocket_connection(websocket_address)
             websockets_nodes.append(websocket)
         return websockets_nodes
