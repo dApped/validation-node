@@ -3,6 +3,7 @@ services:
   # NODE 1
   redis1:
     image: redis:4.0.11
+    ports: ['6379:6379']
   node1:
     build: ./app
     entrypoint:
@@ -16,13 +17,16 @@ services:
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
-      NODE_ADDRESS: '***REMOVED***'
-      NODE_PRIVATE_KEY: '***REMOVED***'
+      NODE_ADDRESS: '0x092cC6D5de08C2A83B43441a8541F0aFc10E92D7'
+      NODE_PRIVATE_KEY: '0x9d988d3dec4376a04eadf0b86474c2e1885dc05889e68cba849f937587dcaa49'
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       NODE_PORT: 81
-    ports: ['81:5000']
+      WERKZEUG_RUN_MAIN: 'true'
+    ports: 
+        - '81:5000'
+        - '8186:8765'
     volumes: ['./app:/app']
     depends_on:
       - redis1
@@ -44,13 +48,16 @@ services:
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
-      NODE_ADDRESS: '***REMOVED***'
-      NODE_PRIVATE_KEY: '***REMOVED***'
+      NODE_ADDRESS: '0x0B3F5BC24eB064D6E7355605F164F0bfd304Ee84'
+      NODE_PRIVATE_KEY: '0x5265b30cf1c938fb0ed2a82d1b7c66ec2c7c27b6c402882123c31b9ee8d2fbd0'
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       NODE_PORT: 82
-    ports: ['82:5000']
+      WERKZEUG_RUN_MAIN: 'true'
+    ports: 
+        - '82:5000'
+        - '8286:8765'
     volumes: ['./app:/app']
     depends_on:
       - redis2
@@ -72,13 +79,16 @@ services:
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
       FLASK_APP: ./application.py
-      NODE_ADDRESS: '***REMOVED***'
-      NODE_PRIVATE_KEY: '***REMOVED***'
+      NODE_ADDRESS: '0x4C7af5334415A8129C6E1a03D436aebC1D289181'
+      NODE_PRIVATE_KEY: '0x4a178bb7d23b904ea6c3dce9f8fb496ec6178f969780db3f9f22fd230cf1b867'
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       NODE_PORT: 83
-    ports: ['83:5000']
+      WERKZEUG_RUN_MAIN: 'true'
+    ports:
+        - '83:5000'
+        - '8386:8765'
     volumes: ['./app:/app']
     depends_on:
       - redis3

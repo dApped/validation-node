@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+import websocket
 from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, request
 
@@ -30,6 +31,7 @@ def init():
     event_registry_filter.init_event_registry_filter(NODE_WEB3, event_registry_abi,
                                                      verity_event_abi, event_registry_address)
     scheduler.init()
+    websocket.init()
 
 
 def create_app():
@@ -94,19 +96,6 @@ def vote():
     ip_address = request.environ.get('HTTP_X_FORWARDED_FOR')
     response = events.vote(json_data, ip_address)
     return jsonify(response), response['status']
-
-
-@application.route('/receive_vote', methods=['POST'])
-def receive_vote():
-    # TODO replace this with websocket
-    json_data = request.get_json()
-    headers = request.headers
-
-    if 'vote' not in json_data:
-        return "Invalid request message", 400
-    vote_json = json_data['vote']
-    response = events.receive_vote(vote_json)
-    return jsonify(response), 200
 
 
 if __name__ == '__main__':

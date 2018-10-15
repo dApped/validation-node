@@ -21,7 +21,10 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: ${NODE_IP}
       NODE_PORT: ${NODE_PORT}
-    ports: ['80:5000']
+      WERKZEUG_RUN_MAIN: 'true'
+    ports: 
+      - '80:5000'
+      - '8086:8765'
     volumes: ['./app:/app']
     depends_on:
       - redis

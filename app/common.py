@@ -2,7 +2,6 @@ import json
 import logging
 import os
 
-import requests
 from web3 import Web3
 
 from ethereum.provider import EthProvider
@@ -47,8 +46,8 @@ def function_transact(w3, contract_function):
         'gasPrice': gas_price,
         'nonce': next_nonce,
     }
-    signed_txn = w3.eth.account.signTransaction(contract_function.buildTransaction(transaction),
-                                                private_key=account['pvt_key'])
+    signed_txn = w3.eth.account.signTransaction(
+        contract_function.buildTransaction(transaction), private_key=account['pvt_key'])
     raw_txn = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
     tx_receipt = w3.eth.waitForTransactionReceipt(raw_txn)
     logger.info('Transmitted transaction %s', Web3.toHex(tx_receipt['transactionHash']))
