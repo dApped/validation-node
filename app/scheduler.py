@@ -44,7 +44,7 @@ def init():
     scheduler.add_job(
         node_registry.update_node_ips,
         'interval',
-        seconds=1, #TODO set this to a minute
+        minutes=1,
         args=[node_registry_abi, node_registry_address])
 
     try:
