@@ -88,8 +88,7 @@ def hello():
 def vote():
     json_data = request.get_json()
     headers = request.headers
-    ip_address = request.environ.get('HTTP_X_FORWARDED_FOR')
-    response = events.vote(json_data, ip_address)
+    response = events.vote(json_data)
     return jsonify(response), response['status']
 
 

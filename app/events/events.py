@@ -41,7 +41,7 @@ def is_vote_payload_valid(data):
     return True
 
 
-def vote(json_data, ip_address):
+def vote(json_data):
     current_timestamp = int(time.time())
     if not is_vote_payload_valid(json_data):
         return user_error_response
