@@ -8,6 +8,9 @@ logger = logging.getLogger('flask.app')
 
 
 def determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance):
+
+    # TODO give dispute stake to dispute opener if he is in consensus
+    # TODO support non linear reward distribution
     votes_count = len(consensus_votes_by_users)
     user_ether_reward_in_wei = int(NODE_WEB3.toWei(ether_balance, 'ether') / votes_count)
     user_token_reward_in_wei = int(NODE_WEB3.toWei(token_balance, 'ether') / votes_count)

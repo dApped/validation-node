@@ -32,27 +32,41 @@ def node_registry_address():
     return Web3.toChecksumAddress(os.getenv('NODE_REGISTRY_ADDRESS'))
 
 
-def function_transact(w3, contract_function):
+def function_transact(w3, contract_function, max_retries=3):
     account = EthProvider.account_dict()
 
-    address = Web3.toChecksumAddress(account['address'])
-    next_nonce = w3.eth.getTransactionCount(address)
+    account['address'] = Web3.toChecksumAddress(account['address'])
+    next_nonce = w3.eth.getTransactionCount(account['address'])
 
-    gas_estimate = 4000000
+    for attempt in range(max_retries):
+
+        try:
+            raw_txn = _raw_transaction(w3, contract_function, account, next_nonce + attempt)
+            tx_receipt = w3.eth.waitForTransactionReceipt(raw_txn)
+            logger.info('Transmitted transaction %s', Web3.toHex(tx_receipt['transactionHash']))
+            return tx_receipt['transactionHash']
+        except Exception as e:
+            logger.error(e)
+            if attempt < max_retries:
+                logger.info('Retrying %d with higher nonce', attempt)
+            else:
+                logger.error('Final failed to submit transaction')
+
+
+def _raw_transaction(w3, contract_function, account, nonce):
     gas_price = Web3.toWei(10, 'gwei')
+    gas_estimate = 4000000
+
     transaction = {
-        'from': address,
-        'gas': gas_estimate,
+        'from': account['address'],
         'gasPrice': gas_price,
-        'nonce': next_nonce,
+        'gas': gas_estimate,
+        'nonce': nonce,
     }
     signed_txn = w3.eth.account.signTransaction(
         contract_function.buildTransaction(transaction), private_key=account['pvt_key'])
     raw_txn = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    tx_receipt = w3.eth.waitForTransactionReceipt(raw_txn)
-    logger.info('Transmitted transaction %s', Web3.toHex(tx_receipt['transactionHash']))
-    return tx_receipt['transactionHash']
-
+    return raw_txn
 
 def public_ip():
     return '%s:%s' % (os.getenv('NODE_IP'), os.getenv('NODE_PORT'))
