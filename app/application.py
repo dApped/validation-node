@@ -74,11 +74,6 @@ def apply_headers(response):
     return response
 
 
-# TODO check why this is here
-def ip_whitelist():
-    return request.remote_addr == os.getenv('IP_WHITELIST')
-
-
 # ------------------------------------------------------------------------------
 # Routes -----------------------------------------------------------------------
 

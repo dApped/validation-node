@@ -81,7 +81,6 @@ class Producer(Common):
                 logger.error('Message does not have required properties: %s', message)
                 continue
             await cls.producer(message)
-            # async_q.task_done()  # TODO if we need to block we also need to confirm the task
 
 
 class Consumer(Common):

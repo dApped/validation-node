@@ -68,7 +68,6 @@ def vote(json_data, ip_address):
     vote.create()
 
     QUEUE.sync_q.put({'node_ips': event_metadata.node_ips, 'vote': vote})
-    # QUEUE.sync_q.join() # TODO check if we need to block
 
     vote_count = database.Vote.count(event.event_id)
     if consensus.should_calculate_consensus(event, vote_count):
