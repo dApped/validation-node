@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 
 from web3 import Web3
 
@@ -39,7 +40,6 @@ def function_transact(w3, contract_function, max_retries=3):
     next_nonce = w3.eth.getTransactionCount(account['address'])
 
     for attempt in range(max_retries):
-
         try:
             raw_txn = _raw_transaction(w3, contract_function, account, next_nonce + attempt)
             tx_receipt = w3.eth.waitForTransactionReceipt(raw_txn)
@@ -51,6 +51,7 @@ def function_transact(w3, contract_function, max_retries=3):
                 logger.info('Retrying %d with higher nonce', attempt)
             else:
                 logger.error('Final failed to submit transaction')
+            time.sleep(1)
 
 
 def _raw_transaction(w3, contract_function, account, nonce):
@@ -67,6 +68,7 @@ def _raw_transaction(w3, contract_function, account, nonce):
         contract_function.buildTransaction(transaction), private_key=account['pvt_key'])
     raw_txn = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
     return raw_txn
+
 
 def public_ip():
     return '%s:%s' % (os.getenv('NODE_IP'), os.getenv('NODE_PORT'))
