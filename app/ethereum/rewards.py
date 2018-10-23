@@ -9,7 +9,11 @@ logger = logging.getLogger('flask.app')
 
 def determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance):
 
-    # TODO give dispute stake to dispute opener if he is in consensus
+    event = database.VerityEvent.get(event_id)
+    if event.disputer in consensus_votes_by_users:
+        logger.info('Disputer %s in consensus', event.disputer)
+        token_balance -= event.dispute_amount
+
     # TODO support non linear reward distribution
     votes_count = len(consensus_votes_by_users)
     user_ether_reward_in_wei = int(NODE_WEB3.toWei(ether_balance, 'ether') / votes_count)
@@ -20,6 +24,8 @@ def determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_b
             eth_reward=user_ether_reward_in_wei, token_reward=user_token_reward_in_wei)
         for user_id in consensus_votes_by_users
     }
+    if event.disputer in consensus_votes_by_users:
+        rewards_dict[event.disputer] = rewards_dict[event.disputer] + event.dispute_amount
     database.Rewards.create(event_id, rewards_dict)
 
 
@@ -28,6 +34,7 @@ def set_consensus_rewards(w3, event_id):
     user_ids, eth_rewards, token_rewards = database.Rewards.get_lists(event_id)
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
+    # TODO should batch transacts to setRewards if a lot of users due to gas limit
     set_rewards_fun = contract_instance.functions.setRewards(user_ids, eth_rewards, token_rewards)
     common.function_transact(w3, set_rewards_fun)
     logger.info('Finished setting rewards for %s', event_id)
