@@ -27,6 +27,9 @@ def check_consensus(event, event_metadata):
         logger.info('Consensus not reached for %s event', event_id)
         return
     logger.info('Consensus reached for %s event', event_id)
+    if event.metadata().is_consensus_reached:
+        logger.info('Consensus already set for %s event', event_id)
+        return
     event_metadata.is_consensus_reached = True
     event_metadata.update()
 
