@@ -9,6 +9,7 @@ services:
     entrypoint:
       - gunicorn
       - -b :5000
+      - -t 1000
       - --reload
       - application
     environment:
@@ -40,6 +41,7 @@ services:
     entrypoint:
       - gunicorn
       - -b :5000
+      - -t 1000
       - --reload
       - application
     environment:
@@ -71,6 +73,7 @@ services:
     entrypoint:
       - gunicorn
       - -b :5000
+      - -t 1000
       - --reload
       - application
     environment:
