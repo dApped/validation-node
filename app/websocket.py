@@ -119,26 +119,38 @@ class Consumer(Common):
             scheduler.scheduler.add_job(consensus.check_consensus, args=[event, event_metadata])
 
     @classmethod
+    async def consumer(cls, message_json):
+        message = json.loads(message_json)
+        if not cls.is_message_valid(message):
+            logger.error("Message is not valid: %s", message)
+            return
+        vote = cls.json_to_vote(message['vote'])
+        if vote is None:
+            logger.error("Vote %s from node is not valid", vote.node_id)
+            return
+        if not await cls.event_exists(vote.event_id):
+            logger.error("Event %s does not exist", vote.event_id)
+            return
+        await cls.create_vote(vote)
+        cls.should_calculate_consensus(vote.event_id)
+
+    @classmethod
     async def consumer_handler(cls, websocket, _):
         cls.register(websocket)
-        try:
-            # asynchronous iteration
-            async for message_json in websocket:
-                message = json.loads(message_json)
-                if not cls.is_message_valid(message):
-                    logger.error("Message is not valid: %s", message)
-                    continue
-                vote = cls.json_to_vote(message['vote'])
-                if vote is None:
-                    logger.error("Vote %s from node is not valid", vote.node_id)
-                    continue
-                if not await cls.event_exists(vote.event_id):
-                    logger.error("Event %s does not exist", vote.event_id)
-                    continue
-                await cls.create_vote(vote)
-                cls.should_calculate_consensus(vote.event_id)
-        finally:
-            cls.unregister(websocket)
+        while True:
+            try:
+                message_json = await asyncio.wait_for(websocket.recv(), timeout=20)
+            except asyncio.TimeoutError:
+                # No data in 20 seconds, check the connection.
+                try:
+                    pong_waiter = await websocket.ping()
+                    await asyncio.wait_for(pong_waiter, timeout=10)
+                except asyncio.TimeoutError:
+                    # No response to ping in 10 seconds, disconnect.
+                    cls.unregister(websocket)
+                    break
+            else:
+                await cls.consumer(message_json)
 
 
 def loop_in_thread(event_loop):
