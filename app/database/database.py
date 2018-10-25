@@ -240,7 +240,7 @@ class Rewards(BaseEvent):
     def get_lists(event_id):
         rewards = Rewards.get(event_id)
         if rewards is None:
-            return None
+            return [], [], []
         return Rewards.transform_dict_to_lists(rewards)
 
     @staticmethod
