@@ -20,12 +20,16 @@ def process_join_events(_, event_id, entries):
     database.Participants.create(event_id, participants)
 
 
-def process_state_transition(_, event_id, entries):
+def process_state_transition(w3, event_id, entries):
     event = database.VerityEvent.get(event_id)
     entry = entries[0]
     event.state = entry['args']['newState']
     logger.info('Event %s state transition detected. New state %d', event_id, event.state)
     event.update()
+    if event.state in {4, 5}:
+        logger.info('Event %s reached a final state. Removing from DB', event_id)
+        VerityEvent.delete_all_event_data(w3, event_id)
+        # TODO: Unregister WebSocket connections
 
 
 def process_validation_start(w3, event_id, entries):
