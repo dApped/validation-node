@@ -14,13 +14,13 @@ from events import event_registry_filter
 logger = logging.getLogger('flask.app')
 
 
-def process_join_events(_, event_id, entries):
+def process_join_events(_scheduler, _w3, event_id, entries):
     logger.info('Adding %d %s entries for %s event', len(entries), JOIN_EVENT_FILTER, event_id)
     participants = [entry['args']['wallet'] for entry in entries]
     database.Participants.create(event_id, participants)
 
 
-def process_state_transition(w3, event_id, entries):
+def process_state_transition(_scheduler, w3, event_id, entries):
     event = database.VerityEvent.get(event_id)
     entry = entries[0]
     event.state = entry['args']['newState']
@@ -32,7 +32,7 @@ def process_state_transition(w3, event_id, entries):
         # TODO: Unregister WebSocket connections
 
 
-def process_validation_start(w3, event_id, entries):
+def process_validation_start(scheduler, w3, event_id, entries):
     entry = entries[0]
     event = database.VerityEvent.get(event_id)
 
@@ -41,10 +41,10 @@ def process_validation_start(w3, event_id, entries):
     event.update()
 
     if not event.is_master_node:
-        rewards.validate_rewards(w3, event_id, validation_round)
+        scheduler.add_job(rewards.validate_rewards, args=[w3, event_id, validation_round])
 
 
-def process_validation_restart(w3, event_id, entries):
+def process_validation_restart(scheduler, w3, event_id, entries):
     entry = entries[0]
     event = database.VerityEvent.get(event_id)
 
@@ -60,18 +60,17 @@ def process_validation_restart(w3, event_id, entries):
     # if node is master node, set consensus rewards
     if is_master_node:
         logger.info('Validation round %d I am Master node', validation_round)
-        # TODO if this blocks other filters, use scheduler
-        rewards.set_consensus_rewards(w3, event_id)
+        scheduler.add_job(rewards.set_consensus_rewards, args=[w3, event_id])
     else:
         logger.info('Validation round %d I am NOT Master node', validation_round)
 
 
-def process_error_event(_, event_id, entries):
+def process_error_event(_scheduler, _w3, event_id, entries):
     for entry in entries:
         logger.error('event_id: %s, %s', event_id, entry)
 
 
-def process_dispute_triggered(w3, event_id, entries):
+def process_dispute_triggered(_scheduler, w3, event_id, entries):
     entry = entries[0]
     dispute_started_by = entry['args']['byAddress']
     logger.info('Dispute on event %s triggered by %s', event_id, dispute_started_by)
@@ -113,9 +112,9 @@ def should_apply_filter(filter_name, event_id):
             and event.application_start_time <= current_timestamp <= event.event_start_time):
         # JoinEvent is used till event_start_time so that we capture all participants
         return True
-    if (filter_name in {VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER,
-                        DISPUTE_TRIGGERED_FILTER}
-            and current_timestamp >= event.event_start_time):
+    if (filter_name in {
+            VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER, DISPUTE_TRIGGERED_FILTER
+    } and current_timestamp >= event.event_start_time):
         return True
     return False
 
@@ -129,15 +128,15 @@ def init_event_filters(w3, contract_abi, event_id):
         database.Filters.create(event_id, filter_.filter_id)
         logger.info('Requesting all entries for %s on %s', filter_name, event_id)
         entries = filter_.get_all_entries()
-        if filter_name in {DISPUTE_TRIGGERED_FILTER,
-                           VALIDATION_STARTED_FILTER,
-                           VALIDATION_RESTART_FILTER} or not entries:
+        if filter_name in {
+                DISPUTE_TRIGGERED_FILTER, VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER
+        } or not entries:
             logger.info("Not calling event handler for filter %s on %s", filter_name, event_id)
             continue
-        filter_func(w3, event_id, entries)
+        filter_func(None, w3, event_id, entries)
 
 
-def filter_events(w3, formatters):
+def filter_events(scheduler, w3, formatters):
     '''filter_events runs in a cron job and requests new entries for all events'''
     event_ids = database.VerityEvent.get_ids_list()
     for event_id in event_ids:
@@ -151,7 +150,7 @@ def filter_events(w3, formatters):
                 entries = filter_.get_new_entries()
                 if not entries:
                     continue
-                filter_func(w3, event_id, entries)
+                filter_func(scheduler, w3, event_id, entries)
             except Exception as e:
                 # TODO remove this when bug is fixed
                 logger.error(event_id, filter_name)
