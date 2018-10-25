@@ -26,9 +26,10 @@ def process_state_transition(w3, event_id, entries):
     event.state = entry['args']['newState']
     logger.info('Event %s state transition detected. New state %d', event_id, event.state)
     event.update()
-    if event.state == 4 or event.state == 5:
+    if event.state in {4, 5}:
         logger.info('Event %s reached a final state. Removing from DB', event_id)
         VerityEvent.delete_all_event_data(w3, event_id)
+        # TODO: Unregister WebSocket connections
 
 
 def process_validation_start(w3, event_id, entries):
