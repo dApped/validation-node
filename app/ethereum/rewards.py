@@ -16,8 +16,8 @@ def determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_b
 
     # TODO support non linear reward distribution
     votes_count = len(consensus_votes_by_users)
-    user_ether_reward_in_wei = int(NODE_WEB3.toWei(ether_balance, 'ether') / votes_count)
-    user_token_reward_in_wei = int(NODE_WEB3.toWei(token_balance, 'ether') / votes_count)
+    user_ether_reward_in_wei = int(ether_balance / votes_count)
+    user_token_reward_in_wei = int(token_balance / votes_count)
 
     rewards_dict = {
         user_id: database.Rewards.reward_dict(
