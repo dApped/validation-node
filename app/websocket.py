@@ -141,7 +141,7 @@ class Consumer(Common):
             try:
                 message_json = await asyncio.wait_for(websocket.recv(), timeout=20)
             except asyncio.TimeoutError:
-                logger.error('No data in 20 seconds, check %s websocket connection', websocket.host)
+                # No data in 20 seconds
                 try:
                     pong_waiter = await websocket.ping()
                     await asyncio.wait_for(pong_waiter, timeout=10)
