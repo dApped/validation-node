@@ -30,23 +30,23 @@ def determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_b
 
 
 def set_consensus_rewards(w3, event_id):
-    logger.info('Started setting rewards for %s', event_id)
+    logger.info('Master node started setting rewards for %s', event_id)
     user_ids, eth_rewards, token_rewards = database.Rewards.get_lists(event_id)
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     # TODO should batch transacts to setRewards if a lot of users due to gas limit
     set_rewards_fun = contract_instance.functions.setRewards(user_ids, eth_rewards, token_rewards)
     common.function_transact(w3, set_rewards_fun)
-    logger.info('Finished setting rewards for %s', event_id)
+    logger.info('Master node finished setting rewards for %s', event_id)
     mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards)
 
 
 def mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards):
-    logger.info('Started marking rewards for %s', event_id)
+    logger.info('Master node started marking rewards for %s', event_id)
     rewards_hash = database.Rewards.hash(user_ids, eth_rewards, token_rewards)
     mark_rewards_set_fun = contract_instance.functions.markRewardsSet(rewards_hash)
     common.function_transact(w3, mark_rewards_set_fun)
-    logger.info('Finished marking rewards for %s', event_id)
+    logger.info('Master node finished marking rewards for %s', event_id)
 
 
 def validate_rewards(w3, event_id, validation_round):

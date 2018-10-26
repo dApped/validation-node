@@ -14,7 +14,6 @@ logger = logging.getLogger('flask.app')
 
 def init():
     logger.info('Scheduler Init started')
-
     event_registry_address = common.event_registry_address()
     event_registry_abi = common.event_registry_contract_abi()
     verity_event_abi = common.verity_event_contract_abi()
@@ -33,7 +32,7 @@ def init():
         verity_event_filters.filter_events,
         'interval',
         seconds=10,
-        args=[NODE_WEB3, verity_event_formatters])
+        args=[scheduler, NODE_WEB3, verity_event_formatters])
 
     scheduler.add_job(
         event_registry_filter.filter_event_registry,
