@@ -1,9 +1,9 @@
-gunicorn==19.9.0
-pytz==2018.5
+apscheduler==3.5.3
 Flask==1.0.2
+gunicorn==19.9.0
+janus==0.4.0
+python-dotenv==0.9.1
+pytz==2018.5
+redis==2.10.6
 requests==2.19.1
 web3==4.6.0
-python-dotenv==0.9.1
-redis==2.10.6
-apscheduler==3.5.3
-janus==0.4.0
