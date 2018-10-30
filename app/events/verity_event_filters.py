@@ -158,6 +158,4 @@ def filter_events(scheduler, w3, formatters):
                     continue
                 filter_func(scheduler, w3, event_id, entries)
             except Exception as e:
-                # TODO remove this when bug is fixed
-                logger.error(event_id, filter_name)
                 logger.exception(e)
