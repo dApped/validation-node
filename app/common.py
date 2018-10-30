@@ -70,5 +70,13 @@ def _raw_transaction(w3, contract_function, account, nonce):
     return raw_txn
 
 
-def public_ip():
-    return '%s:%s' % (os.getenv('NODE_IP'), os.getenv('NODE_PORT'))
+def node_ip():
+    return os.getenv('NODE_IP')
+
+
+def node_port():
+    return os.getenv('NODE_PORT')
+
+
+def node_ip_port():
+    return '%s:%s' % (node_ip(), node_port())
