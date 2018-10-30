@@ -4,6 +4,8 @@ import os
 from eth_account.account import Account
 from web3 import HTTPProvider, Web3
 
+import common
+
 logger = logging.getLogger('flask.app')
 
 
@@ -24,7 +26,7 @@ class EthProvider:
 
     @staticmethod
     def account_dict():
-        node_address = Web3.toChecksumAddress(os.getenv('NODE_ADDRESS'))
+        node_address = Web3.toChecksumAddress(common.node_id())
         node_pvt_key = os.getenv('NODE_PRIVATE_KEY')
         return {'address': node_address, 'pvt_key': node_pvt_key}
 

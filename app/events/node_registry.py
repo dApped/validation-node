@@ -1,5 +1,4 @@
 import logging
-import os
 
 import common
 from database import database
@@ -9,7 +8,7 @@ logger = logging.getLogger('flask.app')
 
 
 def register_node_ip(node_registry_abi, node_registry_address, node_ip):
-    node_addresses = [os.getenv('NODE_ADDRESS')]
+    node_addresses = [common.node_id()]
     node_ips = get_node_ips(node_registry_abi, node_registry_address, node_addresses)
 
     if not node_ips or node_ip != node_ips[0]:

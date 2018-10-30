@@ -70,6 +70,10 @@ def _raw_transaction(w3, contract_function, account, nonce):
     return raw_txn
 
 
+def node_id():
+    return os.getenv('NODE_ADDRESS')
+
+
 def node_ip():
     return os.getenv('NODE_IP')
 
