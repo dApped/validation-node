@@ -26,9 +26,9 @@ class EthProvider:
 
     @staticmethod
     def account_dict():
-        node_address = Web3.toChecksumAddress(common.node_id())
+        node_id = Web3.toChecksumAddress(common.node_id())
         node_pvt_key = os.getenv('NODE_PRIVATE_KEY')
-        return {'address': node_address, 'pvt_key': node_pvt_key}
+        return {'address': node_id, 'pvt_key': node_pvt_key}
 
 
 NODE_WEB3 = EthProvider().web3()

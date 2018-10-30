@@ -51,7 +51,7 @@ def vote(json_data):
     user_id = data['user_id']
     event = database.VerityEvent.get(event_id)
     if not event:
-        message = 'Event %s not found', event_id
+        message = 'Event %s not found' % event_id
         logger.info(message)
         return _response(message, 400)
 
