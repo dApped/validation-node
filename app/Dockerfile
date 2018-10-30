@@ -22,6 +22,3 @@ ENTRYPOINT ["gunicorn", "-b", ":5000", "application"]
 #COPY --from=builder /install /usr/local
 COPY --from=builder /usr/local /usr/local
 COPY ./ /app/
-
-
-
