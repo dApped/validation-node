@@ -25,7 +25,7 @@ def init():
     node_address = common.node_registry_address()
     event_registry_address = common.event_registry_address()
 
-    node_ip = common.public_ip()
+    node_ip = common.node_ip_port()
 
     node_registry.register_node_ip(node_registry_abi, node_address, node_ip)
     event_registry_filter.init_event_registry_filter(NODE_WEB3, event_registry_abi,

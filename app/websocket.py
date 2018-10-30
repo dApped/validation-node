@@ -7,6 +7,7 @@ import threading
 import janus
 import websockets
 
+import common
 import scheduler
 from database import database
 from events import consensus
@@ -18,7 +19,7 @@ logger = logging.getLogger('flask.app')
 
 
 class Common:
-    WEBSOCKETS = dict()  # key: ip:port, value: websocket connections
+    WEBSOCKETS = dict()  # key: ip:port, value: websocket connection
 
     @staticmethod
     def key(host, port):
@@ -44,12 +45,13 @@ class Common:
         return cls.WEBSOCKETS[websocket_address]
 
     @classmethod
-    async def get_or_create_websocket_connections(cls, node_ips):
+    async def get_or_create_websocket_connections(cls, node_ips_ports):
+        my_ip_port = common.node_ip_port()
         websockets_nodes = []
-        for node_ip in node_ips:
-            if os.getenv('NODE_PORT') in node_ip:  # TODO improve this in production
+        for node_ip_port in node_ips_ports:
+            if my_ip_port == node_ip_port:
                 continue
-            websocket_address = '%s86' % node_ip  # TODO remove this in production
+            websocket_address = '%s86' % node_ip_port  # TODO remove this in production
             websocket = await cls.get_or_create_websocket_connection(websocket_address)
             websockets_nodes.append(websocket)
         return websockets_nodes
@@ -67,7 +69,7 @@ class Producer(Common):
     async def producer(cls, message):
         node_ips = message['node_ips']
         if not node_ips:
-            logger.warning('Node ips are not set')
+            logger.warning('Node IPs are not set')
         websockets_nodes = await cls.get_or_create_websocket_connections(node_ips)
         if websockets_nodes:
             message_json = cls.create_message(message['vote'])
@@ -149,7 +151,7 @@ class Consumer(Common):
                     logger.error('No response to ping in 10 seconds, disconnect from websocket %s',
                                  websocket.host)
                     cls.unregister(websocket)
-                    break
+                    return
             else:
                 await cls.consumer(message_json)
 
