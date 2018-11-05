@@ -166,5 +166,5 @@ aws ecr list-images --repository-name validation_nodes
 Use one of the "imageTag" tags. To run a new image from ECR run:
 ```bash
 docker run -d -p 6379:6379 --name redis redis;
-docker run --env-file="<PATH_TO_ENV_FILE>" --link redis -p 80:5000 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:<IMAGE_TAG>
+docker run --env-file="<PATH_TO_ENV_FILE>" --link redis -p 80:5000 -p 8765:8765 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:<IMAGE_TAG>
 ```
