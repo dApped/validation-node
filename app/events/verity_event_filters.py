@@ -114,6 +114,8 @@ def should_apply_filter(filter_name, event_id):
 
     current_timestamp = int(time.time())
     event = database.VerityEvent.get(event_id)
+    if event is None:
+        return False
     if (filter_name == JOIN_EVENT_FILTER
             and event.application_start_time <= current_timestamp <= event.event_start_time):
         # JoinEvent is used till event_start_time so that we capture all participants
