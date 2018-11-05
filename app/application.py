@@ -81,13 +81,12 @@ def apply_headers(response):
 @application.route('/', methods=['GET'])
 def hello():
     application.logger.debug('Root resource requested' + str(datetime.utcnow()))
-    return "Nothing to see here, verity dev", 200
+    return 'Nothing to see here, verity dev', 200
 
 
 @application.route('/vote', methods=['POST'])
 def vote():
     json_data = request.get_json()
-    headers = request.headers
     response = events.vote(json_data)
     return jsonify(response), response['status']
 
