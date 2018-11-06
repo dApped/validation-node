@@ -112,9 +112,8 @@ Now you can start the app on 2 different ways:
 or
 2. As we use redis, you need to run it before starting the app.
 ```bash
-docker run -d -p 6379:6379 redis
+docker run -d -p 6379:6379 --name redis redis
 ```
-Because `env` file is configured for docker use, add `127.0.0.1 host.docker.internal` in `etc/hosts`.
 
 Then run `python app/application.py` and app is exposed at Flask's default port `5000` 
 
@@ -134,3 +133,38 @@ docker-compose -f docker-compose-dev-veritynet.yaml up
 Nodes are exposed on localhost ports `81`, `82` and `83`.
 Each has its own eth address which is assigned from locally available addresses. When using ganache dev chain you get 10.
 We reserve address `[1,2,3]` for each of the nodes respectively.
+
+## Running standalone docker image
+
+```bash
+docker build -t <IMAGE_NAME>:<IMAGE_TAG> app/
+docker run -d -p 6379:6379 --name redis redis
+docker run --env-file=".env" --link redis -p 80:5000 <IMAGE_NAME>:<IMAGE_TAG>
+```
+
+## Amazon node setup
+
+You need `.pem` file for Amazon IAM credentials. Contact @mikelnmartin for them.
+Login to ubuntu instance
+
+```bash
+ssh -i <PATH_TO_PEM>.pem ubuntu@<URL>
+```
+
+Install docker and necessary things for Amazon ECR for development docker images
+```bash
+./install_docker_ubuntu.sh
+
+sudo apt install awscli
+aws ecr get-login --no-include-email --region eu-central-1
+```
+
+To list available images in ECR run:
+```bash
+aws ecr list-images --repository-name validation_nodes
+```
+Use one of the "imageTag" tags. To run a new image from ECR run:
+```bash
+docker run -d -p 6379:6379 --name redis redis;
+docker run --env-file="<PATH_TO_ENV_FILE>" --link redis -p 80:5000 -p 8765:8765 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:<IMAGE_TAG>
+```
