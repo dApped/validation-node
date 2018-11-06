@@ -34,7 +34,7 @@ def check_consensus(event, event_metadata):
     event_metadata.update()
 
     ether_balance, token_balance = event.instance(NODE_WEB3, event_id).functions.getBalance().call()
-    rewards.determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance)
+    rewards.determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance)
     if event.is_master_node:
         scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
     else:
