@@ -31,7 +31,6 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
     }
 
     if event.disputer in consensus_votes_by_users:
-        logger.info('Disputer %s added event dispute', event.disputer)
         rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
 
     if event.staking_amount > 0:
@@ -41,6 +40,7 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
 
 
 def calculate_linear_rewards(ether_balance, token_balance, consensus_votes_by_users):
+    logger.info('Calculating rewards using linear function')
     votes_count = len(consensus_votes_by_users)
 
     eth_reward = int(ether_balance / votes_count)
@@ -67,6 +67,7 @@ def _rescale(reward, last, multi):
 
 
 def calculate_exponential_rewards(ether_balance, token_balance, consensus_votes_by_users):
+    logger.info('Calculating rewards using exponential function')
     num_users = len(consensus_votes_by_users)
     min_reward = 1.0
     factor = 8 / num_users
