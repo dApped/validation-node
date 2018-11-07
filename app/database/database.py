@@ -73,7 +73,7 @@ class VerityEvent(BaseEvent):
         self.min_consensus_ratio = min_consensus_ratio
         self.min_participant_ratio = min_participant_ratio
         self.max_participants = max_participants
-        self.rewards_distribution_function = 0  # TODO rewards_distribution_function change this
+        self.rewards_distribution_function = rewards_distribution_function
         self.rewards_validation_round = rewards_validation_round
         self.dispute_amount = dispute_amount
         self.dispute_timeout = dispute_timeout

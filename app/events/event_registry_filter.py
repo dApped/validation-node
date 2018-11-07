@@ -46,7 +46,7 @@ def call_event_contract_for_metadata(w3, contract_abi, event_id):
     validation_round = contract_instance.functions.rewardsValidationRound().call()
     ((dispute_amount, dispute_timeout, dispute_round),
      disputer) = contract_instance.functions.getDisputeData().call()
-    staking_amount = 10 # TODO: replace with real call
+    staking_amount = contract_instance.functions.stakingAmount().call()
     event = database.VerityEvent(
         event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
         application_start_time, application_end_time, event_start_time, event_end_time, event_name,
