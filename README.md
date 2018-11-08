@@ -156,7 +156,7 @@ Install docker and necessary things for Amazon ECR for development docker images
 ./install_docker_ubuntu.sh
 
 sudo apt install awscli
-aws ecr get-login --no-include-email --region eu-central-1
+$(aws ecr get-login --no-include-email --region eu-central-1)
 ```
 
 To list available images in ECR run:
@@ -168,3 +168,15 @@ Use one of the "imageTag" tags. To run a new image from ECR run:
 docker run -d -p 6379:6379 --name redis redis;
 docker run --env-file="<PATH_TO_ENV_FILE>" --link redis -p 80:5000 -p 8765:8765 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:<IMAGE_TAG>
 ```
+
+# Publishing docker image to ECR
+
+$(aws ecr get-login --no-include-email --region eu-central-1)
+docker build -t validation_nodes:<IMAGE_TAG> app/
+docker tag validation_nodes:<IMAGE_TAG> 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:<IMAGE_TAG>
+docker push 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:<IMAGE_TAG>
+
+# Pulling and starting docker image from ECR
+
+$(aws ecr get-login --no-include-email --region eu-central-1)
+docker run --env-file=ropsten-node2-env --link redis -p 80:5000 -p 8765:8765 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:<IMAGE_TAG>
