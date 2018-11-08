@@ -71,13 +71,13 @@ def calculate_exponential_rewards(ether_balance, token_balance, consensus_votes_
     num_users = len(consensus_votes_by_users)
     min_reward = 1.0
     factor = 8 / num_users
-    rewards_list = [_exponential_factor(min_reward, factor, i) for i in range(num_users)]
-    last, multi = _determine_params(rewards_list)
-    rewards_list = [_rescale(reward, last, multi) for reward in rewards_list]
-    rewards_sum = sum(rewards_list)
+    exponential_factors = [_exponential_factor(min_reward, factor, i) for i in range(num_users)]
+    last, multi = _determine_params(exponential_factors)
+    exponential_factors = [_rescale(reward, last, multi) for reward in exponential_factors]
+    rewards_sum = sum(exponential_factors)
 
     eth_rewards, token_rewards = [], []
-    for reward in rewards_list:
+    for reward in exponential_factors:
         part = reward / rewards_sum
         eth_rewards.append(int(part * ether_balance))
         token_rewards.append(int(part * token_balance))
