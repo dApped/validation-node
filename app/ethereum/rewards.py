@@ -2,31 +2,86 @@ import logging
 
 import common
 from database import database
-from ethereum.provider import NODE_WEB3
 
 logger = logging.getLogger('flask.app')
 
 
-def determine_rewards(event_id, consensus_votes_by_users, ether_balance, token_balance):
-
-    event = database.VerityEvent.get(event_id)
+def determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance):
     if event.disputer in consensus_votes_by_users:
         logger.info('Disputer %s in consensus', event.disputer)
         token_balance -= event.dispute_amount
 
-    # TODO support non linear reward distribution
-    votes_count = len(consensus_votes_by_users)
-    user_ether_reward_in_wei = int(ether_balance / votes_count)
-    user_token_reward_in_wei = int(token_balance / votes_count)
+    if event.staking_amount > 0:
+        token_balance -= event.staking_amount * len(consensus_votes_by_users)
+
+    if event.rewards_distribution_function == 0:
+        eth_rewards, token_rewards = calculate_linear_rewards(ether_balance, token_balance,
+                                                              consensus_votes_by_users)
+    elif event.rewards_distribution_function == 1:
+        eth_rewards, token_rewards = calculate_exponential_rewards(ether_balance, token_balance,
+                                                                   consensus_votes_by_users)
+    else:
+        logger.error('Rewards function %d not supported', event.rewards_distribution_function)
+        return
 
     rewards_dict = {
         user_id: database.Rewards.reward_dict(
-            eth_reward=user_ether_reward_in_wei, token_reward=user_token_reward_in_wei)
-        for user_id in consensus_votes_by_users
+            eth_reward=eth_rewards[i], token_reward=token_rewards[i])
+        for i, user_id in enumerate(consensus_votes_by_users)
     }
+
     if event.disputer in consensus_votes_by_users:
-        rewards_dict[event.disputer] = rewards_dict[event.disputer] + event.dispute_amount
-    database.Rewards.create(event_id, rewards_dict)
+        rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
+
+    if event.staking_amount > 0:
+        for user_id in consensus_votes_by_users:
+            rewards_dict[user_id][database.Rewards.TOKEN_KEY] += event.staking_amount
+    database.Rewards.create(event.event_id, rewards_dict)
+
+
+def calculate_linear_rewards(ether_balance, token_balance, consensus_votes_by_users):
+    logger.info('Calculating rewards using linear function')
+    votes_count = len(consensus_votes_by_users)
+
+    eth_reward = int(ether_balance / votes_count)
+    token_reward = int(token_balance / votes_count)
+
+    eth_rewards = [eth_reward for _ in range(votes_count)]
+    token_rewards = [token_reward for _ in range(votes_count)]
+    return eth_rewards, token_rewards
+
+
+def _exponential_factor(min_reward, factor, i):
+    return min_reward + 1 / (factor * i + 1)
+
+
+def _determine_params(rewards_list):
+    last = rewards_list[-1]
+    first = rewards_list[0] - last
+    multi = 29 / first
+    return last, multi
+
+
+def _rescale(reward, last, multi):
+    return (reward - last) * multi + 1
+
+
+def calculate_exponential_rewards(ether_balance, token_balance, consensus_votes_by_users):
+    logger.info('Calculating rewards using exponential function')
+    num_users = len(consensus_votes_by_users)
+    min_reward = 1.0
+    factor = 8 / num_users
+    exponential_factors = [_exponential_factor(min_reward, factor, i) for i in range(num_users)]
+    last, multi = _determine_params(exponential_factors)
+    exponential_factors = [_rescale(reward, last, multi) for reward in exponential_factors]
+    rewards_sum = sum(exponential_factors)
+
+    eth_rewards, token_rewards = [], []
+    for reward in exponential_factors:
+        part = reward / rewards_sum
+        eth_rewards.append(int(part * ether_balance))
+        token_rewards.append(int(part * token_balance))
+    return eth_rewards, token_rewards
 
 
 def set_consensus_rewards(w3, event_id):

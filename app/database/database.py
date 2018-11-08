@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+import os
 from collections import OrderedDict, defaultdict
 
 import redis
@@ -9,15 +10,12 @@ import common
 
 logger = logging.getLogger('flask.app')
 
-redis_db = redis.StrictRedis(host='redis', port=6379, db=0, decode_responses=True)
+redis_db = redis.StrictRedis(host=os.getenv('REDIS_URL'), port=6379, db=0, decode_responses=True)
 
 
 def flush_database():
     logger.info('Flushing database')
     redis_db.flushdb()
-
-
-logger = logging.getLogger('flask.app')
 
 
 class BaseEvent:
@@ -55,8 +53,8 @@ class VerityEvent(BaseEvent):
                  application_start_time, application_end_time, event_start_time, event_end_time,
                  event_name, data_feed_hash, state, is_master_node, min_total_votes,
                  min_consensus_votes, min_consensus_ratio, min_participant_ratio, max_participants,
-                 rewards_distribution_function, rewards_validation_round,
-                 dispute_amount, dispute_timeout, dispute_round, disputer):
+                 rewards_distribution_function, rewards_validation_round, dispute_amount,
+                 dispute_timeout, dispute_round, disputer, staking_amount):
         self.event_id = event_id
         self.owner = owner
         self.token_address = token_address
@@ -81,6 +79,7 @@ class VerityEvent(BaseEvent):
         self.dispute_timeout = dispute_timeout
         self.dispute_round = dispute_round
         self.disputer = disputer
+        self.staking_amount = staking_amount
 
     def votes(self):
         votes_by_users = Vote.group_votes_by_users(self.event_id, self.node_addresses)
