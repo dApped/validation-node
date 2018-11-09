@@ -73,10 +73,12 @@ def _raw_transaction(w3, contract_function, account, nonce):
 
 
 def list_to_chunks(list_, batch_size=BATCH_SIZE):
+    """ Converts a list to chunks with batch_size entries """
     return list(list_[i:i + batch_size] for i in range(0, len(list_), batch_size))
 
 
 def lists_to_chunks(*lists, batch_size=BATCH_SIZE):
+    """ Converts multiple lists to chunks with batch_size entries """
     assert len({len(list_) for list_ in lists}) == 1, "Lists have different lengths"
 
     chunks = list(list_to_chunks(list_, batch_size) for list_ in lists)
