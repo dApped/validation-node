@@ -89,9 +89,14 @@ def set_consensus_rewards(w3, event_id):
     user_ids, eth_rewards, token_rewards = database.Rewards.get_lists(event_id)
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
-    # TODO should batch transacts to setRewards if a lot of users due to gas limit
-    set_rewards_fun = contract_instance.functions.setRewards(user_ids, eth_rewards, token_rewards)
-    common.function_transact(w3, set_rewards_fun)
+
+    chunks = common.lists_to_chunks(user_ids, eth_rewards, token_rewards)
+    for i, (user_ids_chunk, eth_rewards_chunk, token_rewards_chunk) in enumerate(chunks, 1):
+        logger.info('Setting rewards for %d of %d chunks', i, len(chunks))
+        set_rewards_fun = contract_instance.functions.setRewards(user_ids_chunk, eth_rewards_chunk,
+                                                                 token_rewards_chunk)
+        common.function_transact(w3, set_rewards_fun)
+
     logger.info('Master node finished setting rewards for %s', event_id)
     mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards)
 
@@ -108,9 +113,16 @@ def validate_rewards(w3, event_id, validation_round):
     event_contract_abi = common.verity_event_contract_abi()
     event_contract = w3.eth.contract(address=event_id, abi=event_contract_abi)
     contract_reward_user_ids = event_contract.functions.getRewardsIndex().call()
-    # TODO should batch calls to getRewards if a lot of users due to gas limit
-    (contract_reward_ether,
-     contract_reward_token) = event_contract.functions.getRewards(contract_reward_user_ids).call()
+
+    contract_reward_ether, contract_reward_token = [], []
+    contract_reward_user_ids_chunks = common.list_to_chunks(contract_reward_user_ids)
+    for i, contract_reward_user_ids_chunk in enumerate(contract_reward_user_ids_chunks, 1):
+        logger.info('Requesting contract reward user ids for %d of %d chunks', i,
+                    len(contract_reward_user_ids_chunks))
+        (contract_reward_ether_chunk, contract_reward_token_chunk
+         ) = event_contract.functions.getRewards(contract_reward_user_ids_chunk).call()
+        contract_reward_ether.extend(contract_reward_ether_chunk)
+        contract_reward_token.extend(contract_reward_token_chunk)
 
     contract_rewards_dict = database.Rewards.transform_lists_to_dict(
         contract_reward_user_ids, contract_reward_ether, contract_reward_token)
