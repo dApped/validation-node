@@ -9,6 +9,8 @@ from ethereum.provider import EthProvider
 
 logger = logging.getLogger('flask.app')
 
+BATCH_SIZE = 20
+
 
 def verity_event_contract_abi():
     return json.loads(open(os.path.join(os.getenv('CONTRACT_DIR'),
@@ -68,6 +70,17 @@ def _raw_transaction(w3, contract_function, account, nonce):
         contract_function.buildTransaction(transaction), private_key=account['pvt_key'])
     raw_txn = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
     return raw_txn
+
+
+def list_to_chunks(list_, batch_size=BATCH_SIZE):
+    return list(list_[i:i + batch_size] for i in range(0, len(list_), batch_size))
+
+
+def lists_to_chunks(*lists, batch_size=BATCH_SIZE):
+    assert len({len(list_) for list_ in lists}) == 1, "Lists have different lengths"
+
+    chunks = list(list_to_chunks(list_, batch_size) for list_ in lists)
+    return list(map(list, zip(*chunks)))  # transpose lists
 
 
 def node_id():
