@@ -91,7 +91,7 @@ def set_consensus_rewards(w3, event_id):
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
 
     chunks = common.lists_to_chunks(user_ids, eth_rewards, token_rewards)
-    for i, (user_ids_chunk, eth_rewards_chunk, token_rewards_chunk) in enumerate( chunks, 1):
+    for i, (user_ids_chunk, eth_rewards_chunk, token_rewards_chunk) in enumerate(chunks, 1):
         logger.info('Setting rewards for %d of %d chunks', i, len(chunks))
         set_rewards_fun = contract_instance.functions.setRewards(user_ids_chunk, eth_rewards_chunk,
                                                                  token_rewards_chunk)
