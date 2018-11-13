@@ -168,11 +168,4 @@ def init():
     logger.info('Websocket Init started')
     t = threading.Thread(target=loop_in_thread, args=(LOOP, ))
     t.start()
-
-    addresses = [
-        "ec2-18-185-117-85.eu-central-1.compute.amazonaws.com:80",
-        "ec2-18-185-32-196.eu-central-1.compute.amazonaws.com:80",
-        "ec2-18-196-1-187.eu-central-1.compute.amazonaws.com:80"
-    ]
-    QUEUE.sync_q.put({'node_ips': addresses, 'vote': {'vote': 'something'}})
     logger.info('Websocket Init done')
