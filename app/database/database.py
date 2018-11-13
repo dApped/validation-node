@@ -250,7 +250,7 @@ class Rewards(BaseEvent):
 class Vote(BaseEvent):
     PREFIX = 'votes'
     PREFIX_COMMON = 'votes_common'
-    ANSWERS_SORT_KEY = 'field_name'
+    ANSWERS_SORT_KEY = 'field_id'
 
     def __init__(self, user_id, event_id, node_id, timestamp, answers, _ordered_answers=None):
         self.user_id = user_id
