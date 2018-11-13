@@ -52,7 +52,6 @@ class Common:
             if my_ip_port == node_ip_port:
                 continue
             websocket_address = node_ip_port.split(':')[0] + ':8765'
-            logger.info('Websocket address %s', websocket_address)
             websocket = await cls.get_or_create_websocket_connection(websocket_address)
             websockets_nodes.append(websocket)
         return websockets_nodes
