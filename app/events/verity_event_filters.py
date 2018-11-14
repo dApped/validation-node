@@ -22,7 +22,7 @@ def process_join_events(_scheduler, _w3, event_id, entries):
 
 def process_state_transition(_scheduler, w3, event_id, entries):
     event = database.VerityEvent.get(event_id)
-    entry = entries[0]
+    entry = entries[-1]
     event.state = entry['args']['newState']
     logger.info('Event %s state transition detected. New state %d', event_id, event.state)
     event.update()
@@ -33,7 +33,7 @@ def process_state_transition(_scheduler, w3, event_id, entries):
 
 
 def process_validation_start(scheduler, w3, event_id, entries):
-    entry = entries[0]
+    entry = entries[-1]
     event = database.VerityEvent.get(event_id)
 
     validation_round = entry['args']['validationRound']
@@ -48,7 +48,7 @@ def process_validation_start(scheduler, w3, event_id, entries):
 
 
 def process_validation_restart(scheduler, w3, event_id, entries):
-    entry = entries[0]
+    entry = entries[-1]
     event = database.VerityEvent.get(event_id)
 
     validation_round = entry['args']['validationRound']
@@ -77,7 +77,7 @@ def process_error_event(_scheduler, _w3, event_id, entries):
 
 
 def process_dispute_triggered(_scheduler, w3, event_id, entries):
-    entry = entries[0]
+    entry = entries[-1]
     dispute_started_by = entry['args']['byAddress']
     logger.info('Dispute on event %s triggered by %s', event_id, dispute_started_by)
     VerityEvent.delete_all_event_data(w3, event_id)
@@ -130,18 +130,30 @@ def should_apply_filter(filter_name, event_id):
 def init_event_filters(w3, contract_abi, event_id):
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     for filter_name, filter_func in EVENT_FILTERS:
-        logger.info('Initializing %s filter for %s event', filter_name, event_id)
-        filter_ = contract_instance.events[filter_name].createFilter(
-            fromBlock='earliest', toBlock='latest')
-        database.Filters.create(event_id, filter_.filter_id)
-        logger.info('Requesting all entries for %s on %s', filter_name, event_id)
-        entries = filter_.get_all_entries()
-        if filter_name in {
-                DISPUTE_TRIGGERED_FILTER, VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER
-        } or not entries:
-            logger.info("Not calling event handler for filter %s on %s", filter_name, event_id)
-            continue
-        filter_func(None, w3, event_id, entries)
+        init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
+
+
+def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id):
+    logger.info('Initializing %s filter for %s event', filter_name, event_id)
+    filter_ = contract_instance.events[filter_name].createFilter(
+        fromBlock='earliest', toBlock='latest')
+    database.Filters.create(event_id, filter_.filter_id)
+    logger.info('Requesting all entries for %s on %s', filter_name, event_id)
+    entries = filter_.get_all_entries()
+    if filter_name in {
+            DISPUTE_TRIGGERED_FILTER, VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER
+    } or not entries:
+        logger.info("Not calling event handler for filter %s on %s", filter_name, event_id)
+        return
+    filter_func(None, w3, event_id, entries)
+
+
+def recover_filter(w3, event_id, filter_name, filter_func, filter_id):
+    logger.Info("Recovering filter %s for %s event", filter_name, event_id)
+    database.Filters.remove_from_list(event_id, filter_id)
+    contract_abi = common.verity_event_contract_abi()
+    contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
+    init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
 
 
 def filter_events(scheduler, w3, formatters):
@@ -154,10 +166,14 @@ def filter_events(scheduler, w3, formatters):
                 continue
             filter_ = w3.eth.filter(filter_id=filter_id)
             filter_.log_entry_formatter = formatters[filter_name]
+
             try:
                 entries = filter_.get_new_entries()
-                if not entries:
-                    continue
-                filter_func(scheduler, w3, event_id, entries)
             except Exception as e:
                 logger.exception(e)
+                recover_filter(w3, event_id, filter_name, filter_func, filter_id)
+                continue
+
+            if not entries:
+                continue
+            filter_func(scheduler, w3, event_id, entries)
