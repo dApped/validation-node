@@ -97,12 +97,12 @@ def set_consensus_rewards(w3, event_id):
                                                                  token_rewards_chunk)
         common.function_transact(w3, set_rewards_fun)
     # TODO uncoment and fix function name when implemented
-    #logger.info('Master node started setting consensus answer for %s', event_id)
-    #consensus_answer = database.Vote.get_consensus_vote(event_id)
-    #answer_list = [answer[database.Vote.ANSWERS_VALUE_KEY] for answer in consensus_answer.ordered_answers()]
-    #set_consensus_vote_fun = contract_instance.functions.setAnswer(answer_list)
-    #common.function_transact(w3, set_consensus_vote_fun)
-    #logger.info('Master node finished setting consensus answer for %s', event_id)
+    # logger.info('Master node started setting consensus answer for %s', event_id)
+    # consensus_answer = database.Vote.get_consensus_vote(event_id)
+    # answer_list = [answer[database.Vote.ANSWERS_VALUE_KEY] for answer in consensus_answer.ordered_answers()]
+    # set_consensus_vote_fun = contract_instance.functions.setAnswer(answer_list)
+    # common.function_transact(w3, set_consensus_vote_fun)
+    # logger.info('Master node finished setting consensus answer for %s', event_id)
 
     logger.info('Master node finished setting rewards for %s', event_id)
     mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards)
@@ -134,15 +134,19 @@ def validate_rewards(w3, event_id, validation_round):
     contract_rewards_dict = database.Rewards.transform_lists_to_dict(
         contract_reward_user_ids, contract_reward_ether, contract_reward_token)
     node_rewards_dict = database.Rewards.get(event_id)
+
+    contract_consensus_vote = event_contract.functions.getAnswer()
+    consensus_vote = database.Vote.get_consensus_vote(event_id)
+
     rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
-    if rewards_match:
-        logger.info('Rewards match for event %s. Approving rewards for round %d', event_id,
-                    validation_round)
+    if rewards_match and contract_consensus_vote == consensus_vote:
+        logger.info('Rewards and answers match for event %s. Approving rewards for round %d',
+                    event_id, validation_round)
         approve_fun = event_contract.functions.approveRewards(validation_round)
         common.function_transact(w3, approve_fun)
     else:
-        logger.info('Rewards DO NOT match for event %s. Rejecting rewards for round %d', event_id,
-                    validation_round)
+        logger.info('Rewards or answers DO NOT match for event %s. Rejecting rewards for round %d',
+                    event_id, validation_round)
         (user_ids, eth_rewards,
          token_rewards) = database.Rewards.transform_dict_to_lists(node_rewards_dict)
         alt_hash = database.Rewards.hash(user_ids, eth_rewards, token_rewards)
