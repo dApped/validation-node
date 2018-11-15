@@ -250,7 +250,9 @@ class Rewards(BaseEvent):
 class Vote(BaseEvent):
     PREFIX = 'votes'
     PREFIX_COMMON = 'votes_common'
+    PREFIX_CONSENSUS = 'votes_consensus'
     ANSWERS_SORT_KEY = 'field_name'
+    ANSWERS_VALUE_KEY = 'field_value'
 
     def __init__(self, user_id, event_id, node_id, timestamp, answers, _ordered_answers=None):
         self.user_id = user_id
@@ -268,10 +270,26 @@ class Vote(BaseEvent):
     def key_common(cls, event_id):
         return '%s_%s' % (cls.PREFIX_COMMON, event_id)
 
+    @classmethod
+    def key_consensus(cls, event_id):
+        return '%s_%s' % (cls.PREFIX_CONSENSUS, event_id)
+
     def create(self):
         redis_db.rpush(self.key(self.event_id, self.node_id), self.to_json())
         redis_db.sadd(self.key_common(self.event_id), self.user_id)
         return self
+
+    def set_consensus_vote(self):
+        redis_db.set(self.key_consensus(self.event_id), self.to_json())
+        return self
+
+    @classmethod
+    def get_consensus_vote(cls, event_id):
+        key = cls.key_consensus(event_id)
+        consensus_vote = redis_db.get(key)
+        if consensus_vote is None:
+            return None
+        return cls.from_json(consensus_vote)
 
     @classmethod
     def delete_all(cls, pipeline, event_id, node_ids):
@@ -332,6 +350,8 @@ class Vote(BaseEvent):
         for _, votes in votes_by_users.items():
             if not votes:
                 continue
+            # each user has multiple votes
+            # (although they are the same, so take first one to calculate vote representation
             vote_repr = votes[0].ordered_answers().__repr__()
             votes_by_repr[vote_repr].extend(votes)
         return votes_by_repr

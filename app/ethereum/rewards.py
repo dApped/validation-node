@@ -96,6 +96,13 @@ def set_consensus_rewards(w3, event_id):
         set_rewards_fun = contract_instance.functions.setRewards(user_ids_chunk, eth_rewards_chunk,
                                                                  token_rewards_chunk)
         common.function_transact(w3, set_rewards_fun)
+    # TODO uncoment and fix function name when implemented
+    #logger.info('Master node started setting consensus answer for %s', event_id)
+    #consensus_answer = database.Vote.get_consensus_vote(event_id)
+    #answer_list = [answer[database.Vote.ANSWERS_VALUE_KEY] for answer in consensus_answer.ordered_answers()]
+    #set_consensus_vote_fun = contract_instance.functions.setAnswer(answer_list)
+    #common.function_transact(w3, set_consensus_vote_fun)
+    #logger.info('Master node finished setting consensus answer for %s', event_id)
 
     logger.info('Master node finished setting rewards for %s', event_id)
     mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards)
