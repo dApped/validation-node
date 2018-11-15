@@ -149,7 +149,7 @@ def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
 
 
 def recover_filter(w3, event_id, filter_name, filter_func, filter_id):
-    logger.Info("Recovering filter %s for %s event", filter_name, event_id)
+    logger.info("Recovering filter %s for %s event", filter_name, event_id)
     database.Filters.remove_from_list(event_id, filter_id)
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
