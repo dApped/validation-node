@@ -10,6 +10,7 @@ services:
       - gunicorn
       - -b :5000
       - -t 1000
+      - -k gevent
       - --reload
       - application
     environment:
@@ -42,6 +43,7 @@ services:
       - gunicorn
       - -b :5000
       - -t 1000
+      - -k gevent
       - --reload
       - application
     environment:
@@ -74,6 +76,7 @@ services:
       - gunicorn
       - -b :5000
       - -t 1000
+      - -k gevent
       - --reload
       - application
     environment:
