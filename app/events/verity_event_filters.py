@@ -161,6 +161,9 @@ def filter_events(scheduler, w3, formatters):
     event_ids = database.VerityEvent.get_ids_list()
     for event_id in event_ids:
         filter_ids = database.Filters.get_list(event_id)
+        if database.VerityEvent.get(event_id) is None:
+            logger.info('Event %s is not in the database', event_id)
+            continue
         for (filter_name, filter_func), filter_id in zip(EVENT_FILTERS, filter_ids):
             if not should_apply_filter(filter_name, event_id):
                 continue
