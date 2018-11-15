@@ -49,7 +49,6 @@ def vote(json_data):
 
     data = json_data['data']
     event_id = data['event_id']
-    event_id = os.getenv('EVENT_ID')
     user_id = data['user_id']
     event = database.VerityEvent.get(event_id)
     if not event:
