@@ -185,6 +185,11 @@ class Filters(BaseEvent):
         key = Filters.key(event_id)
         return redis_db.lrange(key, 0, -1)
 
+    @staticmethod
+    def remove_from_list(event_id, filter_id):
+        key = Filters.key(event_id)
+        return redis_db.lrem(key, 1, filter_id)
+
     @classmethod
     def uninstall(cls, w3, filter_ids):
         for filter_id in filter_ids:
@@ -250,7 +255,7 @@ class Rewards(BaseEvent):
 class Vote(BaseEvent):
     PREFIX = 'votes'
     PREFIX_COMMON = 'votes_common'
-    ANSWERS_SORT_KEY = 'field_name'
+    ANSWERS_SORT_KEY = 'field_id'
 
     def __init__(self, user_id, event_id, node_id, timestamp, answers, _ordered_answers=None):
         self.user_id = user_id
