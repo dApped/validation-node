@@ -15,7 +15,7 @@ logger = logging.getLogger('flask.app')
 
 
 def process_join_events(_scheduler, _w3, event_id, entries):
-    logger.info('Adding %d %s entries for %s event', len(entries), JOIN_EVENT_FILTER, event_id)
+    logger.info('[%s] Adding %d %s entries for event', event_id, len(entries), JOIN_EVENT_FILTER)
     participants = [entry['args']['wallet'] for entry in entries]
     database.Participants.create(event_id, participants)
 
@@ -24,10 +24,10 @@ def process_state_transition(_scheduler, w3, event_id, entries):
     event = database.VerityEvent.get(event_id)
     entry = entries[-1]
     event.state = entry['args']['newState']
-    logger.info('Event %s state transition detected. New state %d', event_id, event.state)
+    logger.info('[%s] Event state transition detected. New state %d', event_id, event.state)
     event.update()
     if event.state in {4, 5}:
-        logger.info('Event %s reached a final state. Removing from DB', event_id)
+        logger.info('[%s] Event reached a final state. Removing from DB', event_id)
         VerityEvent.delete_all_event_data(w3, event_id)
         # TODO: Unregister WebSocket connections
 
@@ -41,7 +41,7 @@ def process_validation_start(scheduler, w3, event_id, entries):
     event.update()
 
     if not scheduler:
-        logger.warning('Scheduler is not set')
+        logger.warning('[%s] scheduler is not set', event_id)
         return
     if not event.is_master_node:
         scheduler.add_job(rewards.validate_rewards, args=[w3, event_id, validation_round])
@@ -52,7 +52,7 @@ def process_validation_restart(scheduler, w3, event_id, entries):
     event = database.VerityEvent.get(event_id)
 
     validation_round = entry['args']['validationRound']
-    logger.info('Validation round %d restart', validation_round)
+    logger.info('[%s] Validation round %d restart', event_id, validation_round)
     # validation round starts from 1, instead of 0
     is_master_node = w3.eth.defaultAccount == event.node_addresses[validation_round - 1]
 
@@ -65,10 +65,10 @@ def process_validation_restart(scheduler, w3, event_id, entries):
         return
     # if node is master node, set consensus rewards
     if is_master_node:
-        logger.info('Validation round %d I am Master node', validation_round)
+        logger.info('[%s] vAlidation round %d I am Master node', event_id, validation_round)
         scheduler.add_job(rewards.set_consensus_rewards, args=[w3, event_id])
     else:
-        logger.info('Validation round %d I am NOT Master node', validation_round)
+        logger.info('[%s] Validation round %d I am NOT Master node', event_id, validation_round)
 
 
 def process_error_event(_scheduler, _w3, event_id, entries):
@@ -79,7 +79,7 @@ def process_error_event(_scheduler, _w3, event_id, entries):
 def process_dispute_triggered(_scheduler, w3, event_id, entries):
     entry = entries[-1]
     dispute_started_by = entry['args']['byAddress']
-    logger.info('Dispute on event %s triggered by %s', event_id, dispute_started_by)
+    logger.info('[%s] Dispute on event started by %s', event_id, dispute_started_by)
     VerityEvent.delete_all_event_data(w3, event_id)
     event_registry_filter.init_event(w3, common.verity_event_contract_abi(), event_id)
 
@@ -134,22 +134,22 @@ def init_event_filters(w3, contract_abi, event_id):
 
 
 def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id):
-    logger.info('Initializing %s filter for %s event', filter_name, event_id)
+    logger.info('[%s] Initializing %s filter fo event', event_id, filter_name)
     filter_ = contract_instance.events[filter_name].createFilter(
         fromBlock='earliest', toBlock='latest')
     database.Filters.create(event_id, filter_.filter_id)
-    logger.info('Requesting all entries for %s on %s', filter_name, event_id)
+    logger.info('[%s] Requesting all entries for %s', event_id, filter_name)
     entries = filter_.get_all_entries()
     if filter_name in {
             DISPUTE_TRIGGERED_FILTER, VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER
     } or not entries:
-        logger.info("Not calling event handler for filter %s on %s", filter_name, event_id)
+        logger.info("[%s] No entries for filter %s", event_id, filter_name)
         return
     filter_func(None, w3, event_id, entries)
 
 
 def recover_filter(w3, event_id, filter_name, filter_func, filter_id):
-    logger.info("Recovering filter %s for %s event", filter_name, event_id)
+    logger.info("[%s] Recovering filter %s for event", event_id, filter_name)
     database.Filters.remove_from_list(event_id, filter_id)
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
@@ -162,7 +162,7 @@ def filter_events(scheduler, w3, formatters):
     for event_id in event_ids:
         filter_ids = database.Filters.get_list(event_id)
         if database.VerityEvent.get(event_id) is None:
-            logger.info('Event %s is not in the database', event_id)
+            logger.info('[%s] Event is not in the database', event_id)
             continue
         for (filter_name, filter_func), filter_id in zip(EVENT_FILTERS, filter_ids):
             if not should_apply_filter(filter_name, event_id):

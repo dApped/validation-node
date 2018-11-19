@@ -83,7 +83,7 @@ class VerityEvent(BaseEvent):
 
     def votes(self):
         votes_by_users = Vote.group_votes_by_users(self.event_id, self.node_addresses)
-        votes_by_users = Vote.filter_votes_by_users(votes_by_users)
+        votes_by_users = Vote.filter_votes_by_users(event_id, votes_by_users)
         return votes_by_users
 
     @staticmethod
@@ -316,18 +316,19 @@ class Vote(BaseEvent):
         return votes_by_users
 
     @staticmethod
-    def filter_votes_by_users(votes_by_users):
+    def filter_votes_by_users(event_id, votes_by_users):
         min_votes, max_votes = 2, 3
         user_ids = list(votes_by_users.keys())
         for user_id in user_ids:
             n_votes = len(votes_by_users[user_id])
             if n_votes < min_votes or n_votes > max_votes:
-                logger.info('Vote from %s user has too many or too little entries: %d. Skip it',
-                            user_id, n_votes)
+                logger.info(
+                    '[%s] Vote from %s user has too many or too little entries: %d. Skip it',
+                    event_id, user_id, n_votes)
                 del votes_by_users[user_id]
             elif len({vote.ordered_answers().__repr__() for vote in votes_by_users[user_id]}) != 1:
                 # answers from nodes are not the same
-                logger.info('User %s voted differently on different nodes', user_id)
+                logger.info('[%s] User %s voted differently on different nodes', event_id, user_id)
                 del votes_by_users[user_id]
         return votes_by_users
 

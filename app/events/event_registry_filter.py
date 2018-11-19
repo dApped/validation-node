@@ -28,7 +28,7 @@ def call_event_contract_for_metadata(w3, contract_abi, event_id):
     state = contract_instance.functions.getState().call()
     if state > 2:
         logger.info(
-            'Skipping event %s with state: %d. It is not in waiting, application or running state',
+            '[%s] skipping event with state: %d. It is not in waiting|application|running state',
             event_id, state)
         return None
 
@@ -59,16 +59,16 @@ def call_event_contract_for_metadata(w3, contract_abi, event_id):
 def init_event(w3, contract_abi, event_id):
     node_id = common.node_id()
     if not is_node_registered_on_event(w3, contract_abi, node_id, event_id):
-        logger.info('Node %s is not included in %s event', node_id, event_id)
+        logger.info('[%s] node %s is not included in the event', event_id, node_id)
         return
-    logger.info('Initializing %s event', event_id)
+    logger.info('[%s] initializing event', event_id)
 
     event = call_event_contract_for_metadata(w3, contract_abi, event_id)
     if not event:
         return
     event.create()
     verity_event_filters.init_event_filters(w3, contract_abi, event.event_id)
-    logger.info('%s event initialized', event_id)
+    logger.info('[%s] event initialized', event_id)
 
 
 def init_event_registry_filter(w3, event_registry_abi, verity_event_abi, event_registry_address):
@@ -76,7 +76,7 @@ def init_event_registry_filter(w3, event_registry_abi, verity_event_abi, event_r
     filter_ = contract_instance.events[NEW_VERITY_EVENT].createFilter(
         fromBlock='earliest', toBlock='latest')
     database.Filters.create(event_registry_address, filter_.filter_id)
-    logger.info('Requesting all entries for %s on %s', NEW_VERITY_EVENT, event_registry_address)
+    logger.info('[%s] requesting all entries for %s from EventRegistry', event_registry_address, NEW_VERITY_EVENT)
     entries = filter_.get_all_entries()
     process_new_verity_events(w3, verity_event_abi, entries)
 

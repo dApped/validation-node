@@ -20,15 +20,15 @@ def check_consensus(event, event_metadata):
     vote_count = len(votes_by_users)
 
     if not should_calculate_consensus(event, vote_count):
-        logger.info('Should not calculate consensus for %s event', event_id)
+        logger.info('[%s] Should not calculate consensus for event', event_id)
         return
     consensus_votes_by_users = calculate_consensus(event, votes_by_users)
     if not consensus_votes_by_users:
-        logger.info('Consensus not reached for %s event', event_id)
+        logger.info('[%s] Consensus not reached for event', event_id)
         return
-    logger.info('Consensus reached for %s event', event_id)
+    logger.info('[%s] Consensus reached for event', event_id)
     if event.metadata().is_consensus_reached:
-        logger.info('Consensus already set for %s event', event_id)
+        logger.info('[%s] Consensus already set for event', event_id)
         return
     event_metadata.is_consensus_reached = True
     event_metadata.update()
@@ -45,7 +45,7 @@ def calculate_consensus(event, votes_by_users):
     vote_count = len(votes_by_users)
     if vote_count < event.min_total_votes:
         logger.info(
-            'Not enough valid votes to calculate consensus for %s event. votes_by_users=%d, min_total_votes=%d',
+            '[%s] Not enough valid votes to calculate consensus for event. votes_by_users=%d, min_total_votes=%d',
             event.event_id, len(votes_by_users), event.min_total_votes)
         return dict()
 
@@ -62,7 +62,7 @@ def calculate_consensus(event, votes_by_users):
     if (consensus_votes_count < event.min_consensus_votes
             or consensus_ratio * 100 < event.min_consensus_ratio):
         logger.info(
-            'Not enough consensus votes for %s event. votes_by_users=%d, min_total_votes=%d, consensus_ratio=%d, min_consensus_ratio=%d',
+            '[%s] Not enough consensus votes for event. votes_by_users=%d, min_total_votes=%d, consensus_ratio=%d, min_consensus_ratio=%d',
             event.event_id, len(votes_by_users), event.min_total_votes, consensus_ratio,
             event.min_consensus_ratio)
         return dict()
