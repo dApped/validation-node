@@ -7,21 +7,25 @@ logger = logging.getLogger('flask.app')
 
 
 def determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance):
+    event_id = event.event_id
     if event.disputer in consensus_votes_by_users:
-        logger.info('Disputer %s in consensus', event.disputer)
+        logger.info('[%s] Disputer %s in consensus', event_id, event.disputer)
         token_balance -= event.dispute_amount
 
     if event.staking_amount > 0:
         token_balance -= event.staking_amount * len(consensus_votes_by_users)
 
     if event.rewards_distribution_function == 0:
+        logger.info('[%s] Calculating rewards using linear function', event_id)
         eth_rewards, token_rewards = calculate_linear_rewards(ether_balance, token_balance,
                                                               consensus_votes_by_users)
     elif event.rewards_distribution_function == 1:
+        logger.info('[%s] Calculating rewards using exponential function', event_id)
         eth_rewards, token_rewards = calculate_exponential_rewards(ether_balance, token_balance,
                                                                    consensus_votes_by_users)
     else:
-        logger.error('Rewards function %d not supported', event.rewards_distribution_function)
+        logger.error('[%s] Rewards function %d not supported', event_id,
+                     event.rewards_distribution_function)
         return
 
     rewards_dict = {
@@ -40,7 +44,6 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
 
 
 def calculate_linear_rewards(ether_balance, token_balance, consensus_votes_by_users):
-    logger.info('Calculating rewards using linear function')
     votes_count = len(consensus_votes_by_users)
 
     eth_reward = int(ether_balance / votes_count)
@@ -67,7 +70,6 @@ def _rescale(reward, last, multi):
 
 
 def calculate_exponential_rewards(ether_balance, token_balance, consensus_votes_by_users):
-    logger.info('Calculating rewards using exponential function')
     num_users = len(consensus_votes_by_users)
     min_reward = 1.0
     factor = 8 / num_users
@@ -85,28 +87,28 @@ def calculate_exponential_rewards(ether_balance, token_balance, consensus_votes_
 
 
 def set_consensus_rewards(w3, event_id):
-    logger.info('Master node started setting rewards for %s', event_id)
+    logger.info('[%s] Master node started setting rewards', event_id)
     user_ids, eth_rewards, token_rewards = database.Rewards.get_lists(event_id)
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
 
     chunks = common.lists_to_chunks(user_ids, eth_rewards, token_rewards)
     for i, (user_ids_chunk, eth_rewards_chunk, token_rewards_chunk) in enumerate(chunks, 1):
-        logger.info('Setting rewards for %d of %d chunks', i, len(chunks))
+        logger.info('[%s] Setting rewards for %d of %d chunks', event_id, i, len(chunks))
         set_rewards_fun = contract_instance.functions.setRewards(user_ids_chunk, eth_rewards_chunk,
                                                                  token_rewards_chunk)
         common.function_transact(w3, set_rewards_fun)
 
-    logger.info('Master node finished setting rewards for %s', event_id)
+    logger.info('[%s] Master node finished setting rewards', event_id)
     mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards)
 
 
 def mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards):
-    logger.info('Master node started marking rewards for %s', event_id)
+    logger.info('[%s] Master node started marking rewards', event_id)
     rewards_hash = database.Rewards.hash(user_ids, eth_rewards, token_rewards)
     mark_rewards_set_fun = contract_instance.functions.markRewardsSet(rewards_hash)
     common.function_transact(w3, mark_rewards_set_fun)
-    logger.info('Master node finished marking rewards for %s', event_id)
+    logger.info('[%s] Master node finished marking rewards', event_id)
 
 
 def validate_rewards(w3, event_id, validation_round):
@@ -117,7 +119,7 @@ def validate_rewards(w3, event_id, validation_round):
     contract_reward_ether, contract_reward_token = [], []
     contract_reward_user_ids_chunks = common.list_to_chunks(contract_reward_user_ids)
     for i, contract_reward_user_ids_chunk in enumerate(contract_reward_user_ids_chunks, 1):
-        logger.info('Requesting contract reward user ids for %d of %d chunks', i,
+        logger.info('[%s] Requesting contract reward user ids for %d of %d chunks', event_id, i,
                     len(contract_reward_user_ids_chunks))
         (contract_reward_ether_chunk, contract_reward_token_chunk
          ) = event_contract.functions.getRewards(contract_reward_user_ids_chunk).call()
@@ -129,12 +131,12 @@ def validate_rewards(w3, event_id, validation_round):
     node_rewards_dict = database.Rewards.get(event_id)
     rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
     if rewards_match:
-        logger.info('Rewards match for event %s. Approving rewards for round %d', event_id,
+        logger.info('[%s] Rewards match. Approving rewards for round %d', event_id,
                     validation_round)
         approve_fun = event_contract.functions.approveRewards(validation_round)
         common.function_transact(w3, approve_fun)
     else:
-        logger.info('Rewards DO NOT match for event %s. Rejecting rewards for round %d', event_id,
+        logger.info('[%s] Rewards DO NOT match. Rejecting rewards for round %d', event_id,
                     validation_round)
         (user_ids, eth_rewards,
          token_rewards) = database.Rewards.transform_dict_to_lists(node_rewards_dict)

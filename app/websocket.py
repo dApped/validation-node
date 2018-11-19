@@ -109,8 +109,8 @@ class Consumer(Common):
     @staticmethod
     async def create_vote(vote):
         vote.create()
-        logger.info('Created vote from %s user for %s event from %s node', vote.user_id,
-                    vote.event_id, vote.node_id)
+        logger.info('[%s] Received vote from %s user from %s node: %s', vote.event_id, vote.user_id,
+                    vote.node_id, vote.answers)
 
     @staticmethod
     def should_calculate_consensus(event_id):

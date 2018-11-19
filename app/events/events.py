@@ -13,14 +13,14 @@ logger = logging.getLogger('flask.app')
 
 def _is_vote_valid(timestamp, user_id, event):
     if timestamp < event.event_start_time or timestamp > event.event_end_time:
-        message = 'Voting is not active for %s event. Event Start Time %d, Event End Time: %d'
+        message = '[%s] Voting is not active. Event Start Time %d, Event End Time: %d'
         message = message % (event.event_id, event.event_start_time, event.event_end_time)
         logger.info(message)
         return False, message
 
     user_registered = database.Participants.exists(event.event_id, user_id)
     if not user_registered:
-        message = 'User %s is not registered %s' % (user_id, event.event_id)
+        message = '[%s] User %s is not registered' % (event.event_id, user_id)
         logger.info(message)
         return False, message
     return True, ''
@@ -51,13 +51,13 @@ def vote(json_data):
     user_id = data['user_id']
     event = database.VerityEvent.get(event_id)
     if not event:
-        message = 'Event %s not found' % event_id
+        message = '[%s] Event not found' % event_id
         logger.info(message)
         return _response(message, 400)
 
     event_metadata = event.metadata()
     if event_metadata.is_consensus_reached:
-        message = 'Consensus already reached, no more voting'
+        message = '[%s] Consensus already reached, no more voting' % event_id
         logger.info(message)
         return _response(message, 200)
 
@@ -68,6 +68,7 @@ def vote(json_data):
     node_id = common.node_id()
     vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'])
     vote.create()
+    logger.info('[%s] Received vote %s from user: %s', event_id, user_id, data['answers'])
 
     QUEUE.sync_q.put({'node_ips': event_metadata.node_ips, 'vote': vote})
 
