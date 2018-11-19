@@ -18,8 +18,8 @@ def should_calculate_consensus(event, vote_count):
         return False
     if participant_ratio < event.min_participant_ratio:
         logger.info(
-            '[%s] Should not calculate consensus: participant_ratio<min_participant_ratio: %d<%d',
-            event_id, vote_count, event.min_total_votes)
+            '[%s] Should not calculate consensus: participant_ratio<min_participant_ratio: %.4f<%.4f',
+            event_id, participant_ratio, event.min_participant_ratio)
         return False
     logger.info('[%s] Should calculate consensus', event_id)
     return True
@@ -55,8 +55,8 @@ def calculate_consensus(event, votes_by_users):
     vote_count = len(votes_by_users)
     if vote_count < event.min_total_votes:
         logger.info(
-            '[%s] Not enough valid votes to calculate consensus. votes_by_users=%d, min_total_votes=%d',
-            event.event_id, len(votes_by_users), event.min_total_votes)
+            '[%s] Not enough valid votes to calculate consensus: vote_count<event.min_total_votes: %d<%d',
+            event.event_id, vote_count, event.min_total_votes)
         return dict()
 
     votes_by_repr = database.Vote.group_votes_by_representation(votes_by_users)
@@ -69,11 +69,14 @@ def calculate_consensus(event, votes_by_users):
 
     consensus_votes_count = len(consensus_votes_by_users)
     consensus_ratio = consensus_votes_count / len(votes_by_users)
-    if (consensus_votes_count < event.min_consensus_votes
-            or consensus_ratio * 100 < event.min_consensus_ratio):
+    if consensus_votes_count < event.min_consensus_votes:
         logger.info(
-            '[%s] Not enough consensus votes. votes_by_users=%d, min_total_votes=%d, consensus_ratio=%d, min_consensus_ratio=%d',
-            event.event_id, len(votes_by_users), event.min_total_votes, consensus_ratio,
-            event.min_consensus_ratio)
+            '[%s] Not enough consensus votes: consensus_votes_count<event.min_consensus_votes: %d<%d',
+            event.event_id, consensus_votes_count, event.min_consensus_votes)
+        return dict()
+    if consensus_ratio * 100 < event.min_consensus_ratio:
+        logger.info(
+            '[%s] Not enough consensus votes: consensus_ratio*100<event.min_consensus_ratio: %d<%d',
+            event.event_id, consensus_ratio * 100 < event.min_consensus_ratio)
         return dict()
     return consensus_votes_by_users
