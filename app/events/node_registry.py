@@ -36,6 +36,9 @@ def update_node_ips(node_registry_abi, node_registry_address):
     event_ids = database.VerityEvent.get_ids_list()
     for event_id in event_ids:
         event = database.VerityEvent.get(event_id)
+        if event is None:
+            logger.info('Event %s is not in the database', event_id)
+            continue
         metadata = event.metadata()
         node_ips = get_node_ips(node_registry_abi, node_registry_address, event.node_addresses)
         if set(node_ips) == set(metadata.node_ips):
