@@ -54,7 +54,7 @@ class VerityEvent(BaseEvent):
                  event_name, data_feed_hash, state, is_master_node, min_total_votes,
                  min_consensus_votes, min_consensus_ratio, min_participant_ratio, max_participants,
                  rewards_distribution_function, rewards_validation_round, dispute_amount,
-                 dispute_timeout, dispute_round, disputer, staking_amount):
+                 dispute_timeout, dispute_multiplier, dispute_round, disputer, staking_amount):
         self.event_id = event_id
         self.owner = owner
         self.token_address = token_address
@@ -77,13 +77,14 @@ class VerityEvent(BaseEvent):
         self.rewards_validation_round = rewards_validation_round
         self.dispute_amount = dispute_amount
         self.dispute_timeout = dispute_timeout
+        self.dispute_multiplier = dispute_multiplier
         self.dispute_round = dispute_round
         self.disputer = disputer
         self.staking_amount = staking_amount
 
     def votes(self):
         votes_by_users = Vote.group_votes_by_users(self.event_id, self.node_addresses)
-        votes_by_users = Vote.filter_votes_by_users(event_id, votes_by_users)
+        votes_by_users = Vote.filter_votes_by_users(self.event_id, votes_by_users)
         return votes_by_users
 
     @staticmethod

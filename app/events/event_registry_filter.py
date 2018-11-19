@@ -44,7 +44,7 @@ def call_event_contract_for_metadata(w3, contract_abi, event_id):
     (min_total_votes, min_consensus_votes, min_consensus_ratio, min_participant_ratio,
      max_participants, rewards_distribution_function) = consensus_rules
     validation_round = contract_instance.functions.rewardsValidationRound().call()
-    ((dispute_amount, dispute_timeout, dispute_round),
+    ((dispute_amount, dispute_timeout, dispute_multiplier, dispute_round),
      disputer) = contract_instance.functions.getDisputeData().call()
     staking_amount = contract_instance.functions.stakingAmount().call()
     event = database.VerityEvent(
@@ -52,7 +52,8 @@ def call_event_contract_for_metadata(w3, contract_abi, event_id):
         application_start_time, application_end_time, event_start_time, event_end_time, event_name,
         data_feed_hash, state, is_master_node, min_total_votes, min_consensus_votes,
         min_consensus_ratio, min_participant_ratio, max_participants, rewards_distribution_function,
-        validation_round, dispute_amount, dispute_timeout, dispute_round, disputer, staking_amount)
+        validation_round, dispute_amount, dispute_timeout, dispute_multiplier, dispute_round,
+        disputer, staking_amount)
     return event
 
 
@@ -76,7 +77,8 @@ def init_event_registry_filter(w3, event_registry_abi, verity_event_abi, event_r
     filter_ = contract_instance.events[NEW_VERITY_EVENT].createFilter(
         fromBlock='earliest', toBlock='latest')
     database.Filters.create(event_registry_address, filter_.filter_id)
-    logger.info('[%s] Requesting all entries for %s from EventRegistry', event_registry_address, NEW_VERITY_EVENT)
+    logger.info('[%s] Requesting all entries for %s from EventRegistry', event_registry_address,
+                NEW_VERITY_EVENT)
     entries = filter_.get_all_entries()
     process_new_verity_events(w3, verity_event_abi, entries)
 
