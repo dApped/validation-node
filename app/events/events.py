@@ -68,6 +68,7 @@ def vote(json_data):
     node_id = common.node_id()
     vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'])
     vote.create()
+    logger.info('[%s] Received vote %s from user: %s', event_id, user_id, data['answers'])
 
     QUEUE.sync_q.put({'node_ips': event_metadata.node_ips, 'vote': vote})
 
