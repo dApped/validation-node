@@ -4,6 +4,8 @@ tags
 
 *.pkl
 
+*.log
+
 env/
 .idea/
 
