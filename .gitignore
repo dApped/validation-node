@@ -7,7 +7,5 @@ tags
 *.log
 
 env/
+.env
 .idea/
-
-.* 
-!/.gitignore
