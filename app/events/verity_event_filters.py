@@ -13,6 +13,8 @@ from events import event_registry_filter
 
 logger = logging.getLogger('flask.app')
 
+FINAL_STATES = {4, 5}
+
 
 def process_join_events(_scheduler, _w3, event_id, entries):
     logger.info('[%s] Adding %d %s entries', event_id, len(entries), JOIN_EVENT_FILTER)
@@ -26,7 +28,7 @@ def process_state_transition(_scheduler, w3, event_id, entries):
     event.state = entry['args']['newState']
     logger.info('[%s] Event state transition, new state: %d', event_id, event.state)
     event.update()
-    if event.state in {4, 5}:
+    if event.state in FINAL_STATES:
         logger.info('[%s] Event reached a final state. Removing from DB', event_id)
         VerityEvent.delete_all_event_data(w3, event_id)
         # TODO: Unregister WebSocket connections
@@ -173,6 +175,10 @@ def filter_events(scheduler, w3, formatters):
             try:
                 entries = filter_.get_new_entries()
             except Exception as e:
+                event = database.VerityEvent.get(event_id)
+                if event.state in FINAL_STATES:
+                    # Event was just finished
+                    continue
                 logger.exception(e)
                 recover_filter(w3, event_id, filter_name, filter_func, filter_id)
                 continue
