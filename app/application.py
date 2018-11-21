@@ -35,7 +35,7 @@ def init():
 
 
 def configure_logging(app):
-    formatter = logging.Formatter("[%(asctime)s] %(levelname)s in %(funcName)s: - %(message)s")
+    formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
 
     handler = logging.handlers.RotatingFileHandler('logs/validation-node.log', maxBytes=10000000)
     handler.setFormatter(formatter)
