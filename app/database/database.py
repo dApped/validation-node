@@ -302,6 +302,7 @@ class Vote(BaseEvent):
         for node_id in node_ids:
             pipeline.delete(cls.key(event_id, node_id))
         pipeline.delete(cls.key_common(event_id))
+        pipeline.delete(cls.key_consensus(event_id))
 
     @classmethod
     def count(cls, event_id):
