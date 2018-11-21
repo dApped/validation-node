@@ -99,12 +99,16 @@ def set_consensus_rewards(w3, event_id):
                                                                  token_rewards_chunk)
         common.function_transact(w3, set_rewards_fun)
     # TODO uncoment and fix function name when implemented
-    # logger.info('Master node started setting consensus answer for %s', event_id)
-    # consensus_answer = database.Vote.get_consensus_vote(event_id)
-    # answer_list = [answer[database.Vote.ANSWERS_VALUE_KEY] for answer in consensus_answer.ordered_answers()]
-    # set_consensus_vote_fun = contract_instance.functions.setAnswer(answer_list)
-    # common.function_transact(w3, set_consensus_vote_fun)
-    # logger.info('Master node finished setting consensus answer for %s', event_id)
+    logger.info('Master node started setting consensus answer for %s', event_id)
+    consensus_answer = database.Vote.get_consensus_vote(event_id)
+    answer_list = [answer[database.Vote.ANSWERS_VALUE_KEY] for answer in
+                   consensus_answer.ordered_answers()]
+    answer_list = list(map(lambda x: w3.toBytes(hexstr=w3.toHex(text=str(x))), answer_list))
+
+    logger.info(answer_list)
+    set_consensus_vote_fun = contract_instance.functions.setResults(answer_list)
+    common.function_transact(w3, set_consensus_vote_fun)
+    logger.info('Master node finished setting consensus answer for %s', event_id)
 
     logger.info('[%s] Master node finished setting rewards', event_id)
     mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards)
@@ -137,12 +141,14 @@ def validate_rewards(w3, event_id, validation_round):
         contract_reward_user_ids, contract_reward_ether, contract_reward_token)
     node_rewards_dict = database.Rewards.get(event_id)
 
-    contract_consensus_vote = event_contract.functions.getAnswer()
+    event_consensus_vote = event_contract.functions.getResults().call()
+    event_consensus_vote = [x.decode('utf8').replace('\x00', '') for x in event_consensus_vote]
     consensus_vote = database.Vote.get_consensus_vote(event_id)
+    consensus_vote = [answer[database.Vote.ANSWERS_VALUE_KEY] for answer in
+                      consensus_vote.ordered_answers()]
 
     rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
-
-    if rewards_match and contract_consensus_vote == consensus_vote:
+    if rewards_match and event_consensus_vote == consensus_vote:
         logger.info('[%s] Rewards match. Approving rewards for round %d', event_id,
                     validation_round)
         approve_fun = event_contract.functions.approveRewards(validation_round)
