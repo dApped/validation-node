@@ -173,7 +173,7 @@ docker run --env-file="<PATH_TO_ENV_FILE>" --link redis -p 80:5000 -p 8765:8765 
 
 ```bash
 $(aws ecr get-login --no-include-email --region eu-central-1)
-IMAGE_TAG=SET_VERSION
+IMAGE_TAG=0.0.XX-test
 docker build -t validation_nodes:$IMAGE_TAG app/
 docker tag validation_nodes:$IMAGE_TAG 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:$IMAGE_TAG
 docker push 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:$IMAGE_TAG
@@ -183,5 +183,7 @@ docker push 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:$IM
 
 ```bash
 $(aws ecr get-login --no-include-email --region eu-central-1)
-docker run -d --env-file=ropsten-node2-env --link redis -p 80:5000 -p 8765:8765 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:<IMAGE_TAG>
+mkdir -p logs
+IMAGE_TAG=0.0.XX-test
+docker run -d --env-file=ropsten-node-env --link redis -p 80:5000 -p 8765:8765 -v ~/logs:/app/logs 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:$IMAGE_TAG
 ```
