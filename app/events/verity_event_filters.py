@@ -176,7 +176,7 @@ def filter_events(scheduler, w3, formatters):
                 entries = filter_.get_new_entries()
             except Exception as e:
                 event = database.VerityEvent.get(event_id)
-                if event.state in FINAL_STATES:
+                if event is None or event.state in FINAL_STATES:
                     # Event was just finished
                     continue
                 logger.exception(e)

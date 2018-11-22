@@ -142,6 +142,8 @@ class Consumer(Common):
         while True:
             try:
                 message_json = await asyncio.wait_for(websocket.recv(), timeout=20)
+            except websockets.exceptions.ConnectionClosed:
+                logger.info('%s websocket connection closed', websocket.host)
             except asyncio.TimeoutError:
                 # No data in 20 seconds
                 try:

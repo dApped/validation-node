@@ -40,8 +40,8 @@ def configure_logging(app):
     handler = logging.handlers.RotatingFileHandler('logs/validation-node.log', maxBytes=10000000)
     handler.setFormatter(formatter)
 
-    logging.getLogger('werkzeug').setLevel(logging.INFO)
-    logging.getLogger('werkzeug').addHandler(handler)
+    logging.getLogger('gunicorn.error').setLevel(logging.INFO)
+    logging.getLogger('gunicorn.error').addHandler(handler)
     app.logger.setLevel(logging.INFO)
     app.logger.addHandler(handler)
 
