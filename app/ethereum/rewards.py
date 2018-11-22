@@ -103,8 +103,6 @@ def set_consensus_rewards(w3, event_id):
     answer_list = [answer[database.Vote.ANSWERS_VALUE_KEY] for answer in
                    consensus_answer.ordered_answers()]
     answer_list = list(map(lambda x: w3.toBytes(hexstr=w3.toHex(text=str(x))), answer_list))
-
-    logger.info(answer_list)
     set_consensus_vote_fun = contract_instance.functions.setResults(answer_list)
     common.function_transact(w3, set_consensus_vote_fun)
     logger.info('[%s] Master node finished setting consensus answer', event_id)
