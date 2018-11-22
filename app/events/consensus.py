@@ -79,4 +79,6 @@ def calculate_consensus(event, votes_by_users):
             '[%s] Not enough consensus votes: consensus_ratio*100<event.min_consensus_ratio: %d<%d',
             event.event_id, consensus_ratio * 100 < event.min_consensus_ratio)
         return dict()
+    consensus_vote = votes_by_users[next(iter(consensus_user_ids))][0]
+    consensus_vote.set_consensus_vote()
     return consensus_votes_by_users
