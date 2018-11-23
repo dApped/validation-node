@@ -3,7 +3,7 @@ import logging
 import common
 from database import database
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 
 def determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance):

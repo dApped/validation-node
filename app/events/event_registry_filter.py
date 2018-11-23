@@ -4,7 +4,7 @@ import common
 from database import database
 from events import verity_event_filters
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 NEW_VERITY_EVENT = 'NewVerityEvent'
 

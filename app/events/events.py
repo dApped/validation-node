@@ -8,7 +8,7 @@ import scheduler
 from database import database
 from events import consensus
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 
 def _is_vote_valid(timestamp, user_id, event):

@@ -8,7 +8,7 @@ import redis
 
 import common
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 redis_db = redis.StrictRedis(host=os.getenv('REDIS_URL'), port=6379, db=0, decode_responses=True)
 

@@ -5,7 +5,7 @@ from database import database
 from ethereum import rewards
 from ethereum.provider import NODE_WEB3
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 
 def should_calculate_consensus(event, vote_count):

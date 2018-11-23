@@ -6,13 +6,7 @@ services:
     ports: ['6379:6379']
   node1:
     build: ./app
-    entrypoint:
-      - gunicorn
-      - -b :5000
-      - -t 1000
-      - -k gevent
-      - --reload
-      - application
+    entrypoint: "gunicorn -b :5000 -t 1000 -k gevent --reload --log-config logging.conf application"
     environment:
       REDIS_URL: 'redis1'
       ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
@@ -39,13 +33,7 @@ services:
     image: redis:4.0.11
   node2:
     build: ./app
-    entrypoint:
-      - gunicorn
-      - -b :5000
-      - -t 1000
-      - -k gevent
-      - --reload
-      - application
+    entrypoint: "gunicorn -b :5000 -t 1000 -k gevent --reload --log-config logging.conf application"
     environment:
       REDIS_URL: 'redis2'
       ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
@@ -72,13 +60,7 @@ services:
     image: redis:4.0.11
   node3:
     build: ./app
-    entrypoint:
-      - gunicorn
-      - -b :5000
-      - -t 1000
-      - -k gevent
-      - --reload
-      - application
+    entrypoint: "gunicorn -b :5000 -t 1000 -k gevent --reload --log-config logging.conf application"
     environment:
       REDIS_URL: 'redis3'
       ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}

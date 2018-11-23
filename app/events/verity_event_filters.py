@@ -11,7 +11,7 @@ from database.database import VerityEvent
 from ethereum import rewards
 from events import event_registry_filter
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 FINAL_STATES = {4, 5}
 
