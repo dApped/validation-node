@@ -6,7 +6,7 @@ from web3 import HTTPProvider, Web3
 
 import common
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 
 class EthProvider:

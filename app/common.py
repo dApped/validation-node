@@ -7,7 +7,7 @@ from web3 import Web3
 
 from ethereum.provider import EthProvider
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 CHUNK_SIZE = 20
 

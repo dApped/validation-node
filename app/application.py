@@ -1,4 +1,3 @@
-import logging
 import os
 from datetime import datetime
 
@@ -34,18 +33,6 @@ def init():
     websocket.init()
 
 
-def configure_logging(app):
-    formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
-
-    handler = logging.handlers.RotatingFileHandler('logs/validation-node.log', maxBytes=10000000)
-    handler.setFormatter(formatter)
-
-    logging.getLogger('gunicorn.error').setLevel(logging.INFO)
-    logging.getLogger('gunicorn.error').addHandler(handler)
-    app.logger.setLevel(logging.INFO)
-    app.logger.addHandler(handler)
-
-
 def create_app():
     load_dotenv(dotenv_path='.env')
 
@@ -53,7 +40,6 @@ def create_app():
     os.environ['CONTRACT_DIR'] = os.path.join(project_root, 'contracts')
 
     app = Flask(__name__)
-    configure_logging(app)
     init()
     return app
 

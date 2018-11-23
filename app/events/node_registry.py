@@ -4,7 +4,7 @@ import common
 from database import database
 from ethereum.provider import NODE_WEB3
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 
 def register_node_ip(node_registry_abi, node_registry_address, node_ip):

@@ -9,11 +9,13 @@ from events import event_registry_filter, node_registry, verity_event_filters
 
 scheduler = BackgroundScheduler(timezone=utc)
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 
 def init():
     logger.info('Scheduler Init started')
+    # Disable logging of cron jobs
+    logging.getLogger('apscheduler.executors.default').propagate = False
     event_registry_address = common.event_registry_address()
     event_registry_abi = common.event_registry_contract_abi()
     verity_event_abi = common.verity_event_contract_abi()

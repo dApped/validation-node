@@ -15,7 +15,7 @@ from events import consensus
 LOOP = asyncio.get_event_loop()
 QUEUE = janus.Queue(loop=LOOP)
 
-logger = logging.getLogger('flask.app')
+logger = logging.getLogger()
 
 
 class Common:
@@ -51,7 +51,7 @@ class Common:
         for node_ip_port in node_ips_ports:
             if my_ip_port == node_ip_port:
                 continue
-            websocket_address = '%s86' % node_ip_port  # TODO remove this in production
+            websocket_address = node_ip_port.split(':')[0] + ':8765'
             websocket = await cls.get_or_create_websocket_connection(websocket_address)
             websockets_nodes.append(websocket)
         return websockets_nodes
