@@ -257,7 +257,7 @@ class Vote(BaseEvent):
     PREFIX = 'votes'
     PREFIX_COMMON = 'votes_common'
     PREFIX_CONSENSUS = 'votes_consensus'
-    ANSWERS_SORT_KEY = 'field_id'
+    ANSWERS_SORT_KEY = 'field_name'
     ANSWERS_VALUE_KEY = 'field_value'
 
     def __init__(self, user_id, event_id, node_id, timestamp, answers, _ordered_answers=None):
