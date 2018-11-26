@@ -14,8 +14,11 @@ logger = logging.getLogger()
 
 def init():
     logger.info('Scheduler Init started')
+
     # Disable logging of cron jobs
+    logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
     logging.getLogger('apscheduler.executors.default').propagate = False
+
     event_registry_address = common.event_registry_address()
     event_registry_abi = common.event_registry_contract_abi()
     verity_event_abi = common.verity_event_contract_abi()
