@@ -79,7 +79,7 @@ def health_check():
         'NODE_REGISTRY_ADDRESS': os.getenv('NODE_REGISTRY_ADDRESS'),
         'timestamp': int(time.time())
     }
-    application.logger.debug('Health check %s', response)
+    logger.debug('Health check %s', response)
     return jsonify(response), 200
 
 
