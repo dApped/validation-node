@@ -32,6 +32,10 @@ def _is_vote_payload_valid(data):
     for param in {'user_id', 'event_id', 'answers'}:
         if param not in data['data']:
             return False
+    for answer in data['data']['answers']:
+        for key in [database.Vote.ANSWERS_VALUE_KEY, database.Vote.ANSWERS_SORT_KEY]:
+            if key not in answer:
+                return False
     return True
 
 
