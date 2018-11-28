@@ -12,12 +12,26 @@ scheduler = BackgroundScheduler(timezone=utc)
 logger = logging.getLogger()
 
 
+class SchedulerFilter(logging.Filter):
+    def filter(self, record):
+        if record.msg.find('Running job') >= 0:
+            return False
+        if record.msg.find('executed successfully') >= 0:
+            return False
+        return True
+
+
+def configure_scheduler_logging():
+    # Disable logging of cron jobs
+    scheduler_filter = SchedulerFilter()
+    logging.getLogger('apscheduler.executors.default').addFilter(scheduler_filter)
+    logging.getLogger('apscheduler.executors.default').propagate = True
+    logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
+
+
 def init():
     logger.info('Scheduler Init started')
-
-    # Disable logging of cron jobs
-    logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
-    logging.getLogger('apscheduler.executors.default').propagate = False
+    configure_scheduler_logging()
 
     event_registry_address = common.event_registry_address()
     event_registry_abi = common.event_registry_contract_abi()

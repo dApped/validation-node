@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+import time
 
 import websocket
 from dotenv import load_dotenv
@@ -10,11 +10,10 @@ import scheduler
 from database import database
 from ethereum.provider import NODE_WEB3
 from events import event_registry_filter, events, node_registry
+from version import __version__
 
-# ------------------------------------------------------------------------------
+
 # Flask Setup ------------------------------------------------------------------
-
-
 def init():
     database.flush_database()
     event_registry_abi = common.event_registry_contract_abi()
@@ -71,14 +70,17 @@ def apply_headers(response):
     return response
 
 
-# ------------------------------------------------------------------------------
 # Routes -----------------------------------------------------------------------
-
-
-@application.route('/', methods=['GET'])
-def hello():
-    application.logger.debug('Root resource requested' + str(datetime.utcnow()))
-    return 'Nothing to see here, verity dev', 200
+@application.route('/health_check', methods=['GET'])
+def health_check():
+    response = {
+        'version': __version__,
+        'EVENT_REGISTRY_ADDRESS': os.getenv('EVENT_REGISTRY_ADDRESS'),
+        'NODE_REGISTRY_ADDRESS': os.getenv('NODE_REGISTRY_ADDRESS'),
+        'timestamp': int(time.time())
+    }
+    logger.debug('Health check %s', response)
+    return jsonify(response), 200
 
 
 @application.route('/vote', methods=['POST'])
