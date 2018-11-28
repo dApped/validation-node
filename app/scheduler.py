@@ -26,6 +26,7 @@ def configure_scheduler_logging():
     scheduler_filter = SchedulerFilter()
     logging.getLogger('apscheduler.executors.default').addFilter(scheduler_filter)
     logging.getLogger('apscheduler.executors.default').propagate = True
+    logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
 
 
 def init():
