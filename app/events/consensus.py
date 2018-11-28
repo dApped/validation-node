@@ -11,7 +11,12 @@ logger = logging.getLogger()
 def should_calculate_consensus(event, vote_count):
     '''Heuristic which checks if there is a potential for consensus (assumes all votes are valid)'''
     event_id = event.event_id
-    participant_ratio = (vote_count / len(event.participants())) * 100
+    n_participants = len(event.participants())
+    if n_participants == 0:
+        logger.info('[%s] Should not calculate consensus: %d participants', event_id,
+                    n_participants)
+        return False
+    participant_ratio = (vote_count / n_participants) * 100
     if vote_count < event.min_total_votes:
         logger.info('[%s] Should not calculate consensus: %d vote_count < %d min_total_votes',
                     event_id, vote_count, event.min_total_votes)
