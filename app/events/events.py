@@ -1,12 +1,14 @@
 import logging
 import time
 
-from websocket import QUEUE
+from eth_account.messages import defunct_hash_message
+from web3.auto import w3 as web3_auto
 
 import common
 import scheduler
 from database import database
 from events import consensus
+from websocket import QUEUE
 
 logger = logging.getLogger()
 
@@ -39,6 +41,12 @@ def _is_vote_payload_valid(data):
     return True
 
 
+def _is_vote_signed(data, signature, user_id):
+    data_msg = defunct_hash_message(text=str(data))
+    signer = web3_auto.eth.account.recoverHash(data_msg, signature=signature)
+    return user_id == signer
+
+
 def _response(message, status):
     return {'message': message, 'status': status}
 
@@ -53,6 +61,13 @@ def vote(json_data):
     data = json_data['data']
     event_id = data['event_id']
     user_id = data['user_id']
+    signature = data['signedData']
+
+    if not _is_vote_signed(data, signature, user_id):
+        message = 'Vote not signed correctly'
+        logger.info('[%s] %s from user %s', event_id, message, user_id)
+        return _response(message, 400)
+
     event = database.VerityEvent.get(event_id)
     if not event:
         message = '[%s] Event not found' % event_id
