@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+from enum import Enum
 
 from web3 import Web3
 
@@ -85,6 +86,11 @@ def lists_to_chunks(*lists, batch_size=CHUNK_SIZE):
     return list(map(list, zip(*chunks)))  # transpose lists
 
 
+class AddressType(Enum):
+    IP = 1
+    WEBSOCKET = 2
+
+
 def node_id():
     return os.getenv('NODE_ADDRESS')
 
@@ -99,3 +105,15 @@ def node_port():
 
 def node_ip_port():
     return '%s:%s' % (node_ip(), node_port())
+
+
+def node_websocket_ip():
+    return os.getenv("NODE_WEBSOCKET_IP")
+
+
+def node_websocket_port():
+    return os.getenv("NODE_WEBSOCKET_PORT")
+
+
+def node_websocket_ip_port():
+    return '%s:%s' % (node_websocket_ip(), node_websocket_port())
