@@ -63,11 +63,6 @@ def vote(json_data):
     user_id = data['user_id']
     signature = data['signedData']
 
-    if not _is_vote_signed(data, signature, user_id):
-        message = 'Vote not signed correctly'
-        logger.info('[%s] %s from user %s', event_id, message, user_id)
-        return _response(message, 400)
-
     event = database.VerityEvent.get(event_id)
     if not event:
         message = '[%s] Event not found' % event_id
@@ -84,10 +79,15 @@ def vote(json_data):
     if not valid_vote:
         return _response(message, 400)
 
+    if not _is_vote_signed(data, signature, user_id):
+        message = 'Vote not signed correctly'
+        logger.info('[%s] %s from user %s', event_id, message, user_id)
+        return _response(message, 400)
+
     node_id = common.node_id()
-    vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'])
+    vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'], signature)
     vote.create()
-    logger.info('[%s] Received vote %s from user: %s', event_id, user_id, data['answers'])
+    logger.info('[%s] Accepted vote %s from user: %s', event_id, user_id, data['answers'])
 
     QUEUE.sync_q.put({'node_ips': event_metadata.node_ips, 'vote': vote})
 
