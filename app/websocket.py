@@ -1,11 +1,12 @@
 import asyncio
 import json
 import logging
-import os
 import threading
 
 import janus
 import websockets
+from eth_account.messages import defunct_hash_message
+from web3.auto import w3 as web3_auto
 
 import common
 import scheduler
@@ -93,6 +94,12 @@ class Consumer(Common):
         return 'vote' in message
 
     @staticmethod
+    def is_vote_signed(vote_json):
+        data_msg = defunct_hash_message(text=str(vote_json['data']))
+        signer = web3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signature'])
+        return vote_json['user_id'] == signer
+
+    @staticmethod
     def json_to_vote(vote_json):
         try:
             vote = database.Vote.from_json(vote_json)
@@ -109,7 +116,7 @@ class Consumer(Common):
     @staticmethod
     async def create_vote(vote):
         vote.create()
-        logger.info('[%s] Received vote from %s user from %s node: %s', vote.event_id, vote.user_id,
+        logger.info('[%s] Accepted vote from %s user from %s node: %s', vote.event_id, vote.user_id,
                     vote.node_id, vote.answers)
 
     @staticmethod
@@ -126,6 +133,10 @@ class Consumer(Common):
         if not cls.is_message_valid(message):
             logger.error("Message is not valid: %s", message)
             return
+
+        if not cls.is_vote_signed(message):
+            logger.error("Message is not signed: %s", message)
+
         vote = cls.json_to_vote(message['vote'])
         if vote is None:
             logger.error("Vote %s from node is not valid", vote.node_id)
