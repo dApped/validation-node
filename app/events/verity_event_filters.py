@@ -37,6 +37,9 @@ def process_state_transition(_scheduler, w3, event_id, entries):
 def process_validation_start(scheduler, w3, event_id, entries):
     entry = entries[-1]
     event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event does not exist', event_id)
+        return
 
     validation_round = entry['args']['validationRound']
     event.rewards_validation_round = validation_round
@@ -44,6 +47,9 @@ def process_validation_start(scheduler, w3, event_id, entries):
 
     if not scheduler:
         logger.warning('[%s] Scheduler is not set', event_id)
+        return
+    if not event.metadata().is_consensus_reached:
+        logger.info('[%s] Cannot validate rewards becasue consensus was not reached', event_id)
         return
     if not event.is_master_node:
         scheduler.add_job(rewards.validate_rewards, args=[w3, event_id, validation_round])

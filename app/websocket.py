@@ -35,14 +35,19 @@ class Common:
 
     @classmethod
     async def connect_to_websocket(cls, address):
-        websocket = await websockets.connect('ws://' + address)
+        try:
+            websocket = await websockets.connect('ws://' + address, timeout=2)
+        except Exception as e:
+            logger.error('Cannot connect to websocket: %s', address)
+            logger.error(e)
+            return
         cls.register(websocket)
 
     @classmethod
     async def get_or_create_websocket_connection(cls, websocket_address):
         if websocket_address not in cls.WEBSOCKETS:
             await cls.connect_to_websocket(websocket_address)
-        return cls.WEBSOCKETS[websocket_address]
+        return cls.WEBSOCKETS.get(websocket_address)
 
     @classmethod
     async def get_or_create_websocket_connections(cls, node_ips_ports):
@@ -53,6 +58,8 @@ class Common:
                 continue
             websocket_address = node_ip_port.split(':')[0] + ':8765'
             websocket = await cls.get_or_create_websocket_connection(websocket_address)
+            if not websocket:
+                continue
             websockets_nodes.append(websocket)
         return websockets_nodes
 
@@ -70,6 +77,7 @@ class Producer(Common):
         node_ips = message['node_ips']
         if not node_ips:
             logger.warning('Node IPs are not set')
+            return
         websockets_nodes = await cls.get_or_create_websocket_connections(node_ips)
         if websockets_nodes:
             message_json = cls.create_message(message['vote'])
@@ -138,13 +146,12 @@ class Consumer(Common):
 
     @classmethod
     async def consumer_handler(cls, websocket, _):
-        cls.register(websocket)
+        logger.info('Websocket opened %s:%s', websocket.host, websocket.port)
         while True:
             try:
                 message_json = await asyncio.wait_for(websocket.recv(), timeout=20)
             except websockets.exceptions.ConnectionClosed:
-                logger.info('%s websocket connection closed', websocket.host)
-                cls.unregister(websocket)
+                logger.error('Websocket connection closed %s:%s', websocket.host, websocket.port)
                 return
             except asyncio.TimeoutError:
                 # No data in 20 seconds
@@ -152,9 +159,9 @@ class Consumer(Common):
                     pong_waiter = await websocket.ping()
                     await asyncio.wait_for(pong_waiter, timeout=10)
                 except asyncio.TimeoutError:
-                    logger.error('No response to ping in 10 seconds, disconnect from websocket %s',
-                                 websocket.host)
-                    cls.unregister(websocket)
+                    logger.error(
+                        'No response to ping in 10 seconds. Websocket connection closed %s:%s',
+                        websocket.host, websocket.port)
                     return
             else:
                 await cls.consumer(message_json)
