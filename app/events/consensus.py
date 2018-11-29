@@ -48,6 +48,7 @@ def check_consensus(event, event_metadata):
     event_metadata.is_consensus_reached = True
     event_metadata.update()
 
+    # developer might initialize event and set rewards later. We fetch them just in time
     ether_balance, token_balance = event.instance(NODE_WEB3, event_id).functions.getBalance().call()
     rewards.determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance)
     if event.is_master_node:
