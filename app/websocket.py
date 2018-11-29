@@ -159,8 +159,9 @@ class Consumer(Common):
                     pong_waiter = await websocket.ping()
                     await asyncio.wait_for(pong_waiter, timeout=10)
                 except asyncio.TimeoutError:
-                    logger.error('No response to ping in 10 seconds')
-                    logger.error('Websocket connection closed %s:%s', websocket.host, websocket.port)
+                    logger.error(
+                        'No response to ping in 10 seconds. Websocket connection closed %s:%s',
+                        websocket.host, websocket.port)
                     return
             else:
                 await cls.consumer(message_json)
