@@ -26,7 +26,7 @@ def should_calculate_consensus(event, vote_count):
             '[%s] Should not calculate consensus: %.4f participant_ratio < %.4f min_participant_ratio',
             event_id, participant_ratio, event.min_participant_ratio)
         return False
-    logger.info('[%s] Should calculate consensus', event_id)
+    logger.info('[%s] Should try to calculate consensus', event_id)
     return True
 
 
