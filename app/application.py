@@ -75,6 +75,7 @@ def apply_headers(response):
 def health_check():
     response = {
         'version': __version__,
+        'NODE_ADDRESS': os.getenv('NODE_ADDRESS'),
         'EVENT_REGISTRY_ADDRESS': os.getenv('EVENT_REGISTRY_ADDRESS'),
         'NODE_REGISTRY_ADDRESS': os.getenv('NODE_REGISTRY_ADDRESS'),
         'timestamp': int(time.time())
