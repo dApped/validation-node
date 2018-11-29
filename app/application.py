@@ -7,6 +7,7 @@ from flask import Flask, abort, jsonify, request
 
 import common
 import scheduler
+from common import AddressType
 from database import database
 from ethereum.provider import NODE_WEB3
 from events import event_registry_filter, events, node_registry
@@ -23,9 +24,12 @@ def init():
     node_address = common.node_registry_address()
     event_registry_address = common.event_registry_address()
 
-    node_ip = common.node_ip_port()
+    node_ip_port = common.node_ip_port()
+    node_websocket_ip_port = common.node_websocket_ip_port()
 
-    node_registry.register_node_ip(node_registry_abi, node_address, node_ip)
+    node_registry.register_node_ip(node_registry_abi, node_address, node_ip_port, AddressType.IP)
+    node_registry.register_node_ip(node_registry_abi, node_address, node_websocket_ip_port,
+                                   AddressType.WEBSOCKET)
     event_registry_filter.init_event_registry_filter(NODE_WEB3, event_registry_abi,
                                                      verity_event_abi, event_registry_address)
     scheduler.init()
