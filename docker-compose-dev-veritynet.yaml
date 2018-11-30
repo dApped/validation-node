@@ -18,9 +18,8 @@ services:
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
-      NODE_PORT: 81
-      NODE_WEBSOCKET_IP: 'host.docker.internal'
-      NODE_WEBSOCKET_PORT: 8781
+      HTTP_PORT: 81
+      WEBSOCKET_PORT: 8781
       WERKZEUG_RUN_MAIN: 'true'
     ports: 
         - '81:5000'
@@ -47,9 +46,8 @@ services:
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
-      NODE_PORT: 82
-      NODE_WEBSOCKET_IP: 'host.docker.internal'
-      NODE_WEBSOCKET_PORT: 8782
+      HTTP_PORT: 82
+      WEBSOCKET_PORT: 8782
       WERKZEUG_RUN_MAIN: 'true'
     ports: 
         - '82:5000'
@@ -76,9 +74,8 @@ services:
       EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
-      NODE_PORT: 83
-      NODE_WEBSOCKET_IP: 'host.docker.internal'
-      NODE_WEBSOCKET_PORT: 8783
+      HTTP_PORT: 83
+      WEBSOCKET_PORT: 8783
       WERKZEUG_RUN_MAIN: 'true'
     ports:
         - '83:5000'
