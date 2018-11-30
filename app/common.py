@@ -8,6 +8,7 @@ from eth_account.messages import defunct_hash_message
 from web3 import Web3
 from web3.auto import w3 as web3_auto
 
+from database import database
 from ethereum.provider import EthProvider
 
 logger = logging.getLogger()
@@ -119,6 +120,45 @@ def lists_to_chunks(*lists, batch_size=CHUNK_SIZE):
 
     chunks = list(list_to_chunks(list_, batch_size) for list_ in lists)
     return list(map(list, zip(*chunks)))  # transpose lists
+
+
+def is_vote_payload_valid(data):
+    if data is None:
+        return False
+    for field in ['data', 'signedData']:
+        if field not in data or data[field] is None:
+            return False
+    for param in {'user_id', 'event_id', 'answers'}:
+        if param not in data['data'] or data['data'][param] is None:
+            return False
+    for answer in data['data']['answers']:
+        for key in [database.Vote.ANSWERS_VALUE_KEY, database.Vote.ANSWERS_SORT_KEY]:
+            if key not in answer:
+                return False
+    return True
+
+
+def parse_fields_from_json_data(json_data):
+    data = json_data['data']
+    event_id = data['event_id']
+    user_id = data['user_id']
+    signature = json_data['signedData']
+    return event_id, user_id, data, signature
+
+
+def is_vote_valid(timestamp, user_id, event):
+    if timestamp < event.event_start_time or timestamp > event.event_end_time:
+        message = '[%s] Voting is not active. Event Start Time %d, Event End Time: %d'
+        message = message % (event.event_id, event.event_start_time, event.event_end_time)
+        logger.info(message)
+        return False, message
+
+    user_registered = database.Participants.exists(event.event_id, user_id)
+    if not user_registered:
+        message = '[%s] User %s is not registered' % (event.event_id, user_id)
+        logger.info(message)
+        return False, message
+    return True, ''
 
 
 def is_vote_signed(vote_json):

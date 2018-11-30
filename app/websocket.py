@@ -6,7 +6,6 @@ import threading
 import janus
 import websockets
 
-
 import common
 import scheduler
 from database import database
@@ -62,89 +61,86 @@ class Common:
             websockets_nodes.append(websocket)
         return websockets_nodes
 
+    @staticmethod
+    def is_message_valid(message_json):
+        if message_json is None:
+            return False
+        for field in ['event_id', 'current_timestamp', 'json_data', 'node_id']:
+            if field not in message_json or message_json[field] is None:
+                return False
+        return True
+
+    @staticmethod
+    def parse_fields_from_message(message_json):
+        return (message_json['event_id'], message_json['node_id'],
+                message_json['current_timestamp'], message_json['json_data'])
+
 
 class Producer(Common):
     ''' Propagate votes to other nodes'''
 
-    @staticmethod
-    def create_message(vote):
-        message_send = {'vote': vote.to_json()}
-        return json.dumps(message_send)
-
     @classmethod
     async def producer(cls, message):
-        node_websocket_ips = message['node_websocket_ips']
+        event_id, _, _, _ = cls.parse_fields_from_message(message)
+        # event exists because vote was accepted with vote API
+        event_metadata = database.VerityEvent.get(event_id).metadata()
+        node_websocket_ips = event_metadata.node_websocket_ips
         if not node_websocket_ips:
             logger.warning('Node Websocket IPs are not set')
             return
         websockets_nodes = await cls.get_or_create_websocket_connections(node_websocket_ips)
-        if websockets_nodes:
-            message_json = cls.create_message(message['vote'])
-            await asyncio.wait([websocket.send(message_json) for websocket in websockets_nodes])
+        if not websockets_nodes:
+            logger.warning('Websockets are not connected')
+            return
+        message_json = json.dumps(message)
+        await asyncio.wait([websocket.send(message_json) for websocket in websockets_nodes])
 
     @classmethod
     async def producer_handler(cls, async_q):
         while True:
-            message = await async_q.get()
-            if 'node_websocket_ips' not in message or 'vote' not in message:
-                logger.error('Message does not have required properties: %s', message)
+            message_json = await async_q.get()
+            if not cls.is_message_valid(message_json):
+                logger.info('Invalid message_json: %s', message_json)
                 continue
-            await cls.producer(message)
+            await cls.producer(message_json)
 
 
 class Consumer(Common):
     ''' Consume votes from other nodes'''
 
-    @staticmethod
-    def is_message_valid(message):
-        return 'vote' in message
+    @classmethod
+    async def consumer(cls, message_json):
+        _, node_id, current_timestamp, json_data = cls.parse_fields_from_message(message_json)
 
-    @staticmethod
-    def json_to_vote(vote_json):
-        try:
-            vote = database.Vote.from_json(vote_json)
-        except Exception as e:
-            logger.exception(e)
-            return None
-        return vote
+        if not common.is_vote_payload_valid(json_data):
+            logger.info('Invalid vote payload: %s', json_data)
+            return
 
-    @staticmethod
-    async def event_exists(event_id):
+        event_id, user_id, data, signature = common.parse_fields_from_json_data(json_data)
         event = database.VerityEvent.get(event_id)
-        return event is not None
+        if not event:
+            logger.info('[%s] Event not found', event_id)
+            return
 
-    @staticmethod
-    async def create_vote(vote):
+        event_metadata = event.metadata()
+        # Do not check if consensus was already reached because nodes needs to have a common state
+
+        is_vote_valid, message = common.is_vote_valid(current_timestamp, user_id, event)
+        if not is_vote_valid:
+            logger.info(message)
+            return
+
+        if not common.is_vote_signed(json_data):
+            logger.info('[%s] Vote not signed correctly: %s', event_id, json_data)
+            return
+
+        vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'],
+                             signature)
         vote.create()
         logger.info('[%s] Accepted vote from %s user from %s node: %s', vote.event_id, vote.user_id,
                     vote.node_id, vote.answers)
-
-    @staticmethod
-    def should_calculate_consensus(event_id):
-        event = database.VerityEvent.get(event_id)
-        vote_count = database.Vote.count(event_id)
-        if consensus.should_calculate_consensus(event, vote_count):
-            event_metadata = event.metadata()
+        if consensus.should_calculate_consensus(event):
             scheduler.scheduler.add_job(consensus.check_consensus, args=[event, event_metadata])
-
-    @classmethod
-    async def consumer(cls, message_json):
-        message = json.loads(message_json)
-        if not cls.is_message_valid(message):
-            logger.error("Message is not valid: %s", message)
-            return
-        if not common.is_vote_signed(message):
-            logger.error("Message is not signed: %s", message)
-            return
-        vote = cls.json_to_vote(message['vote'])
-        if vote is None:
-            logger.error("Vote %s from node is not valid", vote.node_id)
-            return
-        if not await cls.event_exists(vote.event_id):
-            logger.error("Event %s does not exist", vote.event_id)
-            return
-        await cls.create_vote(vote)
-        cls.should_calculate_consensus(vote.event_id)
 
     @classmethod
     async def consumer_handler(cls, websocket, _):
@@ -152,6 +148,11 @@ class Consumer(Common):
         while True:
             try:
                 message_json = await asyncio.wait_for(websocket.recv(), timeout=20)
+                message_json = json.loads(message_json)
+                if not cls.is_message_valid(message_json):
+                    logger.info('Invalid message_json: %s', message_json)
+                    continue
+                await cls.consumer(message_json)
             except websockets.exceptions.ConnectionClosed:
                 logger.error('Websocket connection closed %s:%s', websocket.host, websocket.port)
                 return
@@ -165,8 +166,8 @@ class Consumer(Common):
                         'No response to ping in 10 seconds. Websocket connection closed %s:%s',
                         websocket.host, websocket.port)
                     return
-            else:
-                await cls.consumer(message_json)
+            except Exception as e:
+                logger.error(e)
 
 
 def loop_in_thread(event_loop):

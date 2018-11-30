@@ -8,9 +8,10 @@ from ethereum.provider import NODE_WEB3
 logger = logging.getLogger()
 
 
-def should_calculate_consensus(event, vote_count):
+def should_calculate_consensus(event):
     '''Heuristic which checks if there is a potential for consensus (assumes all votes are valid)'''
     event_id = event.event_id
+    vote_count = database.Vote.count(event_id)
     n_participants = len(event.participants())
     if n_participants == 0:
         logger.info('[%s] Should not calculate consensus: %d participants', event_id,
@@ -33,9 +34,8 @@ def should_calculate_consensus(event, vote_count):
 def check_consensus(event, event_metadata):
     event_id = event.event_id
     votes_by_users = event.votes()
-    vote_count = len(votes_by_users)
 
-    if not should_calculate_consensus(event, vote_count):
+    if not should_calculate_consensus(event):
         return
     consensus_votes_by_users = calculate_consensus(event, votes_by_users)
     if not consensus_votes_by_users:
