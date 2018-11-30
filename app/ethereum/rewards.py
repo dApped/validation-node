@@ -1,9 +1,16 @@
 import logging
+from enum import Enum
+from statistics import mean, median
 
 import common
 from database import database
 
 logger = logging.getLogger()
+
+
+class VoteTimestampsMetric(Enum):
+    MEAN = 1
+    MEDIAN = 2
 
 
 def determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance):
@@ -17,33 +24,36 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
 
     if event.rewards_distribution_function == 0:
         logger.info('[%s] Calculating rewards using linear function', event_id)
-        eth_rewards, token_rewards = calculate_linear_rewards(ether_balance, token_balance,
-                                                              consensus_votes_by_users)
+        user_ids, eth_rewards, token_rewards = calculate_linear_rewards(
+            ether_balance, token_balance, consensus_votes_by_users)
     elif event.rewards_distribution_function == 1:
         logger.info('[%s] Calculating rewards using exponential function', event_id)
-        eth_rewards, token_rewards = calculate_exponential_rewards(ether_balance, token_balance,
-                                                                   consensus_votes_by_users)
+        user_ids, eth_rewards, token_rewards = calculate_exponential_rewards(
+            ether_balance, token_balance, consensus_votes_by_users)
     else:
         logger.error('[%s] Rewards function %d not supported', event_id,
                      event.rewards_distribution_function)
         return
 
-    rewards_dict = {
-        user_id: database.Rewards.reward_dict(
+    rewards_dict = {}
+    for i, user_id in enumerate(user_ids):
+        rewards_dict[user_id] = database.Rewards.reward_dict(
             eth_reward=eth_rewards[i], token_reward=token_rewards[i])
-        for i, user_id in enumerate(consensus_votes_by_users)
-    }
+    if not user_ids:
+        logger.warning('[%s] Did not set the rewards because user_ids were empty', event_id)
 
     if event.disputer in consensus_votes_by_users:
         rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
 
     if event.staking_amount > 0:
+        logger.warning('[%s] Adding staking amount to users that were in consensus', event_id)
         for user_id in consensus_votes_by_users:
             rewards_dict[user_id][database.Rewards.TOKEN_KEY] += event.staking_amount
     database.Rewards.create(event.event_id, rewards_dict)
 
 
 def calculate_linear_rewards(ether_balance, token_balance, consensus_votes_by_users):
+    user_ids = list(consensus_votes_by_users.keys())
     votes_count = len(consensus_votes_by_users)
 
     eth_reward = int(ether_balance / votes_count)
@@ -51,7 +61,7 @@ def calculate_linear_rewards(ether_balance, token_balance, consensus_votes_by_us
 
     eth_rewards = [eth_reward for _ in range(votes_count)]
     token_rewards = [token_reward for _ in range(votes_count)]
-    return eth_rewards, token_rewards
+    return user_ids, eth_rewards, token_rewards
 
 
 def _exponential_factor(min_reward, factor, i):
@@ -69,7 +79,30 @@ def _rescale(reward, last, multi):
     return (reward - last) * multi + 1
 
 
+def order_users_by_vote_timestamps(consensus_votes_by_users,
+                                   timestamps_metric=VoteTimestampsMetric.MEAN):
+    scores = []
+    for user_id, votes in consensus_votes_by_users.items():
+        timestamps = [vote.timestamp for vote in votes]
+        if not timestamps:
+            logging.warning('Users %s vote timestamps are empty', user_id)
+            continue
+        if timestamps_metric == VoteTimestampsMetric.MEAN:
+            score = mean(timestamps)
+        elif timestamps_metric == VoteTimestampsMetric.MEDIAN:
+            score = median(timestamps)
+        else:
+            raise Exception('Given TimestampsMetric is not supported: ' + str(timestamps_metric))
+        scores.append((user_id, score))
+    scores = sorted(scores, key=lambda x: x[1])
+    return [user_id for user_id, _ in scores]
+
+
 def calculate_exponential_rewards(ether_balance, token_balance, consensus_votes_by_users):
+    user_ids = order_users_by_vote_timestamps(consensus_votes_by_users)
+    if not user_ids:
+        logger.info('User ids are empty. Cannot calculate exponential rewards')
+        return [], [], []
     num_users = len(consensus_votes_by_users)
     min_reward = 1.0
     factor = 8 / num_users
@@ -83,7 +116,7 @@ def calculate_exponential_rewards(ether_balance, token_balance, consensus_votes_
         part = reward / rewards_sum
         eth_rewards.append(int(part * ether_balance))
         token_rewards.append(int(part * token_balance))
-    return eth_rewards, token_rewards
+    return user_ids, eth_rewards, token_rewards
 
 
 def set_consensus_rewards(w3, event_id):
@@ -100,8 +133,9 @@ def set_consensus_rewards(w3, event_id):
         common.function_transact(w3, set_rewards_fun)
     logger.info('[%s] Master node started setting consensus answer', event_id)
     consensus_answer = database.Vote.get_consensus_vote(event_id)
-    answer_list = [answer[database.Vote.ANSWERS_VALUE_KEY] for answer in
-                   consensus_answer.ordered_answers()]
+    answer_list = [
+        answer[database.Vote.ANSWERS_VALUE_KEY] for answer in consensus_answer.ordered_answers()
+    ]
     answer_list = list(map(lambda x: w3.toBytes(hexstr=w3.toHex(text=str(x))), answer_list))
     set_consensus_vote_fun = contract_instance.functions.setResults(answer_list)
     common.function_transact(w3, set_consensus_vote_fun)
@@ -143,8 +177,9 @@ def validate_rewards(w3, event_id, validation_round):
     # TODO Find a better way of removing trailing 0 bytes
     event_consensus_vote = [x.decode('utf8').replace('\x00', '') for x in event_consensus_vote]
     consensus_vote = database.Vote.get_consensus_vote(event_id)
-    consensus_vote = [answer[database.Vote.ANSWERS_VALUE_KEY] for answer in
-                      consensus_vote.ordered_answers()]
+    consensus_vote = [
+        answer[database.Vote.ANSWERS_VALUE_KEY] for answer in consensus_vote.ordered_answers()
+    ]
 
     rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
     consensus_match = event_consensus_vote == consensus_vote
@@ -153,8 +188,7 @@ def validate_rewards(w3, event_id, validation_round):
     logger.info('[%s] Consensus votes DO%s match', event_id, '' if consensus_match else ' NOT')
 
     if rewards_match and consensus_match:
-        logger.info('[%s] Approving rewards for round %d', event_id,
-                    validation_round)
+        logger.info('[%s] Approving rewards for round %d', event_id, validation_round)
         approve_fun = event_contract.functions.approveRewards(validation_round)
         common.function_transact(w3, approve_fun)
     else:
