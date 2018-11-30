@@ -144,7 +144,7 @@ class Consumer(Common):
 
         if not cls.is_vote_signed(message):
             logger.error("Message is not signed: %s", message)
-
+            return
         vote = cls.json_to_vote(message['vote'])
         if vote is None:
             logger.error("Vote %s from node is not valid", vote.node_id)
