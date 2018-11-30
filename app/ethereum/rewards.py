@@ -35,17 +35,19 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
                      event.rewards_distribution_function)
         return
 
-    rewards_dict = {}
-    for i, user_id in enumerate(user_ids):
-        rewards_dict[user_id] = database.Rewards.reward_dict(
+    rewards_dict = {
+        user_id: database.Rewards.reward_dict(
             eth_reward=eth_rewards[i], token_reward=token_rewards[i])
+        for i, user_id in enumerate(user_ids)
+    }
     if not user_ids:
         logger.warning('[%s] Did not set the rewards because user_ids were empty', event_id)
 
     if event.disputer in consensus_votes_by_users:
+        logger.info('[%s] Adding dispute staking amount to %s disputer', event_id, event.disputer)
         rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
 
-    logger.warning('[%s] Adding staking amount to users that were in consensus', event_id)
+    logger.info('[%s] Adding staking amount to users that were in consensus', event_id)
     for user_id in consensus_votes_by_users:
         rewards_dict[user_id][database.Rewards.TOKEN_KEY] += event.staking_amount
     database.Rewards.create(event.event_id, rewards_dict)
