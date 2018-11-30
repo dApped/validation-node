@@ -55,7 +55,7 @@ def vote(json_data):
     data = json_data['data']
     event_id = data['event_id']
     user_id = data['user_id']
-    signature = data['signedData']
+    signature = json_data['signedData']
 
     event = database.VerityEvent.get(event_id)
     if not event:

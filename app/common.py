@@ -104,6 +104,8 @@ def lists_to_chunks(*lists, batch_size=CHUNK_SIZE):
 
 
 def is_vote_signed(vote_json):
-    data_msg = defunct_hash_message(text=str(vote_json['data']))
-    signer = web3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signature'])
-    return vote_json['user_id'] == signer
+    vote_data = vote_json['data']
+    data_msg = defunct_hash_message(text=str(vote_data))
+    signer = web3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signedData'])
+    logger.info('%s - %s' % (vote_data['user_id'], signer))
+    return vote_data['user_id'] == signer
