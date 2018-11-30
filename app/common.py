@@ -3,7 +3,9 @@ import logging
 import os
 import time
 
+from eth_account.messages import defunct_hash_message
 from web3 import Web3
+from web3.auto import w3 as web3_auto
 
 from ethereum.provider import EthProvider
 
@@ -33,6 +35,22 @@ def event_registry_address():
 
 def node_registry_address():
     return Web3.toChecksumAddress(os.getenv('NODE_REGISTRY_ADDRESS'))
+
+
+def node_id():
+    return os.getenv('NODE_ADDRESS')
+
+
+def node_ip():
+    return os.getenv('NODE_IP')
+
+
+def node_port():
+    return os.getenv('NODE_PORT')
+
+
+def node_ip_port():
+    return '%s:%s' % (node_ip(), node_port())
 
 
 def function_transact(w3, contract_function, max_retries=3):
@@ -85,17 +103,8 @@ def lists_to_chunks(*lists, batch_size=CHUNK_SIZE):
     return list(map(list, zip(*chunks)))  # transpose lists
 
 
-def node_id():
-    return os.getenv('NODE_ADDRESS')
-
-
-def node_ip():
-    return os.getenv('NODE_IP')
-
-
-def node_port():
-    return os.getenv('NODE_PORT')
-
-
-def node_ip_port():
-    return '%s:%s' % (node_ip(), node_port())
+def is_vote_signed(vote_json):
+    vote_data = vote_json['data']
+    data_msg = defunct_hash_message(text=str(vote_data))
+    signer = web3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signedData'])
+    return vote_data['user_id'] == signer

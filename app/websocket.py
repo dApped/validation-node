@@ -1,11 +1,11 @@
 import asyncio
 import json
 import logging
-import os
 import threading
 
 import janus
 import websockets
+
 
 import common
 import scheduler
@@ -117,7 +117,7 @@ class Consumer(Common):
     @staticmethod
     async def create_vote(vote):
         vote.create()
-        logger.info('[%s] Received vote from %s user from %s node: %s', vote.event_id, vote.user_id,
+        logger.info('[%s] Accepted vote from %s user from %s node: %s', vote.event_id, vote.user_id,
                     vote.node_id, vote.answers)
 
     @staticmethod
@@ -133,6 +133,9 @@ class Consumer(Common):
         message = json.loads(message_json)
         if not cls.is_message_valid(message):
             logger.error("Message is not valid: %s", message)
+            return
+        if not common.is_vote_signed(message):
+            logger.error("Message is not signed: %s", message)
             return
         vote = cls.json_to_vote(message['vote'])
         if vote is None:
