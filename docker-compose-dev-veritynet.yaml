@@ -19,10 +19,12 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       NODE_PORT: 81
+      NODE_WEBSOCKET_IP: 'host.docker.internal'
+      NODE_WEBSOCKET_PORT: 8781
       WERKZEUG_RUN_MAIN: 'true'
     ports: 
         - '81:5000'
-        - '8186:8765'
+        - '8781:8781'
     volumes: ['./app:/app']
     depends_on:
       - redis1
@@ -46,10 +48,12 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       NODE_PORT: 82
+      NODE_WEBSOCKET_IP: 'host.docker.internal'
+      NODE_WEBSOCKET_PORT: 8782
       WERKZEUG_RUN_MAIN: 'true'
     ports: 
         - '82:5000'
-        - '8286:8765'
+        - '8782:8782'
     volumes: ['./app:/app']
     depends_on:
       - redis2
@@ -73,10 +77,12 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       NODE_PORT: 83
+      NODE_WEBSOCKET_IP: 'host.docker.internal'
+      NODE_WEBSOCKET_PORT: 8783
       WERKZEUG_RUN_MAIN: 'true'
     ports:
         - '83:5000'
-        - '8386:8765'
+        - '8783:8783'
     volumes: ['./app:/app']
     depends_on:
       - redis3

@@ -50,14 +50,13 @@ class Common:
         return cls.WEBSOCKETS.get(websocket_address)
 
     @classmethod
-    async def get_or_create_websocket_connections(cls, node_ips_ports):
-        my_ip_port = common.node_ip_port()
+    async def get_or_create_websocket_connections(cls, node_websocket_ips_ports):
+        my_websocket_ip_port = common.node_websocket_ip_port()
         websockets_nodes = []
-        for node_ip_port in node_ips_ports:
-            if my_ip_port == node_ip_port:
+        for websocket_ip_port in node_websocket_ips_ports:
+            if my_websocket_ip_port == websocket_ip_port:
                 continue
-            websocket_address = node_ip_port.split(':')[0] + ':8765'
-            websocket = await cls.get_or_create_websocket_connection(websocket_address)
+            websocket = await cls.get_or_create_websocket_connection(websocket_ip_port)
             if not websocket:
                 continue
             websockets_nodes.append(websocket)
@@ -74,11 +73,11 @@ class Producer(Common):
 
     @classmethod
     async def producer(cls, message):
-        node_ips = message['node_ips']
-        if not node_ips:
-            logger.warning('Node IPs are not set')
+        node_websocket_ips = message['node_websocket_ips']
+        if not node_websocket_ips:
+            logger.warning('Node Websocket IPs are not set')
             return
-        websockets_nodes = await cls.get_or_create_websocket_connections(node_ips)
+        websockets_nodes = await cls.get_or_create_websocket_connections(node_websocket_ips)
         if websockets_nodes:
             message_json = cls.create_message(message['vote'])
             await asyncio.wait([websocket.send(message_json) for websocket in websockets_nodes])
@@ -87,7 +86,7 @@ class Producer(Common):
     async def producer_handler(cls, async_q):
         while True:
             message = await async_q.get()
-            if 'node_ips' not in message or 'vote' not in message:
+            if 'node_websocket_ips' not in message or 'vote' not in message:
                 logger.error('Message does not have required properties: %s', message)
                 continue
             await cls.producer(message)
@@ -171,8 +170,10 @@ class Consumer(Common):
 
 
 def loop_in_thread(event_loop):
+    node_websocket_port = common.node_websocket_port()
     asyncio.set_event_loop(event_loop)
-    event_loop.run_until_complete(websockets.serve(Consumer.consumer_handler, '0.0.0.0', 8765))
+    event_loop.run_until_complete(
+        websockets.serve(Consumer.consumer_handler, '0.0.0.0', node_websocket_port))
     event_loop.run_until_complete(Producer.producer_handler(QUEUE.async_q))
     event_loop.run_forever()
 

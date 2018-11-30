@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+from enum import Enum
 
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
@@ -12,6 +13,11 @@ from ethereum.provider import EthProvider
 logger = logging.getLogger()
 
 CHUNK_SIZE = 20
+
+
+class AddressType(Enum):
+    IP = 1
+    WEBSOCKET = 2
 
 
 def verity_event_contract_abi():
@@ -51,6 +57,18 @@ def node_port():
 
 def node_ip_port():
     return '%s:%s' % (node_ip(), node_port())
+
+
+def node_websocket_ip():
+    return os.getenv("NODE_WEBSOCKET_IP")
+
+
+def node_websocket_port():
+    return os.getenv("NODE_WEBSOCKET_PORT")
+
+
+def node_websocket_ip_port():
+    return '%s:%s' % (node_websocket_ip(), node_websocket_port())
 
 
 def function_transact(w3, contract_function, max_retries=3):
