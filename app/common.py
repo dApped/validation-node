@@ -107,5 +107,4 @@ def is_vote_signed(vote_json):
     vote_data = vote_json['data']
     data_msg = defunct_hash_message(text=str(vote_data))
     signer = web3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signedData'])
-    logger.info('%s - %s' % (vote_data['user_id'], signer))
     return vote_data['user_id'] == signer
