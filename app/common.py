@@ -53,23 +53,19 @@ def node_ip():
 
 
 def node_port():
-    return os.getenv('NODE_PORT')
+    return os.getenv('HTTP_PORT')
 
 
 def node_ip_port():
     return '%s:%s' % (node_ip(), node_port())
 
 
-def node_websocket_ip():
-    return os.getenv("NODE_WEBSOCKET_IP")
-
-
 def node_websocket_port():
-    return os.getenv("NODE_WEBSOCKET_PORT")
+    return os.getenv("WEBSOCKET_PORT")
 
 
 def node_websocket_ip_port():
-    return '%s:%s' % (node_websocket_ip(), node_websocket_port())
+    return '%s:%s' % (node_ip(), node_websocket_port())
 
 
 def function_transact(w3, contract_function, max_retries=3):
