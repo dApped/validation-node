@@ -41,12 +41,6 @@ def _is_vote_payload_valid(data):
     return True
 
 
-def _is_vote_signed(data, signature, user_id):
-    data_msg = defunct_hash_message(text=str(data))
-    signer = web3_auto.eth.account.recoverHash(data_msg, signature=signature)
-    return user_id == signer
-
-
 def _response(message, status):
     return {'message': message, 'status': status}
 
@@ -79,7 +73,7 @@ def vote(json_data):
     if not valid_vote:
         return _response(message, 400)
 
-    if not _is_vote_signed(data, signature, user_id):
+    if not common.is_vote_signed(json_data):
         message = 'Vote not signed correctly'
         logger.info('[%s] %s from user %s', event_id, message, user_id)
         return _response(message, 400)
