@@ -1,12 +1,14 @@
 import logging
 import time
 
-from websocket import QUEUE
+from eth_account.messages import defunct_hash_message
+from web3.auto import w3 as web3_auto
 
 import common
 import scheduler
 from database import database
 from events import consensus
+from websocket import QUEUE
 
 logger = logging.getLogger()
 
@@ -53,6 +55,8 @@ def vote(json_data):
     data = json_data['data']
     event_id = data['event_id']
     user_id = data['user_id']
+    signature = json_data['signedData']
+
     event = database.VerityEvent.get(event_id)
     if not event:
         message = '[%s] Event not found' % event_id
@@ -69,10 +73,15 @@ def vote(json_data):
     if not valid_vote:
         return _response(message, 400)
 
+    if not common.is_vote_signed(json_data):
+        message = 'Vote not signed correctly'
+        logger.info('[%s] %s from user %s', event_id, message, user_id)
+        return _response(message, 400)
+
     node_id = common.node_id()
-    vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'])
+    vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'], signature)
     vote.create()
-    logger.info('[%s] Received vote %s from user: %s', event_id, user_id, data['answers'])
+    logger.info('[%s] Accepted vote %s from user: %s', event_id, user_id, data['answers'])
 
     QUEUE.sync_q.put({'node_websocket_ips': event_metadata.node_websocket_ips, 'vote': vote})
 

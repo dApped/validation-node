@@ -261,12 +261,13 @@ class Vote(BaseEvent):
     ANSWERS_SORT_KEY = 'field_name'
     ANSWERS_VALUE_KEY = 'field_value'
 
-    def __init__(self, user_id, event_id, node_id, timestamp, answers, _ordered_answers=None):
+    def __init__(self, user_id, event_id, node_id, timestamp, answers, signature, _ordered_answers=None):
         self.user_id = user_id
         self.event_id = event_id
         self.node_id = node_id
         self.timestamp = timestamp
         self.answers = answers
+        self.signature = signature
         self._ordered_answers = _ordered_answers
 
     @classmethod
