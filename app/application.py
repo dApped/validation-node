@@ -75,7 +75,7 @@ def apply_headers(response):
 
 
 # Routes -----------------------------------------------------------------------
-@application.route('/health_check', methods=['GET'])
+@application.route('/health', methods=['GET'])
 def health_check():
     response = {
         'version': __version__,
