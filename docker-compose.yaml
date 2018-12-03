@@ -1,0 +1,32 @@
+version: "3"
+services:
+  redis:
+    image: redis:4.0.11
+  node:
+    build: ./app
+    entrypoint:
+      - gunicorn
+      - -b :5000
+      - --reload
+      - application
+    environment:
+      REDIS_URL: 'redis'
+      ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
+      FLASK_ENV: ${FLASK_ENV}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      FLASK_APP: ./application.py
+      NODE_ADDRESS: ${NODE_ADDRESS}
+      NODE_PRIVATE_KEY: ${NODE_PRIVATE_KEY}
+      EVENT_REGISTRY_ADDRESS: ${EVENT_REGISTRY_ADDRESS}
+      NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
+      NODE_IP: ${NODE_IP}
+      NODE_PORT: ${NODE_PORT}
+      WERKZEUG_RUN_MAIN: 'true'
+    ports: 
+      - '80:5000'
+      - '8086:8765'
+    volumes: ['./app:/app']
+    depends_on:
+      - redis
+    links:
+      - redis
