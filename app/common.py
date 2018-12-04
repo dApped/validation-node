@@ -56,8 +56,15 @@ def node_port():
     return os.getenv('HTTP_PORT')
 
 
+def protocol():
+    prefix = 'http://'
+    if os.getenv('USE_HTTPS') == 'true':
+        prefix = 'https://'
+    return prefix
+
+
 def node_ip_port():
-    return '%s:%s' % (node_ip(), node_port())
+    return '%s%s:%s' % (protocol(), node_ip(), node_port())
 
 
 def node_websocket_port():
@@ -65,7 +72,7 @@ def node_websocket_port():
 
 
 def node_websocket_ip_port():
-    return '%s:%s' % (node_ip(), node_websocket_port())
+    return 'ws://%s:%s' % (node_ip(), node_websocket_port())
 
 
 def function_transact(w3, contract_function, max_retries=3):

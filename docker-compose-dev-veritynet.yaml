@@ -20,7 +20,7 @@ services:
       NODE_IP: 'host.docker.internal'
       HTTP_PORT: 81
       WEBSOCKET_PORT: 8781
-      WERKZEUG_RUN_MAIN: 'true'
+      USE_HTTPS: 'false'
     ports: 
         - '81:5000'
         - '8781:8781'
@@ -48,7 +48,7 @@ services:
       NODE_IP: 'host.docker.internal'
       HTTP_PORT: 82
       WEBSOCKET_PORT: 8782
-      WERKZEUG_RUN_MAIN: 'true'
+      USE_HTTPS: 'false'
     ports: 
         - '82:5000'
         - '8782:8782'
@@ -76,7 +76,7 @@ services:
       NODE_IP: 'host.docker.internal'
       HTTP_PORT: 83
       WEBSOCKET_PORT: 8783
-      WERKZEUG_RUN_MAIN: 'true'
+      USE_HTTPS: 'false'
     ports:
         - '83:5000'
         - '8783:8783'

@@ -35,7 +35,7 @@ class Common:
     @classmethod
     async def connect_to_websocket(cls, address):
         try:
-            websocket = await websockets.connect('ws://' + address, timeout=2)
+            websocket = await websockets.connect(address, timeout=2)
         except Exception as e:
             logger.error('Cannot connect to websocket: %s', address)
             logger.error(e)
