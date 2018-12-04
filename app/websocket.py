@@ -130,8 +130,9 @@ class Consumer(Common):
             logger.info(message)
             return
 
-        if not common.is_vote_signed(json_data):
-            logger.info('[%s] Vote not signed correctly: %s', event_id, json_data)
+        is_vote_signed_correctly, signer = common.is_vote_signed(json_data)
+        if not is_vote_signed_correctly:
+            logger.info('[%s] Vote not signed correctly from user %s. Message signed by %s', event_id, user_id, signer)
             return
 
         vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'],
