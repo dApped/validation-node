@@ -39,9 +39,10 @@ def vote(json_data):
     if not valid_vote:
         return _response(message, 400)
 
-    if not common.is_vote_signed(json_data):
+    is_vote_signed_correctly, signer = common.is_vote_signed(json_data)
+    if not is_vote_signed_correctly:
         message = 'Vote not signed correctly'
-        logger.info('[%s] %s from user %s', event_id, message, user_id)
+        logger.info('[%s] %s from user %s. Message signed by %s', event_id, message, user_id, signer)
         return _response(message, 400)
 
     node_id = common.node_id()
