@@ -167,9 +167,11 @@ def is_vote_valid(timestamp, user_id, event):
 def is_vote_signed(vote_json):
     try:
         vote_data = vote_json['data']
-        data_msg = defunct_hash_message(text=str(vote_data))
+        message = json.dumps(vote_data, separators=(',', ':'))
+        data_msg = defunct_hash_message(text=str(message))
         signer = web3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signedData'])
     except Exception as e:
         logger.error(e)
         return False, 'None'
     return vote_data['user_id'] == signer, signer
+
