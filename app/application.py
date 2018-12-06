@@ -50,7 +50,7 @@ def init_logging():
     )
     sentry_sdk.init(
         dsn=os.getenv('SENTRY_DSN'),
-        env=os.getenv('FLASK_ENV'),
+        environment=os.getenv('FLASK_ENV'),
         integrations=[sentry_logging, FlaskIntegration()])
     node_id = common.node_id()
 
