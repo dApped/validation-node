@@ -1,9 +1,14 @@
+import logging
 import os
 import time
+from logging.config import dictConfig
 
+import sentry_sdk
 import websocket
 from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, request
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 import common
 import scheduler
@@ -36,6 +41,70 @@ def init():
     websocket.init()
 
 
+def init_logging():
+    sentry_logging = LoggingIntegration(
+        level=logging.INFO,  # Capture info and above as breadcrumbs
+        event_level=logging.INFO  # Send info as events
+    )
+    sentry_sdk.init(
+        dsn=os.getenv('SENTRY_DSN'),
+        environment=os.getenv('FLASK_ENV'),
+        integrations=[sentry_logging, FlaskIntegration()])
+    node_id = common.node_id()
+
+    logging_config = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'f': {
+                'format': '%(asctime)s [%(levelname)s] [' + node_id + '] %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S'
+            },
+        },
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'f',
+                'level': 'INFO',
+            },
+            'file': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'level': 'INFO',
+                'formatter': 'f',
+                'filename': 'logs/validation_node.log',
+                'mode': 'a',
+            },
+            'file_gunicorn_access': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'level': 'INFO',
+                'filename': 'logs/gunicorn.access.log',
+                'mode': 'a',
+            },
+        },
+        'root': {
+            'qualname': 'root',
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'loggers': {
+            'gunicorn.error': {
+                'qualname': 'gunicorn.error',
+                'level': 'INFO',
+                'handlers': ['console', 'file'],
+                'propagate': True
+            },
+            'gunicorn.access': {
+                'qualname': 'gunicorn.access',
+                'level': 'INFO',
+                'handlers': ['file_gunicorn_access'],
+                'propagate': True
+            },
+        }
+    }
+    dictConfig(logging_config)
+
+
 def create_app():
     load_dotenv(dotenv_path='.env')
 
@@ -43,6 +112,7 @@ def create_app():
     os.environ['CONTRACT_DIR'] = os.path.join(project_root, 'contracts')
 
     app = Flask(__name__)
+    init_logging()
     init()
     return app
 
@@ -84,7 +154,7 @@ def health_check():
         'NODE_REGISTRY_ADDRESS': os.getenv('NODE_REGISTRY_ADDRESS'),
         'timestamp': int(time.time())
     }
-    logger.debug('Health check %s', response)
+    logger.debug('Health %s', response)
     return jsonify(response), 200
 
 
