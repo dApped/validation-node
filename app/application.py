@@ -18,8 +18,6 @@ from ethereum.provider import NODE_WEB3
 from events import event_registry_filter, events, node_registry
 from version import __version__
 
-logger = logging.getLogger()
-
 
 # Flask Setup ------------------------------------------------------------------
 def init():
@@ -54,14 +52,16 @@ def init_logging():
         integrations=[sentry_logging, FlaskIntegration()])
     node_id = common.node_id()
 
-    logging_config = dict(
-        formatters={
+    logging_config = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
             'f': {
                 'format': '%(asctime)s [%(levelname)s] [' + node_id + '] %(message)s',
                 'datefmt': '%Y-%m-%d %H:%M:%S'
             },
         },
-        handlers={
+        'handlers': {
             'console': {
                 'class': 'logging.StreamHandler',
                 'formatter': 'f',
@@ -74,13 +74,34 @@ def init_logging():
                 'filename': 'logs/validation_node.log',
                 'mode': 'a',
             },
+            'file_gunicorn_access': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'level': 'INFO',
+                'filename': 'logs/gunicorn.access.log',
+                'mode': 'a',
+            },
         },
-        root={
+        'root': {
+            'qualname': 'root',
             'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': True,
         },
-    )
+        'loggers': {
+            'gunicorn.error': {
+                'qualname': 'gunicorn.error',
+                'level': 'INFO',
+                'handlers': ['console', 'file'],
+                'propagate': True
+            },
+            'gunicorn.access': {
+                'qualname': 'gunicorn.access',
+                'level': 'INFO',
+                'handlers': ['file_gunicorn_access'],
+                'propagate': True
+            },
+        }
+    }
     dictConfig(logging_config)
 
 
@@ -97,6 +118,7 @@ def create_app():
 
 
 application = create_app()
+logger = application.logger
 
 
 @application.before_request
