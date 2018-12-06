@@ -22,7 +22,7 @@ class Common:
 
     @staticmethod
     def key(host, port):
-        return '%s:%s' % (host, port)
+        return 'ws://%s:%s' % (host, port)
 
     @classmethod
     def register(cls, websocket):
