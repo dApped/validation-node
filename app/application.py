@@ -1,9 +1,14 @@
+import logging
 import os
 import time
+from logging.config import dictConfig
 
+import sentry_sdk
 import websocket
 from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, request
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 import common
 import scheduler
@@ -12,6 +17,8 @@ from database import database
 from ethereum.provider import NODE_WEB3
 from events import event_registry_filter, events, node_registry
 from version import __version__
+
+logger = logging.getLogger()
 
 
 # Flask Setup ------------------------------------------------------------------
@@ -36,6 +43,47 @@ def init():
     websocket.init()
 
 
+def init_logging():
+    sentry_logging = LoggingIntegration(
+        level=logging.INFO,  # Capture info and above as breadcrumbs
+        event_level=logging.INFO  # Send info as events
+    )
+    sentry_sdk.init(
+        dsn=os.getenv('SENTRY_DSN'),
+        env=os.getenv('FLASK_ENV'),
+        integrations=[sentry_logging, FlaskIntegration()])
+    node_id = common.node_id()
+
+    logging_config = dict(
+        formatters={
+            'f': {
+                'format': '%(asctime)s [%(levelname)s] [' + node_id + '] %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S'
+            },
+        },
+        handlers={
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'f',
+                'level': 'INFO',
+            },
+            'file': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'level': 'INFO',
+                'formatter': 'f',
+                'filename': 'logs/validation_node.log',
+                'mode': 'a',
+            },
+        },
+        root={
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    )
+    dictConfig(logging_config)
+
+
 def create_app():
     load_dotenv(dotenv_path='.env')
 
@@ -43,12 +91,12 @@ def create_app():
     os.environ['CONTRACT_DIR'] = os.path.join(project_root, 'contracts')
 
     app = Flask(__name__)
+    init_logging()
     init()
     return app
 
 
 application = create_app()
-logger = application.logger
 
 
 @application.before_request
@@ -84,7 +132,7 @@ def health_check():
         'NODE_REGISTRY_ADDRESS': os.getenv('NODE_REGISTRY_ADDRESS'),
         'timestamp': int(time.time())
     }
-    logger.debug('Health check %s', response)
+    logger.debug('Health %s', response)
     return jsonify(response), 200
 
 
