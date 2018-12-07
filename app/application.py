@@ -44,20 +44,19 @@ def init():
 def init_logging():
     sentry_logging = LoggingIntegration(
         level=logging.INFO,  # Capture info and above as breadcrumbs
-        event_level=logging.INFO  # Send info as events
+        event_level=logging.WARN  # Send warn as events
     )
     sentry_sdk.init(
         dsn=os.getenv('SENTRY_DSN'),
         environment=os.getenv('FLASK_ENV'),
         integrations=[sentry_logging, FlaskIntegration()])
-    node_id = common.node_id()
 
     logging_config = {
         'version': 1,
         'disable_existing_loggers': False,
         'formatters': {
             'f': {
-                'format': '%(asctime)s [%(levelname)s] [' + node_id + '] %(message)s',
+                'format': '%(asctime)s [%(levelname)s] %(message)s',
                 'datefmt': '%Y-%m-%d %H:%M:%S'
             },
         },
@@ -74,31 +73,34 @@ def init_logging():
                 'filename': 'logs/validation_node.log',
                 'mode': 'a',
             },
-            'file_gunicorn_access': {
+            'error_file': {
                 'class': 'logging.handlers.RotatingFileHandler',
                 'level': 'INFO',
-                'filename': 'logs/gunicorn.access.log',
+                'formatter': 'f',
+                'filename': 'logs/gunicorn.error.log',
                 'mode': 'a',
+            },
+            'access_file': {
+                'class': 'logging.FileHandler',
+                'formatter': 'f',
+                'filename': 'logs/gunicorn.access.log',
             },
         },
         'root': {
-            'qualname': 'root',
             'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': True,
         },
         'loggers': {
             'gunicorn.error': {
-                'qualname': 'gunicorn.error',
                 'level': 'INFO',
-                'handlers': ['console', 'file'],
+                'handlers': ['console', 'error_file'],
                 'propagate': True
             },
             'gunicorn.access': {
-                'qualname': 'gunicorn.access',
                 'level': 'INFO',
-                'handlers': ['file_gunicorn_access'],
-                'propagate': True
+                'handlers': ['access_file'],
+                'propagate': False
             },
         }
     }
@@ -128,10 +130,10 @@ def limit_remote_addr():
 
     if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ[
             'HTTP_X_FORWARDED_FOR'] in blacklist:
-        logger.debug('Vietnamese bot detected!')
+        logger.warning('Vietnamese bot detected!')
         abort(403)
     if request.environ['REMOTE_ADDR'] in blacklist:
-        logger.debug('Vietnamese bot detected!')
+        logger.warning('Vietnamese bot detected!')
         abort(403)
 
 
