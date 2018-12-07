@@ -88,11 +88,11 @@ def function_transact(w3, contract_function, max_retries=3):
             logger.info('Transmitted transaction %s', Web3.toHex(tx_receipt['transactionHash']))
             return tx_receipt['transactionHash']
         except Exception as e:
-            logger.error(e)
+            logger.info(e)
             if attempt < max_retries:
                 logger.info('Retrying %d with higher nonce', attempt)
             else:
-                logger.error('Final failed to submit transaction')
+                logger.exception('Final failed to submit transaction')
             time.sleep(1)
 
 
@@ -171,7 +171,6 @@ def is_vote_signed(vote_json):
         data_msg = defunct_hash_message(text=str(message))
         signer = web3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signedData'])
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
         return False, 'None'
     return vote_data['user_id'] == signer, signer
-

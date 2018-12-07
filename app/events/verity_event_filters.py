@@ -69,7 +69,7 @@ def process_validation_restart(scheduler, w3, event_id, entries):
     event.update()
 
     if not scheduler:
-        logger.warning('Scheduler is not set')
+        logger.warning('[%s] Scheduler is not set', event_id)
         return
     # if node is master node, set consensus rewards
     if is_master_node:
@@ -81,7 +81,7 @@ def process_validation_restart(scheduler, w3, event_id, entries):
 
 def process_error_event(_scheduler, _w3, event_id, entries):
     for entry in entries:
-        logger.error('event_id: %s, %s', event_id, entry)
+        logger.info('event_id: %s, %s', event_id, entry)
 
 
 def process_dispute_triggered(_scheduler, w3, event_id, entries):
