@@ -25,8 +25,8 @@ def vote(json_data):
     event_id, user_id, data, signature = common.parse_fields_from_json_data(json_data)
     event = database.VerityEvent.get(event_id)
     if not event:
-        message = '[%s] Event not found' % event_id
-        logger.info(message)
+        message = 'Event not found'
+        logger.info('[%s] %s', event_id, message)
         return _response(message, 400)
 
     event_metadata = event.metadata()
