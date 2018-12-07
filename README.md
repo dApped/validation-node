@@ -189,3 +189,18 @@ mkdir -p logs
 IMAGE_TAG=0.0.XX-test
 docker run -d --env-file=ropsten-node-env --link redis -p 80:5000 -p 8765:8765 -v ~/logs:/app/logs 174676166688.dkr.ecr.eu-central-1.amazonaws.com/validation_nodes:$IMAGE_TAG
 ```
+
+# Publishing docker image to dockerhub
+
+```bash
+IMAGE_TAG=1.0.0-rcX
+docker build -t validation_nodes:$IMAGE_TAG app/
+docker tag validation_nodes:$IMAGE_TAG verityoracle/validation-node:$IMAGE_TAG
+docker push verityoracle/validation-node:$IMAGE_TAG
+```
+
+# Pulling and starting docker image from dockerhub
+
+```bash
+IMAGE_TAG=1.0.0-rcX
+docker run -d --env-file=ropsten-node-env --link redis -p 80:5000 -p 8765:8765 -v ~/logs:/app/logs verityoracle/validation-node:$IMAGE_TAG ```

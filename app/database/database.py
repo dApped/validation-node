@@ -257,11 +257,19 @@ class Rewards(BaseEvent):
 class Vote(BaseEvent):
     PREFIX = 'votes'
     PREFIX_COMMON = 'votes_common'
+    PREFIX_EXISTS = 'votes_exists'
     PREFIX_CONSENSUS = 'votes_consensus'
     ANSWERS_SORT_KEY = 'field_name'
     ANSWERS_VALUE_KEY = 'field_value'
 
-    def __init__(self, user_id, event_id, node_id, timestamp, answers, signature, _ordered_answers=None):
+    def __init__(self,
+                 user_id,
+                 event_id,
+                 node_id,
+                 timestamp,
+                 answers,
+                 signature,
+                 _ordered_answers=None):
         self.user_id = user_id
         self.event_id = event_id
         self.node_id = node_id
@@ -275,17 +283,33 @@ class Vote(BaseEvent):
         return '%s_%s_%s' % (cls.PREFIX, event_id, node_id)
 
     @classmethod
+    def key_exists(cls, event_id):
+        return '%s_%s' % (cls.PREFIX_EXISTS, event_id)
+
+    @classmethod
     def key_common(cls, event_id):
         return '%s_%s' % (cls.PREFIX_COMMON, event_id)
+
+    @staticmethod
+    def key_user_node(node_id, user_id):
+        return '%s_%s' % (node_id, user_id)
 
     @classmethod
     def key_consensus(cls, event_id):
         return '%s_%s' % (cls.PREFIX_CONSENSUS, event_id)
 
     def create(self):
-        redis_db.rpush(self.key(self.event_id, self.node_id), self.to_json())
-        redis_db.sadd(self.key_common(self.event_id), self.user_id)
+        redis_db.rpush(self.key(self.event_id, self.node_id), self.to_json())  # store vote
+        redis_db.sadd(self.key_common(self.event_id), self.user_id)  # for consensus check heuristic
+        redis_db.sadd(
+            self.key_exists(self.event_id),
+            self.key_user_node(self.node_id, self.user_id))  # for vote exists check
         return self
+
+    @classmethod
+    def exists(cls, event_id, node_id, user_id):
+        key = cls.key_exists(event_id)
+        return redis_db.sismember(key, cls.key_user_node(node_id, user_id))
 
     def set_consensus_vote(self):
         redis_db.set(self.key_consensus(self.event_id), self.to_json())
@@ -305,6 +329,7 @@ class Vote(BaseEvent):
             pipeline.delete(cls.key(event_id, node_id))
         pipeline.delete(cls.key_common(event_id))
         pipeline.delete(cls.key_consensus(event_id))
+        pipeline.delete(cls.key_exists(event_id))
 
     @classmethod
     def count(cls, event_id):
