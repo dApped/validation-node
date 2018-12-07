@@ -42,10 +42,16 @@ def vote(json_data):
     is_vote_signed_correctly, signer = common.is_vote_signed(json_data)
     if not is_vote_signed_correctly:
         message = 'Vote not signed correctly'
-        logger.info('[%s] %s from user %s. Message signed by %s', event_id, message, user_id, signer)
+        logger.info('[%s] %s from user %s. Message signed by %s', event_id, message, user_id,
+                    signer)
         return _response(message, 400)
 
     node_id = common.node_id()
+    if database.Vote.exists(event_id, node_id, user_id):
+        message = 'Already received vote from %s user' % user_id
+        logger.info('[%s] %s', event_id, message)
+        return _response(message, 400)
+
     vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'], signature)
     vote.create()
     logger.info('[%s] Accepted vote %s from user: %s', event_id, user_id, data['answers'])
