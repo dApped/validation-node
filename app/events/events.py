@@ -31,8 +31,8 @@ def vote(json_data):
 
     event_metadata = event.metadata()
     if event_metadata.is_consensus_reached:
-        message = '[%s] Consensus already reached, no more voting' % event_id
-        logger.info(message)
+        message = 'Consensus already reached, no more voting'
+        logger.info('[%s] %s', event_id, message)
         return _response(message, 200)
 
     valid_vote, message = common.is_vote_valid(current_timestamp, user_id, event)
