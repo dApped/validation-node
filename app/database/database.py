@@ -83,8 +83,10 @@ class VerityEvent(BaseEvent):
         self.staking_amount = staking_amount
 
     def votes(self):
+        n_node_addresses = len(self.node_addresses)
         votes_by_users = Vote.group_votes_by_users(self.event_id, self.node_addresses)
-        votes_by_users = Vote.filter_votes_by_users(self.event_id, votes_by_users)
+        votes_by_users = Vote.filter_votes_by_users(
+            self.event_id, votes_by_users, max_votes=n_node_addresses)
         return votes_by_users
 
     @staticmethod
@@ -363,8 +365,7 @@ class Vote(BaseEvent):
         return votes_by_users
 
     @staticmethod
-    def filter_votes_by_users(event_id, votes_by_users):
-        min_votes, max_votes = 2, 3
+    def filter_votes_by_users(event_id, votes_by_users, min_votes=2, max_votes=3):
         user_ids = list(votes_by_users.keys())
         for user_id in user_ids:
             n_votes = len(votes_by_users[user_id])
