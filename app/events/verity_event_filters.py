@@ -185,7 +185,7 @@ def filter_events(scheduler, w3, formatters):
                 if event is None or event.state in FINAL_STATES:
                     # Event was just finished
                     continue
-                logger.exception(e)
+                logger.error("Filter not found")
                 recover_filter(w3, event_id, filter_name, filter_func, filter_id)
                 continue
 
