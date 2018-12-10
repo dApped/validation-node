@@ -191,14 +191,17 @@ docker run -d --env-file=ropsten-node-env --link redis -p 80:5000 -p 8765:8765 -
 # Publishing docker image to dockerhub
 
 ```bash
-IMAGE_TAG=1.0.0-rcX
+IMAGE_TAG=1.0.0-rc5
 docker build -t validation_nodes:$IMAGE_TAG app/
+
 docker tag validation_nodes:$IMAGE_TAG verityoracle/validation-node:$IMAGE_TAG
 docker push verityoracle/validation-node:$IMAGE_TAG
+
+docker tag validation_nodes:$IMAGE_TAG verityoracle/validation-node:latest
+docker push verityoracle/validation-node:latest
 ```
 
 # Pulling and starting docker image from dockerhub
 
 ```bash
-IMAGE_TAG=1.0.0-rcX
-docker run -d --env-file=ropsten-node-env --link redis -p 80:5000 -p 8765:8765 -v ~/logs:/app/logs verityoracle/validation-node:$IMAGE_TAG ```
+docker stop $(docker ps -aq);docker rm $(docker ps -aq);docker run -d -p 6379:6379 --name redis redis;docker run -d --env-file=node-config.env -v ~/logs:/app/logs --link redis -p 80:5000 -p 8765:8765 verityoracle/validation-node:latest
