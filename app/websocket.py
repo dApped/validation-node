@@ -36,9 +36,8 @@ class Common:
     async def connect_to_websocket(cls, address):
         try:
             websocket = await websockets.connect(address, timeout=2)
-        except Exception as e:
-            logger.error('Cannot connect to websocket: %s', address)
-            logger.error(e)
+        except:
+            logger.exception('Cannot connect to websocket: %s', address)
             return
         cls.register(websocket)
 
@@ -113,13 +112,13 @@ class Consumer(Common):
         _, node_id, current_timestamp, json_data = cls.parse_fields_from_message(message_json)
 
         if not common.is_vote_payload_valid(json_data):
-            logger.info('Invalid vote payload: %s', json_data)
+            logger.warning('Invalid vote payload: %s', json_data)
             return
 
         event_id, user_id, data, signature = common.parse_fields_from_json_data(json_data)
         event = database.VerityEvent.get(event_id)
         if not event:
-            logger.info('[%s] Event not found', event_id)
+            logger.warning('[%s] Event not found', event_id)
             return
 
         event_metadata = event.metadata()
@@ -132,8 +131,8 @@ class Consumer(Common):
 
         is_vote_signed_correctly, signer = common.is_vote_signed(json_data)
         if not is_vote_signed_correctly:
-            logger.info('[%s] Vote not signed correctly from user %s. Message signed by %s',
-                        event_id, user_id, signer)
+            logger.warning('[%s] Vote not signed correctly from user %s. Message signed by %s',
+                           event_id, user_id, signer)
             return
 
         if database.Vote.exists(event_id, user_id, node_id):
@@ -157,7 +156,7 @@ class Consumer(Common):
                 message_json = await asyncio.wait_for(websocket.recv(), timeout=20)
                 message_json = json.loads(message_json)
                 if not cls.is_message_valid(message_json):
-                    logger.info('Invalid message_json: %s', message_json)
+                    logger.warning('Invalid message_json: %s', message_json)
                     continue
                 await cls.consumer(message_json)
             except websockets.exceptions.ConnectionClosed:
@@ -173,8 +172,8 @@ class Consumer(Common):
                         'No response to ping in 10 seconds. Websocket connection closed %s:%s',
                         websocket.host, websocket.port)
                     return
-            except Exception as e:
-                logger.error(e)
+            except:
+                logger.exception("Consumer handler exception")
 
 
 def loop_in_thread(event_loop):

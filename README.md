@@ -1,7 +1,5 @@
 # Validation node
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
 ## Getting started
 
 Validation node environment is set up using [Docker](https://www.docker.com/get-started) (so make sure you have it installed).

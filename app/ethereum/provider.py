@@ -21,7 +21,7 @@ class EthProvider:
             w3.eth.defaultAccount = node_address.address
             logger.debug('MY ETH ADDRESS %s', w3.eth.defaultAccount)
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
         return w3
 
     @staticmethod
