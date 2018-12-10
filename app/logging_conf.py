@@ -1,5 +1,6 @@
 import logging
 import os
+from logging.config import dictConfig
 
 import sentry_sdk
 from sentry_sdk import configure_scope
@@ -75,4 +76,4 @@ def init_logging():
             },
         }
     }
-    logging.config.dictConfig(logging_config)
+    dictConfig(logging_config)
