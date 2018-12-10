@@ -204,4 +204,4 @@ docker push verityoracle/validation-node:latest
 # Pulling and starting docker image from dockerhub
 
 ```bash
-docker stop $(docker ps -aq);docker rm $(docker ps -aq);docker run -d -p 6379:6379 --name redis redis;docker run -d --env-file=node-config.env -v ~/logs:/app/logs --link redis -p 80:5000 -p 8765:8765 verityoracle/validation-node:latest
+docker stop $(docker ps -aq); docker rm $(docker ps -aq); docker rmi $(docker images -q) --force; docker run -d -p 6379:6379 --name redis redis; docker run -d --env-file=node-config.env -v ~/logs:/app/logs --link redis -p 80:5000 -p 8765:8765 verityoracle/validation-node:latest
