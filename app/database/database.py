@@ -11,8 +11,8 @@ import common
 logger = logging.getLogger()
 
 redis_db = redis.StrictRedis(
-    host=os.getenv('REDIS_URL'),
-    port=os.getenv('REDIS_PORT', default='6379'),
+    host=os.getenv('DB_REDIS_IP'),
+    port=os.getenv('DB_REDIS_PORT', default='6379'),
     db=0,
     decode_responses=True)
 

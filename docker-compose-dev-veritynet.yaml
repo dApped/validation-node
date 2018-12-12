@@ -8,7 +8,7 @@ services:
     build: ./app
     entrypoint: "gunicorn -b :5000 -t 1000 -k gevent --access-logfile '-' --reload application"
     environment:
-      REDIS_URL: 'redis1'
+      DB_REDIS_IP: 'redis1'
       ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
@@ -37,7 +37,7 @@ services:
     build: ./app
     entrypoint: "gunicorn -b :5000 -t 1000 -k gevent --access-logfile '-' --reload application"
     environment:
-      REDIS_URL: 'redis2'
+      DB_REDIS_IP: 'redis2'
       ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
@@ -66,7 +66,7 @@ services:
     build: ./app
     entrypoint: "gunicorn -b :5000 -t 1000 -k gevent --access-logfile '-' --reload application"
     environment:
-      REDIS_URL: 'redis3'
+      DB_REDIS_IP: 'redis3'
       ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
       FLASK_ENV: ${FLASK_ENV}
       FLASK_DEBUG: ${FLASK_DEBUG}
