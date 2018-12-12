@@ -10,7 +10,11 @@ import common
 
 logger = logging.getLogger()
 
-redis_db = redis.StrictRedis(host=os.getenv('REDIS_URL'), port=6379, db=0, decode_responses=True)
+redis_db = redis.StrictRedis(
+    host=os.getenv('REDIS_URL'),
+    port=os.getenv('REDIS_PORT', default='6379'),
+    db=0,
+    decode_responses=True)
 
 
 def flush_database():
@@ -376,7 +380,8 @@ class Vote(BaseEvent):
                 del votes_by_users[user_id]
             elif len({vote.ordered_answers().__repr__() for vote in votes_by_users[user_id]}) != 1:
                 # answers from nodes are not the same
-                logger.warning('[%s] User %s voted differently on different nodes', event_id, user_id)
+                logger.warning('[%s] User %s voted differently on different nodes', event_id,
+                               user_id)
                 del votes_by_users[user_id]
         return votes_by_users
 
