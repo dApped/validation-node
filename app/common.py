@@ -7,6 +7,7 @@ from enum import Enum
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
 from web3.auto import w3 as web3_auto
+from web3.gas_strategies.time_based import medium_gas_price_strategy
 
 from database import database
 from ethereum.provider import EthProvider
@@ -97,15 +98,14 @@ def function_transact(w3, contract_function, max_retries=3):
 
 
 def _raw_transaction(w3, contract_function, account, nonce):
-    gas_price = Web3.toWei(10, 'gwei')
-    gas_estimate = 4000000
+    w3.eth.setGasPriceStrategy(medium_gas_price_strategy)
 
     transaction = {
         'from': account['address'],
-        'gasPrice': gas_price,
-        'gas': gas_estimate,
         'nonce': nonce,
     }
+    transaction['gasPrice'] = w3.eth.generateGasPrice()
+    transaction['gas'] = w3.eth.estimateGas()
     signed_txn = w3.eth.account.signTransaction(
         contract_function.buildTransaction(transaction), private_key=account['pvt_key'])
     raw_txn = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
