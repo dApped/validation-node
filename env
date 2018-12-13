@@ -1,7 +1,7 @@
 ### FLASK
 FLASK_ENV=dev
 
-REDIS_URL=redis
+DB_REDIS_IP=redis
 
 NODE_IP=localhost
 HTTP_PORT=80

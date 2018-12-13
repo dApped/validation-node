@@ -10,11 +10,7 @@ import common
 
 logger = logging.getLogger()
 
-redis_db = redis.StrictRedis(
-    host=os.getenv('DB_REDIS_IP'),
-    port=os.getenv('DB_REDIS_PORT', default='6379'),
-    db=0,
-    decode_responses=True)
+redis_db = redis.StrictRedis(host=os.getenv('DB_REDIS_IP'), port=6379, db=0, decode_responses=True)
 
 
 def flush_database():
