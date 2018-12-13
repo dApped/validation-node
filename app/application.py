@@ -84,7 +84,8 @@ def health_check():
         'NODE_ADDRESS': os.getenv('NODE_ADDRESS'),
         'EVENT_REGISTRY_ADDRESS': os.getenv('EVENT_REGISTRY_ADDRESS'),
         'NODE_REGISTRY_ADDRESS': os.getenv('NODE_REGISTRY_ADDRESS'),
-        'timestamp': int(time.time())
+        'timestamp': int(time.time()),
+        'block_number': NODE_WEB3.eth.blockNumber,
     }
     logger.debug('Health %s', response)
     return jsonify(response), 200
