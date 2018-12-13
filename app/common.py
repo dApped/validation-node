@@ -105,7 +105,7 @@ def _raw_transaction(w3, contract_function, account, nonce):
         'nonce': nonce,
     }
     transaction['gasPrice'] = w3.eth.generateGasPrice()
-    transaction['gas'] = w3.eth.estimateGas()
+    transaction['gas'] = w3.eth.estimateGas(transaction)
     signed_txn = w3.eth.account.signTransaction(
         contract_function.buildTransaction(transaction), private_key=account['pvt_key'])
     raw_txn = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
