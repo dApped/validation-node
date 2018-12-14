@@ -46,7 +46,7 @@ def node_registry_address():
 
 
 def node_id():
-    return os.getenv('NODE_ADDRESS')
+    return Web3.toChecksumAddress(os.getenv('NODE_ADDRESS'))
 
 
 def node_ip():
