@@ -212,7 +212,7 @@ docker stop $(docker ps -aq); docker rm $(docker ps -aq); docker rmi $(docker im
 docker stop $(docker ps -aq); docker rm $(docker ps -aq); docker rmi $(docker images -q) --force
 
 docker run -d -p 6381:6379 --name redis1 redis
-docker run -d --env-file=mainnet-node.env -v ~/mainnet/logs:/app/logs --link redis1 -p 81:5000 -p 8781:8765 verityoracle/validation-node:latest
+docker run -d --env-file=mainnet-node.env -v ~/mainnet/logs:/app/logs --link redis1 -p 81:5000 -p 8781:8781 verityoracle/validation-node:latest
 
 docker run -d -p 6382:6379 --name redis2 redis
-docker run -d --env-file=ropsten-node.env -v ~/ropsten/logs:/app/logs --link redis2 -p 82:5000 -p 8782:8765 verityoracle/validation-node:latest
+docker run -d --env-file=ropsten-node.env -v ~/ropsten/logs:/app/logs --link redis2 -p 82:5000 -p 8782:8782 verityoracle/validation-node:latest
