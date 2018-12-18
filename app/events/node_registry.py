@@ -22,8 +22,7 @@ def register_node_ip(node_registry_abi, node_registry_address, node_ip, address_
             register_node_ip_fun = contract_instance.functions.registerNodeWs(node_ip)
         else:
             raise Exception('Unsupported address type ' + str(address_type))
-        trx = common.function_transact(NODE_WEB3, register_node_ip_fun)
-        NODE_WEB3.eth.waitForTransactionReceipt(trx)
+        common.function_transact(NODE_WEB3, register_node_ip_fun)
     logger.info('Node %s: %s', str(address_type), node_ip)
 
 
