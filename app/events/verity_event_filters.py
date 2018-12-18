@@ -87,9 +87,16 @@ def process_error_event(_scheduler, _w3, event_id, entries):
 def process_dispute_triggered(_scheduler, w3, event_id, entries):
     entry = entries[-1]
     dispute_started_by = entry['args']['byAddress']
-    logger.info('[%s] Dispute tarted by %s', event_id, dispute_started_by)
+    logger.info('[%s] Dispute started by %s', event_id, dispute_started_by)
+    event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event doesn\'t exists in the database', event_id)
+        return
+    contract_block_number = event.metadata().contract_block_number
+
     VerityEvent.delete_all_event_data(w3, event_id)
-    event_registry_filter.init_event(w3, common.verity_event_contract_abi(), event_id)
+    event_registry_filter.init_event(w3, common.verity_event_contract_abi(), event_id,
+                                     contract_block_number)
 
 
 STATE_TRANSITION_FILTER = 'StateTransition'
@@ -143,21 +150,26 @@ def init_event_filters(w3, contract_abi, event_id):
 
 def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id):
     logger.info('[%s] Initializing %s filter', event_id, filter_name)
-    filter_ = contract_instance.events[filter_name].createFilter(
-        fromBlock='earliest', toBlock='latest')
+    event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event doesn\'t exists in the database', event_id)
+        return
+    contract_block_number = event.metadata().contract_block_number
+    filter_ = contract_instance.events[filter_name].createFilter(fromBlock=0, toBlock='latest')
     database.Filters.create(event_id, filter_.filter_id)
-    logger.info('[%s] Requesting all entries for %s', event_id, filter_name)
+    logger.info('[%s] Requesting all entries for %s from %d block', event_id, filter_name,
+                contract_block_number)
     entries = filter_.get_all_entries()
     if filter_name in {
             DISPUTE_TRIGGERED_FILTER, VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER
     } or not entries:
-        logger.info("[%s] No entries for filter %s", event_id, filter_name)
+        logger.info('[%s] No entries for filter %s', event_id, filter_name)
         return
     filter_func(None, w3, event_id, entries)
 
 
 def recover_filter(w3, event_id, filter_name, filter_func, filter_id):
-    logger.info("[%s] Recovering filter %s", event_id, filter_name)
+    logger.info('[%s] Recovering filter %s', event_id, filter_name)
     database.Filters.remove_from_list(event_id, filter_id)
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
@@ -185,7 +197,7 @@ def filter_events(scheduler, w3, formatters):
                 if event is None or event.state in FINAL_STATES:
                     # Event was just finished
                     continue
-                logger.error("Filter not found")
+                logger.exception('Filter not found')
                 recover_filter(w3, event_id, filter_name, filter_func, filter_id)
                 continue
 
