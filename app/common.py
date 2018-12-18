@@ -16,6 +16,7 @@ logger = logging.getLogger()
 
 CHUNK_SIZE = 20
 GAS_PRICE_FACTOR = 1.2
+WAIT_FOR_TRANSACTION_RECEIPT_TIMEOUT = 60 * 15  # 15 minutes
 
 
 class AddressType(Enum):
@@ -86,7 +87,8 @@ def function_transact(w3, contract_function, max_retries=3):
     for attempt in range(max_retries):
         try:
             raw_txn = _raw_transaction(w3, contract_function, account, next_nonce + attempt)
-            tx_receipt = w3.eth.waitForTransactionReceipt(raw_txn)
+            tx_receipt = w3.eth.waitForTransactionReceipt(
+                raw_txn, timeout=WAIT_FOR_TRANSACTION_RECEIPT_TIMEOUT)
             logger.info('Transmitted transaction %s', Web3.toHex(tx_receipt['transactionHash']))
             return tx_receipt['transactionHash']
         except Exception as e:
