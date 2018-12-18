@@ -15,6 +15,7 @@ from ethereum.provider import EthProvider
 logger = logging.getLogger()
 
 CHUNK_SIZE = 20
+GAS_PRICE_FACTOR = 1.2
 
 
 class AddressType(Enum):
@@ -89,11 +90,7 @@ def function_transact(w3, contract_function, max_retries=3):
             logger.info('Transmitted transaction %s', Web3.toHex(tx_receipt['transactionHash']))
             return tx_receipt['transactionHash']
         except Exception as e:
-            logger.info(e)
-            if attempt < max_retries:
-                logger.info('Retrying %d with higher nonce', attempt)
-            else:
-                logger.exception('Final failed to submit transaction')
+            logger.exception('Transaction failed. Retry: %d/%d', attempt, max_retries)
             time.sleep(1)
 
 
@@ -104,8 +101,8 @@ def _raw_transaction(w3, contract_function, account, nonce):
         'from': account['address'],
         'nonce': nonce,
     }
-    transaction['gasPrice'] = w3.eth.generateGasPrice()
-    transaction['gas'] = w3.eth.estimateGas(transaction)
+    transaction['gasPrice'] = int(w3.eth.generateGasPrice() * GAS_PRICE_FACTOR)
+    transaction['gas'] = 2000000
     signed_txn = w3.eth.account.signTransaction(
         contract_function.buildTransaction(transaction), private_key=account['pvt_key'])
     raw_txn = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
