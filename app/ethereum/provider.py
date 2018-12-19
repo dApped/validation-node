@@ -14,7 +14,7 @@ class EthProvider:
         self.ETH_RPC_PROVIDER = os.getenv('ETH_RPC_PROVIDER')
 
     def web3(self):
-        w3 = Web3(HTTPProvider(self.ETH_RPC_PROVIDER, request_kwargs={'timeout': 60 * 5}))
+        w3 = Web3(HTTPProvider(self.ETH_RPC_PROVIDER))
         try:
             # TODO should probably have encrypted private key with passphrase here
             node_address = Account.privateKeyToAccount(os.getenv('NODE_PRIVATE_KEY'))

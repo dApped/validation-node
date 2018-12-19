@@ -11,8 +11,9 @@ NEW_VERITY_EVENT = 'NewVerityEvent'
 
 def process_new_verity_events(w3, event_contract_abi, entries):
     for entry in entries:
+        contract_block_number = entry['blockNumber']
         event_address = entry['args']['eventAddress']
-        init_event(w3, event_contract_abi, event_address)
+        init_event(w3, event_contract_abi, event_address, contract_block_number)
 
 
 def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
@@ -57,7 +58,7 @@ def call_event_contract_for_metadata(w3, contract_abi, event_id):
     return event
 
 
-def init_event(w3, contract_abi, event_id):
+def init_event(w3, contract_abi, event_id, contract_block_number):
     node_id = common.node_id()
     if not is_node_registered_on_event(w3, contract_abi, node_id, event_id):
         logger.info('[%s] Node %s is not included in the event', event_id, node_id)
@@ -68,6 +69,9 @@ def init_event(w3, contract_abi, event_id):
     if not event:
         return
     event.create()
+    event_metadata = event.metadata()
+    event_metadata.contract_block_number = contract_block_number
+    event_metadata.update()
     verity_event_filters.init_event_filters(w3, contract_abi, event.event_id)
     logger.info('[%s] Event initialized', event_id)
 
