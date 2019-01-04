@@ -148,19 +148,12 @@ def parse_fields_from_json_data(json_data):
     return event_id, user_id, data, signature
 
 
-def is_vote_valid(timestamp, user_id, event):
-    if timestamp < event.event_start_time or timestamp > event.event_end_time:
-        message = '[%s] Voting is not active. Event Start Time %d, Event End Time: %d'
-        message = message % (event.event_id, event.event_start_time, event.event_end_time)
-        logger.info(message)
-        return False, message
+def is_voting_active(timestamp, event_start_time, event_end_time):
+    return timestamp < event_start_time or timestamp > event_end_time
 
-    user_registered = database.Participants.exists(event.event_id, user_id)
-    if not user_registered:
-        message = '[%s] User %s is not registered' % (event.event_id, user_id)
-        logger.info(message)
-        return False, message
-    return True, ''
+
+def is_user_registered(user_id, event_id):
+    return database.Participants.exists(event_id, user_id)
 
 
 def is_vote_signed(vote_json):
