@@ -128,7 +128,7 @@ class Consumer(Common):
         if not is_voting_active:
             message = '[%s] Voting is not active. Event Start Time %d, Event End Time: %d'
             message = message % (event.event_id, event.event_start_time, event.event_end_time)
-            logger.warning(message)
+            logger.info(message)
             return
 
         is_user_registered, = common.is_user_registered(user_id, event)
@@ -195,6 +195,6 @@ def loop_in_thread(event_loop):
 
 def init():
     logger.info('Websocket Init started')
-    t = threading.Thread(target=loop_in_thread, args=(LOOP,))
+    t = threading.Thread(target=loop_in_thread, args=(LOOP, ))
     t.start()
     logger.info('Websocket Init done')
