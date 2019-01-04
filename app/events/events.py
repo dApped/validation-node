@@ -35,14 +35,14 @@ def vote(json_data):
         logger.info('[%s] %s', event_id, message)
         return _response(message, 403)
 
-    is_voting_active = common.is_voting_active(current_timestamp, event)
+    is_voting_active = common.is_voting_active(current_timestamp, event.event_start_time, event.event_end_time)
     if not is_voting_active:
         message = '[%s] Voting is not active. Event Start Time %d, Event End Time: %d'
         message = message % (event.event_id, event.event_start_time, event.event_end_time)
         logger.info(message)
         return _response(message, 422)
 
-    is_user_registered = common.is_user_registered(user_id, event)
+    is_user_registered = common.is_user_registered(user_id, event.event_id)
     if not is_user_registered:
         message = '[%s] User %s is not registered' % (event.event_id, user_id)
         logger.info(message)

@@ -148,12 +148,12 @@ def parse_fields_from_json_data(json_data):
     return event_id, user_id, data, signature
 
 
-def is_voting_active(timestamp, event):
-    return timestamp < event.event_start_time or timestamp > event.event_end_time
+def is_voting_active(timestamp, event_start_time, event_end_time):
+    return timestamp < event_start_time or timestamp > event_end_time
 
 
-def is_user_registered(user_id, event):
-    return database.Participants.exists(event.event_id, user_id)
+def is_user_registered(user_id, event_id):
+    return database.Participants.exists(event_id, user_id)
 
 
 def is_vote_signed(vote_json):
