@@ -149,7 +149,7 @@ def parse_fields_from_json_data(json_data):
 
 
 def is_voting_active(timestamp, event_start_time, event_end_time):
-    return timestamp < event_start_time or timestamp > event_end_time
+    return event_start_time <= timestamp <= event_end_time
 
 
 def is_user_registered(user_id, event_id):
