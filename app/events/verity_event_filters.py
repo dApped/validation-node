@@ -155,7 +155,8 @@ def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
         logger.info('[%s] Event doesn\'t exists in the database', event_id)
         return
     contract_block_number = event.metadata().contract_block_number
-    filter_ = contract_instance.events[filter_name].createFilter(fromBlock=0, toBlock='latest')
+    filter_ = contract_instance.events[filter_name].createFilter(
+        fromBlock=contract_block_number, toBlock='latest')
     database.Filters.create(event_id, filter_.filter_id)
     logger.info('[%s] Requesting all entries for %s from %d block', event_id, filter_name,
                 contract_block_number)
