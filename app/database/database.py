@@ -82,11 +82,17 @@ class VerityEvent(BaseEvent):
         self.disputer = disputer
         self.staking_amount = staking_amount
 
-    def votes(self):
-        n_node_addresses = len(self.node_addresses)
+    def votes(self, min_votes=None, max_votes=None, consensus_vote=None):
+        min_votes = min_votes or 2
+        max_votes = max_votes or len(self.node_addresses)
+
         votes_by_users = Vote.group_votes_by_users(self.event_id, self.node_addresses)
         votes_by_users = Vote.filter_votes_by_users(
-            self.event_id, votes_by_users, max_votes=n_node_addresses)
+            self.event_id,
+            votes_by_users,
+            min_votes=min_votes,
+            max_votes=max_votes,
+            consensus_vote=consensus_vote)
         return votes_by_users
 
     @staticmethod
@@ -115,6 +121,9 @@ class VerityEvent(BaseEvent):
     def get_ids_list():
         return redis_db.lrange(VerityEvent.IDS_KEY, 0, -1)
 
+    def user_ids_without_vote(self):
+        return self.participants().difference(Vote.user_ids_with_vote(self.event_id))
+
     @classmethod
     def delete_all_event_data(cls, w3, event_id):
         filter_ids = Filters.get_list(event_id)
@@ -135,7 +144,8 @@ class VerityEvent(BaseEvent):
 class VerityEventMetadata(BaseEvent):
     PREFIX = 'metadata'
 
-    def __init__(self, event_id, is_consensus_reached, node_ips, node_websocket_ips, contract_block_number):
+    def __init__(self, event_id, is_consensus_reached, node_ips, node_websocket_ips,
+                 contract_block_number):
         self.event_id = event_id
         self.is_consensus_reached = is_consensus_reached
         self.node_ips = node_ips
@@ -342,6 +352,10 @@ class Vote(BaseEvent):
     def count(cls, event_id):
         return redis_db.scard(cls.key_common(event_id))
 
+    @classmethod
+    def user_ids_with_vote(cls, event_id):
+        return redis_db.smembers(cls.key_common(event_id))
+
     def ordered_answers(self):
         if self._ordered_answers is not None:
             return self._ordered_answers
@@ -370,7 +384,7 @@ class Vote(BaseEvent):
         return votes_by_users
 
     @staticmethod
-    def filter_votes_by_users(event_id, votes_by_users, min_votes=2, max_votes=3):
+    def filter_votes_by_users(event_id, votes_by_users, min_votes, max_votes, consensus_vote):
         user_ids = list(votes_by_users.keys())
         for user_id in user_ids:
             n_votes = len(votes_by_users[user_id])
@@ -383,6 +397,11 @@ class Vote(BaseEvent):
                 # answers from nodes are not the same
                 logger.warning('[%s] User %s voted differently on different nodes', event_id,
                                user_id)
+                del votes_by_users[user_id]
+            elif consensus_vote is not None and\
+                    votes_by_users[user_id][0].ordered_answers().__repr__() != consensus_vote:
+                logger.info('[%s] Vote from %s user is not in consensus. Skip it', event_id,
+                            user_id)
                 del votes_by_users[user_id]
         return votes_by_users
 

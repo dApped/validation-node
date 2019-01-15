@@ -1,4 +1,5 @@
 import logging
+import time
 
 import scheduler
 from database import database
@@ -47,6 +48,11 @@ def check_consensus(event, event_metadata):
         return
     event_metadata.is_consensus_reached = True
     event_metadata.update()
+
+    n_seconds_wait = 5
+    logger.info('[%s] Waiting %d seconds for websockets to exchange votes', event_id,
+                n_seconds_wait)
+    time.sleep(n_seconds_wait)
 
     # developer might initialize event and set rewards later. We fetch them just in time
     ether_balance, token_balance = event.instance(NODE_WEB3, event_id).functions.getBalance().call()

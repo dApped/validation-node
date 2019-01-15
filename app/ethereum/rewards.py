@@ -15,12 +15,31 @@ class VoteTimestampsMetric(Enum):
 
 def determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance):
     event_id = event.event_id
+    logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
+    logger.info('[%s] %d users in consensus', event_id, len(consensus_votes_by_users))
+
     if event.disputer in consensus_votes_by_users:
         logger.info('[%s] Disputer %s in consensus', event_id, event.disputer)
         token_balance -= event.dispute_amount
 
+    user_ids_to_return_staking_amount = []
     if event.staking_amount > 0:
-        token_balance -= event.staking_amount * len(consensus_votes_by_users)
+        consensus_vote = list(consensus_votes_by_users.values())[0][0].ordered_answers().__repr__()
+        votes_by_users = event.votes(min_votes=1, consensus_vote=consensus_vote)
+        consensus_user_ids = list(votes_by_users.keys())
+        user_ids_to_return_staking_amount.extend(consensus_user_ids)
+        logger.info('[%s] %d users with at least one correct vote', event_id,
+                    len(consensus_user_ids))
+
+        user_ids_without_vote = list(event.user_ids_without_vote())
+        logger.info('[%s] %d users without a vote', event_id, len(user_ids_without_vote))
+        user_ids_to_return_staking_amount.extend(user_ids_without_vote)
+
+        n_users_to_return = len(user_ids_to_return_staking_amount)
+        staking_amount_to_return = event.staking_amount * n_users_to_return
+        token_balance -= staking_amount_to_return
+        logger.info('[%s] %d users to return %d VTY join stake', event_id,
+                    len(user_ids_to_return_staking_amount), staking_amount_to_return)
 
     if event.rewards_distribution_function == 0:
         logger.info('[%s] Calculating rewards using linear function', event_id)
@@ -47,8 +66,10 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
         logger.info('[%s] Adding dispute staking amount to %s disputer', event_id, event.disputer)
         rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
 
-    logger.info('[%s] Adding staking amount to users that were in consensus', event_id)
-    for user_id in consensus_votes_by_users:
+    logger.info('[%s] Returing staking amount to users in consensus or without a vote', event_id)
+    for user_id in user_ids_to_return_staking_amount:
+        if user_id not in rewards_dict:
+            rewards_dict[user_id] = database.Rewards.reward_dict()
         rewards_dict[user_id][database.Rewards.TOKEN_KEY] += event.staking_amount
     database.Rewards.create(event.event_id, rewards_dict)
 
