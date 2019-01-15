@@ -83,10 +83,8 @@ class VerityEvent(BaseEvent):
         self.staking_amount = staking_amount
 
     def votes(self, min_votes=None, max_votes=None, consensus_vote=None):
-        if min_votes is None:
-            min_votes = 2
-        if max_votes is None:
-            max_votes = len(self.node_addresses)
+        min_votes = min_votes or 2
+        max_votes = max_votes or len(self.node_addresses)
 
         votes_by_users = Vote.group_votes_by_users(self.event_id, self.node_addresses)
         votes_by_users = Vote.filter_votes_by_users(
