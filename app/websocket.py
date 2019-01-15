@@ -122,7 +122,13 @@ class Consumer(Common):
             return
 
         event_metadata = event.metadata()
-        # Do not check if consensus was already reached because nodes needs to have a common state
+        if event_metadata.is_consensus_reached and user_id in database.Vote.user_ids_with_vote(
+                event_id):
+            # Reject the vote so that consensus ratio stays the sane
+            message = '[%s] Consensus was already reached and vote from %s user already exists'
+            message = message % (event.event_id, user_id)
+            logger.info(message)
+            return
 
         is_voting_active = common.is_voting_active(current_timestamp, event.event_start_time,
                                                    event.event_end_time)
@@ -154,7 +160,7 @@ class Consumer(Common):
         vote.create()
         logger.info('[%s] Accepted vote from %s user from %s node: %s', vote.event_id, vote.user_id,
                     vote.node_id, vote.answers)
-        if consensus.should_calculate_consensus(event):
+        if consensus.should_calculate_consensus(event) and event_metadata.is_consensus_reached:
             scheduler.scheduler.add_job(consensus.check_consensus, args=[event, event_metadata])
 
     @classmethod
