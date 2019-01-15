@@ -160,7 +160,7 @@ class Consumer(Common):
         vote.create()
         logger.info('[%s] Accepted vote from %s user from %s node: %s', vote.event_id, vote.user_id,
                     vote.node_id, vote.answers)
-        if consensus.should_calculate_consensus(event) and not event_metadata.is_consensus_reached:
+        if not event_metadata.is_consensus_reached and consensus.should_calculate_consensus(event):
             scheduler.scheduler.add_job(consensus.check_consensus, args=[event, event_metadata])
 
     @classmethod
