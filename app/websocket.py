@@ -35,6 +35,7 @@ class Common:
     @classmethod
     async def connect_to_websocket(cls, address):
         try:
+            logger.info('Connecting to %s websocket', address)
             websocket = await websockets.connect(address, timeout=2)
         except:
             logger.exception('Cannot connect to websocket: %s', address)
@@ -45,7 +46,24 @@ class Common:
     async def get_or_create_websocket_connection(cls, websocket_address):
         if websocket_address not in cls.WEBSOCKETS:
             await cls.connect_to_websocket(websocket_address)
-        return cls.WEBSOCKETS.get(websocket_address)
+        websocket = cls.WEBSOCKETS.get(websocket_address)
+        if websocket is None:
+            return websocket
+        if not websocket.open:
+            cls.unregister(websocket)
+            websocket = await cls.get_or_create_websocket_connection(websocket_address)
+        return websocket
+
+    @classmethod
+    async def is_websocket_online(cls, websocket, timeout):
+        try:
+            pong_waiter = await websocket.ping()
+            await asyncio.wait_for(pong_waiter, timeout=timeout)
+        except asyncio.TimeoutError:
+            logger.warning('No response to ping in %d seconds. Websocket connection closed %s:%s',
+                           timeout, websocket.host, websocket.port)
+            return False
+        return True
 
     @classmethod
     async def get_or_create_websocket_connections(cls, node_websocket_ips_ports):
@@ -179,13 +197,7 @@ class Consumer(Common):
                 return
             except asyncio.TimeoutError:
                 # No data in 20 seconds
-                try:
-                    pong_waiter = await websocket.ping()
-                    await asyncio.wait_for(pong_waiter, timeout=10)
-                except asyncio.TimeoutError:
-                    logger.error(
-                        'No response to ping in 10 seconds. Websocket connection closed %s:%s',
-                        websocket.host, websocket.port)
+                if not await cls.is_websocket_online(websocket, 10):
                     return
             except:
                 logger.exception("Consumer handler exception")
