@@ -54,8 +54,11 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
                                                        consensus_votes_by_users.get(event.disputer),
                                                        event.metadata().previous_consensus_answers)
     if return_dispute_stake:
+        # disputer voted differently then first consensus and was part of new consensus.
+        # we need to return the dispute stake to disputer
         token_balance -= event.dispute_amount
     elif event.disputer is not None and event.disputer in consensus_votes_by_users:
+        # disputer voted the same as previous consensus. Don't return dispute stake
         logger.info('[%s] Removing %s disputer from rewards', event_id, event.disputer)
         consensus_votes_by_users.pop(event.disputer)
 
