@@ -13,34 +13,73 @@ class VoteTimestampsMetric(Enum):
     MEDIAN = 2
 
 
+def should_return_dispute_stake(event_id, disputer_id, disputer_votes, previous_consensus_answers):
+    if disputer_id is None or disputer_votes is None:
+        return False
+
+    disputer_answers = database.Vote.answers_from_vote(disputer_votes[0])
+    if previous_consensus_answers != disputer_answers:
+        logger.info('[%s] Disputer %s answer is different from previous consensus', event_id,
+                    disputer_id)
+        return True
+    logger.info('[%s] Disputer %s answer is the same as previous consensus', event_id, disputer_id)
+    return False
+
+
+def user_ids_to_return_join_stakes(event_id, staking_amount, user_ids_consensus,
+                                   user_ids_without_vote, return_dispute_stake, disputer_id):
+    user_ids = []
+    if staking_amount == 0:
+        return user_ids
+
+    logger.info('[%s] %d users with at least one correct vote', event_id, len(user_ids_consensus))
+    user_ids.extend(user_ids_consensus)
+
+    logger.info('[%s] %d users without a vote', event_id, len(user_ids_without_vote))
+    user_ids.extend(user_ids_without_vote)
+
+    if not return_dispute_stake and disputer_id in user_ids:
+        logger.info('[%s] Removing %s disputer from join stakes', event_id, disputer_id)
+        user_ids.remove(disputer_id)
+    return user_ids
+
+
 def determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance):
     event_id = event.event_id
     logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
     logger.info('[%s] %d users in consensus', event_id, len(consensus_votes_by_users))
 
-    if event.disputer in consensus_votes_by_users:
-        logger.info('[%s] Disputer %s in consensus', event_id, event.disputer)
+    # handle dispute
+    return_dispute_stake = should_return_dispute_stake(event_id, event.disputer,
+                                                       consensus_votes_by_users.get(event.disputer),
+                                                       event.metadata().previous_consensus_answers)
+    if return_dispute_stake:
+        # disputer voted differently then first consensus and was part of new consensus.
+        # we need to return the dispute stake to disputer
         token_balance -= event.dispute_amount
+    elif event.disputer is not None and event.disputer in consensus_votes_by_users:
+        # disputer voted the same as previous consensus. Don't return dispute stake
+        logger.info('[%s] Removing %s disputer from rewards', event_id, event.disputer)
+        consensus_votes_by_users.pop(event.disputer)
 
-    user_ids_to_return_staking_amount = []
-    if event.staking_amount > 0:
-        consensus_vote = list(consensus_votes_by_users.values())[0][0].ordered_answers().__repr__()
-        votes_by_users = event.votes(min_votes=1, consensus_vote=consensus_vote)
-        consensus_user_ids = list(votes_by_users.keys())
-        user_ids_to_return_staking_amount.extend(consensus_user_ids)
-        logger.info('[%s] %d users with at least one correct vote', event_id,
-                    len(consensus_user_ids))
+    # handle join stakes
+    consensus_vote = list(consensus_votes_by_users.values())[0][0]
+    votes_by_users = event.votes(min_votes=1, consensus_vote=consensus_vote)
+    user_ids_consensus = list(votes_by_users.keys())
+    user_ids_without_vote = list(event.user_ids_without_vote())
 
-        user_ids_without_vote = list(event.user_ids_without_vote())
-        logger.info('[%s] %d users without a vote', event_id, len(user_ids_without_vote))
-        user_ids_to_return_staking_amount.extend(user_ids_without_vote)
+    user_ids_to_return_staking_amount = user_ids_to_return_join_stakes(
+        event_id, event.staking_amount, user_ids_consensus, user_ids_without_vote,
+        return_dispute_stake, event.disputer)
 
+    if user_ids_to_return_staking_amount:
         n_users_to_return = len(user_ids_to_return_staking_amount)
         staking_amount_to_return = event.staking_amount * n_users_to_return
         token_balance -= staking_amount_to_return
-        logger.info('[%s] %d users to return %d VTY join stake', event_id,
-                    len(user_ids_to_return_staking_amount), staking_amount_to_return)
+        logger.info('[%s] %d users to return %d VTY join stake', event_id, n_users_to_return,
+                    staking_amount_to_return)
 
+    # handle rewards
     if event.rewards_distribution_function == 0:
         logger.info('[%s] Calculating rewards using linear function', event_id)
         user_ids, eth_rewards, token_rewards = calculate_linear_rewards(
@@ -54,6 +93,7 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
                      event.rewards_distribution_function)
         return
 
+    # compose rewards
     rewards_dict = {
         user_id: database.Rewards.reward_dict(
             eth_reward=eth_rewards[i], token_reward=token_rewards[i])
@@ -62,7 +102,7 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
     if not user_ids:
         logger.warning('[%s] Did not set the rewards because user_ids were empty', event_id)
 
-    if event.disputer in consensus_votes_by_users:
+    if return_dispute_stake:
         logger.info('[%s] Adding dispute staking amount to %s disputer', event_id, event.disputer)
         rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
 
@@ -154,12 +194,10 @@ def set_consensus_rewards(w3, event_id):
                                                                  token_rewards_chunk)
         common.function_transact(w3, set_rewards_fun)
     logger.info('[%s] Master node started setting consensus answer', event_id)
-    consensus_answer = database.Vote.get_consensus_vote(event_id)
-    answer_list = [
-        answer[database.Vote.ANSWERS_VALUE_KEY] for answer in consensus_answer.ordered_answers()
-    ]
-    answer_list = list(map(lambda x: w3.toBytes(hexstr=w3.toHex(text=str(x))), answer_list))
-    set_consensus_vote_fun = contract_instance.functions.setResults(answer_list)
+    consensus_answers = database.Vote.get_consensus_answers(event_id)
+    consensus_answers = list(
+        map(lambda x: w3.toBytes(hexstr=w3.toHex(text=str(x))), consensus_answers))
+    set_consensus_vote_fun = contract_instance.functions.setResults(consensus_answers)
     common.function_transact(w3, set_consensus_vote_fun)
     logger.info('[%s] Master node finished setting consensus answer', event_id)
 
@@ -195,19 +233,14 @@ def validate_rewards(w3, event_id, validation_round):
         contract_reward_user_ids, contract_reward_ether, contract_reward_token)
     node_rewards_dict = database.Rewards.get(event_id)
 
-    event_consensus_vote = event_contract.functions.getResults().call()
-    # TODO Find a better way of removing trailing 0 bytes
-    event_consensus_vote = [x.decode('utf8').replace('\x00', '') for x in event_consensus_vote]
-    consensus_vote = database.Vote.get_consensus_vote(event_id)
-    consensus_vote = [
-        answer[database.Vote.ANSWERS_VALUE_KEY] for answer in consensus_vote.ordered_answers()
-    ]
+    event_consensus_answer = common.consensus_answers_from_contract(event_contract)
+    consensus_answer = database.Vote.get_consensus_answers(event_id)
 
     rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
-    consensus_match = event_consensus_vote == consensus_vote
+    consensus_match = event_consensus_answer == consensus_answer
 
     logger.info('[%s] Rewards DO%s match', event_id, '' if rewards_match else ' NOT')
-    logger.info('[%s] Consensus votes DO%s match', event_id, '' if consensus_match else ' NOT')
+    logger.info('[%s] Consensus answers DO%s match', event_id, '' if consensus_match else ' NOT')
 
     if rewards_match and consensus_match:
         logger.info('[%s] Approving rewards for round %d', event_id, validation_round)

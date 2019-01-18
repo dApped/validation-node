@@ -145,12 +145,13 @@ class VerityEventMetadata(BaseEvent):
     PREFIX = 'metadata'
 
     def __init__(self, event_id, is_consensus_reached, node_ips, node_websocket_ips,
-                 contract_block_number):
+                 contract_block_number, previous_consensus_answers):
         self.event_id = event_id
         self.is_consensus_reached = is_consensus_reached
         self.node_ips = node_ips
         self.node_websocket_ips = node_websocket_ips
         self.contract_block_number = contract_block_number
+        self.previous_consensus_answers = previous_consensus_answers
 
     def create(self):
         redis_db.set(self.key(self.event_id), self.to_json())
@@ -164,7 +165,8 @@ class VerityEventMetadata(BaseEvent):
                 is_consensus_reached=False,
                 node_ips=[],
                 node_websocket_ips=[],
-                contract_block_number=0)
+                contract_block_number=0,
+                previous_consensus_answers=None)
             event_metadata.create()
         return event_metadata
 
@@ -341,6 +343,17 @@ class Vote(BaseEvent):
         return cls.from_json(consensus_vote)
 
     @classmethod
+    def get_consensus_answers(cls, event_id):
+        consensus_vote = cls.get_consensus_vote(event_id)
+        return cls.answers_from_vote(consensus_vote)
+
+    @classmethod
+    def answers_from_vote(cls, vote):
+        if vote is None:
+            return None
+        return [answer[cls.ANSWERS_VALUE_KEY] for answer in vote.ordered_answers()]
+
+    @classmethod
     def delete_all(cls, pipeline, event_id, node_ids):
         for node_id in node_ids:
             pipeline.delete(cls.key(event_id, node_id))
@@ -383,6 +396,10 @@ class Vote(BaseEvent):
                 votes_by_users[vote.user_id].append(vote)
         return votes_by_users
 
+    def answers_representation(self):
+        """ Immutable (static) representation of the vote's answers"""
+        return self.ordered_answers().__repr__()
+
     @staticmethod
     def filter_votes_by_users(event_id, votes_by_users, min_votes, max_votes, consensus_vote):
         user_ids = list(votes_by_users.keys())
@@ -393,13 +410,14 @@ class Vote(BaseEvent):
                     '[%s] Vote from %s user has too many or too little entries: %d. Skip it',
                     event_id, user_id, n_votes)
                 del votes_by_users[user_id]
-            elif len({vote.ordered_answers().__repr__() for vote in votes_by_users[user_id]}) != 1:
+            elif len({vote.answers_representation() for vote in votes_by_users[user_id]}) != 1:
                 # answers from nodes are not the same
                 logger.warning('[%s] User %s voted differently on different nodes', event_id,
                                user_id)
                 del votes_by_users[user_id]
             elif consensus_vote is not None and\
-                    votes_by_users[user_id][0].ordered_answers().__repr__() != consensus_vote:
+                    votes_by_users[user_id][0].answers_representation() !=\
+                    consensus_vote.answers_representation():
                 logger.info('[%s] Vote from %s user is not in consensus. Skip it', event_id,
                             user_id)
                 del votes_by_users[user_id]
@@ -413,6 +431,6 @@ class Vote(BaseEvent):
                 continue
             # each user has multiple votes
             # (although they are the same, so take first one to calculate vote representation
-            vote_repr = votes[0].ordered_answers().__repr__()
+            vote_repr = votes[0].answers_representation()
             votes_by_repr[vote_repr].extend(votes)
         return votes_by_repr

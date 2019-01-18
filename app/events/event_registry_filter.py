@@ -23,9 +23,7 @@ def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
     return node_id in node_ids
 
 
-def call_event_contract_for_metadata(w3, contract_abi, event_id):
-    contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
-
+def call_event_contract_for_metadata(w3, contract_instance, event_id):
     state = contract_instance.functions.getState().call()
     if state > 2:
         logger.info(
@@ -65,12 +63,15 @@ def init_event(w3, contract_abi, event_id, contract_block_number):
         return
     logger.info('[%s] Initializing event', event_id)
 
-    event = call_event_contract_for_metadata(w3, contract_abi, event_id)
+    contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
+    event = call_event_contract_for_metadata(w3, contract_instance, event_id)
     if not event:
         return
     event.create()
     event_metadata = event.metadata()
     event_metadata.contract_block_number = contract_block_number
+    event_metadata.previous_consensus_answers = common.consensus_answers_from_contract(
+        contract_instance)
     event_metadata.update()
     verity_event_filters.init_event_filters(w3, contract_abi, event.event_id)
     logger.info('[%s] Event initialized', event_id)
