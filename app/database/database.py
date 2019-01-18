@@ -396,7 +396,7 @@ class Vote(BaseEvent):
                 votes_by_users[vote.user_id].append(vote)
         return votes_by_users
 
-    def representation(self):
+    def answers_representation(self):
         """ Immutable (static) representation of the vote's answers"""
         return self.ordered_answers().__repr__()
 
@@ -410,13 +410,14 @@ class Vote(BaseEvent):
                     '[%s] Vote from %s user has too many or too little entries: %d. Skip it',
                     event_id, user_id, n_votes)
                 del votes_by_users[user_id]
-            elif len({vote.representation() for vote in votes_by_users[user_id]}) != 1:
+            elif len({vote.answers_representation() for vote in votes_by_users[user_id]}) != 1:
                 # answers from nodes are not the same
                 logger.warning('[%s] User %s voted differently on different nodes', event_id,
                                user_id)
                 del votes_by_users[user_id]
             elif consensus_vote is not None and\
-                    votes_by_users[user_id][0].representation() != consensus_vote.representation():
+                    votes_by_users[user_id][0].answers_representation() !=\
+                    consensus_vote.answers_representation():
                 logger.info('[%s] Vote from %s user is not in consensus. Skip it', event_id,
                             user_id)
                 del votes_by_users[user_id]
@@ -430,6 +431,6 @@ class Vote(BaseEvent):
                 continue
             # each user has multiple votes
             # (although they are the same, so take first one to calculate vote representation
-            vote_repr = votes[0].representation()
+            vote_repr = votes[0].answers_representation()
             votes_by_repr[vote_repr].extend(votes)
         return votes_by_repr
