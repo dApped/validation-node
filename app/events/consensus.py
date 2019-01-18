@@ -64,11 +64,12 @@ def check_consensus(event, event_metadata):
 
 
 def calculate_consensus(event, votes_by_users):
+    event_id = event.event_id
     vote_count = len(votes_by_users)
     if vote_count < event.min_total_votes:
         logger.info(
             '[%s] Not enough valid votes to calculate consensus: %d vote_count < %d event.min_total_votes',
-            event.event_id, vote_count, event.min_total_votes)
+            event_id, vote_count, event.min_total_votes)
         return dict()
 
     votes_by_repr = database.Vote.group_votes_by_representation(votes_by_users)
@@ -84,12 +85,12 @@ def calculate_consensus(event, votes_by_users):
     if consensus_votes_count < event.min_consensus_votes:
         logger.info(
             '[%s] Not enough consensus votes: %d consensus_votes_count < %d event.min_consensus_votes',
-            event.event_id, consensus_votes_count, event.min_consensus_votes)
+            event_id, consensus_votes_count, event.min_consensus_votes)
         return dict()
     if consensus_ratio * 100 < event.min_consensus_ratio:
         logger.info(
             '[%s] Not enough consensus votes: %d consensus_ratio < %d event.min_consensus_ratio',
-            event.event_id, consensus_ratio * 100 < event.min_consensus_ratio)
+            event_id, consensus_ratio * 100 < event.min_consensus_ratio)
         return dict()
     consensus_vote = votes_by_users[next(iter(consensus_user_ids))][0]
     consensus_vote.set_consensus_vote()

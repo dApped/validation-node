@@ -166,3 +166,17 @@ def is_vote_signed(vote_json):
         logger.exception(e)
         return False, 'None'
     return vote_data['user_id'] == signer, signer
+
+
+def from_bytes32_to_str(bytes32):
+    bytes32 = bytes32.hex().rstrip("0")
+    if len(bytes32) % 2 != 0:
+        bytes32 = bytes32 + '0'
+    return bytes.fromhex(bytes32).decode('utf8')
+
+
+def consensus_answers_from_contract(verity_event_instance):
+    event_consensus_answers = verity_event_instance.functions.getResults().call()
+    if event_consensus_answers is None:
+        return None
+    return [from_bytes32_to_str(x) for x in event_consensus_answers]
