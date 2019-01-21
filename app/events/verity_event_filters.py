@@ -26,12 +26,18 @@ def process_state_transition(_scheduler, w3, event_id, entries):
     event = database.VerityEvent.get(event_id)
     entry = entries[-1]
     event.state = entry['args']['newState']
-    logger.info('[%s] Event state transition, new state: %d', event_id, event.state)
     event.update()
+    logger.info('[%s] Event state transition, new state: %d', event_id, event.state)
     if event.state in FINAL_STATES:
         logger.info('[%s] Event reached a final state. Removing from DB', event_id)
         VerityEvent.delete_all_event_data(w3, event_id)
-        # TODO: Unregister WebSocket connections
+
+
+def process_event_failed(_scheduler, w3, event_id, entries):
+    entry = entries[-1]
+    description = entry['args']['description']
+    logger.info('[%s] Event failed: %s. Removing from DB', event_id, description)
+    VerityEvent.delete_all_event_data(w3, event_id)
 
 
 def process_validation_start(scheduler, w3, event_id, entries):
@@ -105,13 +111,15 @@ ERROR_FILTER = 'Error'
 VALIDATION_STARTED_FILTER = 'ValidationStarted'
 VALIDATION_RESTART_FILTER = 'ValidationRestart'
 DISPUTE_TRIGGERED_FILTER = 'DisputeTriggered'
+EVENT_FAILED_FILTER = 'EventFailed'
 
 EVENT_FILTERS = [(JOIN_EVENT_FILTER, process_join_events),
                  (STATE_TRANSITION_FILTER, process_state_transition),
                  (ERROR_FILTER, process_error_event),
                  (VALIDATION_STARTED_FILTER, process_validation_start),
                  (VALIDATION_RESTART_FILTER, process_validation_restart),
-                 (DISPUTE_TRIGGERED_FILTER, process_dispute_triggered)]
+                 (DISPUTE_TRIGGERED_FILTER, process_dispute_triggered),
+                 (EVENT_FAILED_FILTER, process_event_failed)]
 
 
 def log_entry_formatters(contract_abi, filter_names):
@@ -124,7 +132,7 @@ def log_entry_formatters(contract_abi, filter_names):
 
 
 def should_apply_filter(filter_name, event_id):
-    if filter_name in {ERROR_FILTER, STATE_TRANSITION_FILTER}:
+    if filter_name in {ERROR_FILTER, STATE_TRANSITION_FILTER, EVENT_FAILED_FILTER}:
         return True
 
     current_timestamp = int(time.time())
@@ -132,8 +140,8 @@ def should_apply_filter(filter_name, event_id):
     if event is None:
         return False
     if (filter_name == JOIN_EVENT_FILTER
-            and event.application_start_time <= current_timestamp <= event.event_start_time):
-        # JoinEvent is used till event_start_time so that we capture all participants
+            and event.application_start_time <= current_timestamp <= event.event_end_time):
+        # JoinEvent is used till event_end_time so that we capture all participants
         return True
     if (filter_name in {
             VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER, DISPUTE_TRIGGERED_FILTER
