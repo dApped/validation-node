@@ -180,3 +180,7 @@ def consensus_answers_from_contract(verity_event_instance):
     if event_consensus_answers is None:
         return None
     return [from_bytes32_to_str(x) for x in event_consensus_answers]
+
+
+def default_eth_address():
+    return "0x0000000000000000000000000000000000000000"
