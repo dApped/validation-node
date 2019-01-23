@@ -22,6 +22,8 @@ services:
       HTTP_PORT: 81
       WEBSOCKET_PORT: 8781
       USE_HTTPS: 'false'
+      EXPLORER_IP: ${EXPLORER_IP}
+      EXPLORER_PORT: ${EXPLORER_PORT}
     ports: 
         - '81:5000'
         - '8781:8781'
@@ -51,6 +53,8 @@ services:
       HTTP_PORT: 82
       WEBSOCKET_PORT: 8782
       USE_HTTPS: 'false'
+      EXPLORER_IP: ${EXPLORER_IP}
+      EXPLORER_PORT: ${EXPLORER_PORT}
     ports: 
         - '82:5000'
         - '8782:8782'
@@ -79,6 +83,8 @@ services:
       HTTP_PORT: 83
       WEBSOCKET_PORT: 8783
       USE_HTTPS: 'false'
+      EXPLORER_IP: ${EXPLORER_IP}
+      EXPLORER_PORT: ${EXPLORER_PORT}
       SENTRY_DSN: ${SENTRY_DSN}
     ports:
         - '83:5000'
