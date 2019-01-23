@@ -13,6 +13,7 @@ class VoteTimestampsMetric(Enum):
     MEDIAN = 2
 
 
+
 def should_return_dispute_stake(event_id, disputer_id, disputer_votes, user_ids_without_vote,
                                 previous_consensus_answers):
     if disputer_id == common.default_eth_address():
@@ -59,7 +60,7 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
 
     user_ids_without_vote = event.user_ids_without_vote()
     consensus_vote = list(consensus_votes_by_users.values())[0][0]
-    votes_by_users = event.votes(min_votes=1, consensus_vote=consensus_vote)
+    votes_by_users = event.votes(min_votes=1, filter_by_vote=consensus_vote)
     user_ids_consensus = list(votes_by_users.keys())
 
     # handle dispute
@@ -92,11 +93,11 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
     # handle rewards
     if event.rewards_distribution_function == 0:
         logger.info('[%s] Calculating rewards using linear function', event_id)
-        user_ids, eth_rewards, token_rewards = calculate_linear_rewards(
+        ordered_user_ids, eth_rewards, token_rewards = calculate_linear_rewards(
             ether_balance, token_balance, consensus_votes_by_users)
     elif event.rewards_distribution_function == 1:
         logger.info('[%s] Calculating rewards using exponential function', event_id)
-        user_ids, eth_rewards, token_rewards = calculate_exponential_rewards(
+        ordered_user_ids, eth_rewards, token_rewards = calculate_exponential_rewards(
             ether_balance, token_balance, consensus_votes_by_users)
     else:
         logger.error('[%s] Rewards function %d not supported', event_id,
@@ -107,9 +108,9 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
     rewards_dict = {
         user_id: database.Rewards.reward_dict(
             eth_reward=eth_rewards[i], token_reward=token_rewards[i])
-        for i, user_id in enumerate(user_ids)
+        for i, user_id in enumerate(ordered_user_ids)
     }
-    if not user_ids:
+    if not ordered_user_ids:
         logger.warning('[%s] Did not set the rewards because user_ids were empty', event_id)
 
     if return_dispute_stake:
@@ -117,13 +118,15 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
         if event.disputer not in rewards_dict:
             rewards_dict[event.disputer] = database.Rewards.reward_dict()
         rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
+        ordered_user_ids.append(event.disputer)
 
     logger.info('[%s] Returing staking amount to users in consensus or without a vote', event_id)
     for user_id in user_ids_to_return_staking_amount:
         if user_id not in rewards_dict:
             rewards_dict[user_id] = database.Rewards.reward_dict()
+            ordered_user_ids.append(user_id)
         rewards_dict[user_id][database.Rewards.TOKEN_KEY] += event.staking_amount
-    database.Rewards.create(event.event_id, rewards_dict)
+    database.Rewards.create(event.event_id, ordered_user_ids, rewards_dict)
 
 
 def calculate_linear_rewards(ether_balance, token_balance, consensus_votes_by_users):
