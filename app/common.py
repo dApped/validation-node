@@ -183,4 +183,5 @@ def consensus_answers_from_contract(verity_event_instance):
 
 
 def default_eth_address():
+    # default address on smart contract
     return "0x0000000000000000000000000000000000000000"
