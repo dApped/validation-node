@@ -6,7 +6,7 @@ from enum import Enum
 
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
-from web3.auto import w3 as web3_auto
+from web3.auto import w3 as w3_auto
 from web3.gas_strategies.time_based import medium_gas_price_strategy
 
 from database import database
@@ -76,6 +76,19 @@ def node_websocket_port():
 
 def node_websocket_ip_port():
     return 'ws://%s:%s' % (node_ip(), node_websocket_port())
+
+
+def explorer_ip():
+    return os.getenv('EXPLORER_IP')
+
+
+def explorer_port():
+    return os.getenv('EXPLORER_PORT')
+
+
+def explorer_ip_port():
+    # TODO add protocol
+    return 'http://%s:%s' % (explorer_ip(), explorer_port())
 
 
 def function_transact(w3, contract_function, max_retries=3):
@@ -161,7 +174,7 @@ def is_vote_signed(vote_json):
         vote_data = vote_json['data']
         message = json.dumps(vote_data, separators=(',', ':'))
         data_msg = defunct_hash_message(text=str(message))
-        signer = web3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signedData'])
+        signer = w3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signedData'])
     except Exception as e:
         logger.exception(e)
         return False, 'None'
@@ -185,3 +198,11 @@ def consensus_answers_from_contract(verity_event_instance):
 def default_eth_address():
     # default address on smart contract
     return "0x0000000000000000000000000000000000000000"
+
+
+def sign_data(data):
+    message = json.dumps(data, separators=(',', ':'))
+    message_hash = defunct_hash_message(text=str(message))
+    signature = w3_auto.eth.account.signHash(
+        message_hash, private_key=os.getenv('NODE_PRIVATE_KEY'))
+    return signature['signature'].hex()
