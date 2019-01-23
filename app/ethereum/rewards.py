@@ -13,8 +13,16 @@ class VoteTimestampsMetric(Enum):
     MEDIAN = 2
 
 
-def should_return_dispute_stake(event_id, disputer_id, disputer_votes, previous_consensus_answers):
-    if disputer_id is None or disputer_votes is None:
+def should_return_dispute_stake(event_id, disputer_id, disputer_votes, user_ids_without_vote,
+                                previous_consensus_answers):
+    if disputer_id == common.default_eth_address():
+        logger.info('[%s] No disputer', event_id)
+        return False
+    elif disputer_id in user_ids_without_vote:
+        logger.info('[%s] Disputer %s did not vote', event_id, disputer_id)
+        return True
+    elif disputer_votes is None:
+        logger.info('[%s] Disputer %s vote was not in consensus', event_id, disputer_id)
         return False
 
     disputer_answers = database.Vote.answers_from_vote(disputer_votes[0])
@@ -49,9 +57,15 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
     logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
     logger.info('[%s] %d users in consensus', event_id, len(consensus_votes_by_users))
 
+    user_ids_without_vote = event.user_ids_without_vote()
+    consensus_vote = list(consensus_votes_by_users.values())[0][0]
+    votes_by_users = event.votes(min_votes=1, consensus_vote=consensus_vote)
+    user_ids_consensus = list(votes_by_users.keys())
+
     # handle dispute
     return_dispute_stake = should_return_dispute_stake(event_id, event.disputer,
-                                                       consensus_votes_by_users.get(event.disputer),
+                                                       votes_by_users.get(event.disputer),
+                                                       user_ids_without_vote,
                                                        event.metadata().previous_consensus_answers)
     if return_dispute_stake:
         # disputer voted differently then first consensus and was part of new consensus.
@@ -63,10 +77,6 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
         consensus_votes_by_users.pop(event.disputer)
 
     # handle join stakes
-    consensus_vote = list(consensus_votes_by_users.values())[0][0]
-    votes_by_users = event.votes(min_votes=1, consensus_vote=consensus_vote)
-    user_ids_consensus = list(votes_by_users.keys())
-    user_ids_without_vote = list(event.user_ids_without_vote())
 
     user_ids_to_return_staking_amount = user_ids_to_return_join_stakes(
         event_id, event.staking_amount, user_ids_consensus, user_ids_without_vote,
@@ -104,6 +114,8 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
 
     if return_dispute_stake:
         logger.info('[%s] Adding dispute staking amount to %s disputer', event_id, event.disputer)
+        if event.disputer not in rewards_dict:
+            rewards_dict[event.disputer] = database.Rewards.reward_dict()
         rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
 
     logger.info('[%s] Returing staking amount to users in consensus or without a vote', event_id)
