@@ -78,7 +78,7 @@ def init():
     scheduler.add_job(
         node_registry.update_node_ips,
         'interval',
-        seconds=10,
+        seconds=60,
         args=[node_registry_abi, node_registry_address])
     try:
         scheduler.start()
