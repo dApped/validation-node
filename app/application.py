@@ -31,10 +31,11 @@ def init():
     node_registry.register_node_ip(node_registry_abi, node_address, node_ip_port, AddressType.IP)
     node_registry.register_node_ip(node_registry_abi, node_address, node_websocket_ip_port,
                                    AddressType.WEBSOCKET)
-    event_registry_filter.init_event_registry_filter(NODE_WEB3, event_registry_abi,
-                                                     verity_event_abi, event_registry_address)
     scheduler.init()
     websocket.init()
+
+    event_registry_filter.init_event_registry_filter(scheduler.scheduler, NODE_WEB3, event_registry_abi,
+                                                     verity_event_abi, event_registry_address)
 
 
 def create_app():

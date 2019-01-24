@@ -83,6 +83,10 @@ class VerityEvent(BaseEvent):
         self.disputer = disputer
         self.staking_amount = staking_amount
 
+    @staticmethod
+    def consensus_not_reached_job_id(event_id):
+        return '%s_process_consensus_not_reached' % event_id
+
     def votes_consensus(self):
         return self.votes(
             min_votes=2,

@@ -90,7 +90,7 @@ def process_error_event(_scheduler, _w3, event_id, entries):
         logger.info('event_id: %s, %s', event_id, entry)
 
 
-def process_dispute_triggered(_scheduler, w3, event_id, entries):
+def process_dispute_triggered(scheduler, w3, event_id, entries):
     entry = entries[-1]
     dispute_started_by = entry['args']['byAddress']
     logger.info('[%s] Dispute started by %s', event_id, dispute_started_by)
@@ -101,7 +101,7 @@ def process_dispute_triggered(_scheduler, w3, event_id, entries):
     contract_block_number = event.metadata().contract_block_number
 
     VerityEvent.delete_all_event_data(w3, event_id)
-    event_registry_filter.init_event(w3, common.verity_event_contract_abi(), event_id,
+    event_registry_filter.init_event(scheduler, w3, common.verity_event_contract_abi(), event_id,
                                      contract_block_number)
 
 
