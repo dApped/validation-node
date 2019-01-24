@@ -9,6 +9,7 @@ from database import database
 from ethereum import rewards
 from ethereum.provider import NODE_WEB3
 
+
 logger = logging.getLogger()
 
 
@@ -51,6 +52,8 @@ def check_consensus(event, event_metadata):
         return
     event_metadata.is_consensus_reached = True
     event_metadata.update()
+
+    remove_consensus_not_reached_job(event_id)
 
     n_seconds_wait = 5
     logger.info('[%s] Waiting %d seconds for websockets to exchange votes', event_id,
@@ -101,6 +104,27 @@ def calculate_consensus(event, votes_by_users):
     return consensus_votes_by_users
 
 
+def remove_consensus_not_reached_job(event_id):
+    logger.info('[%s] Removing consensus_not_reached_job', event_id)
+    consensus_not_reached_job_id = database.VerityEvent.consensus_not_reached_job_id(event_id)
+    scheduler.scheduler.remove_job(consensus_not_reached_job_id)
+
+
+def process_consensus_not_reached(event_id):
+    logger.info('[%s] Running process_consensus_not_reached_job', event_id)
+    event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event does not exists', event_id)
+        return
+    metadata = event.metadata()
+    if metadata.is_consensus_reached:
+        logger.info('[%s] Consensus already reached', event_id)
+        return
+    send_data_to_explorer(event_id)
+    # TODO set join stakes for consensus not reached
+    # TODO remove all event data from database
+
+
 def send_data_to_explorer(event_id, max_retries=2):
     logger.info('[%s] Sending event data to explorer', event_id)
     event = database.VerityEvent.get(event_id)
@@ -117,7 +141,7 @@ def send_data_to_explorer(event_id, max_retries=2):
                         response.status_code, retry, max_retries)
         except Exception:
             logger.exception('Cannot send data to explorer %d:%d retry', retry, max_retries)
-        time.sleep(5)
+        time.sleep(60)
 
 
 def compose_event_payload(event):
