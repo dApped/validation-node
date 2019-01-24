@@ -1,5 +1,6 @@
 import logging
 
+from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import utc
 
@@ -27,6 +28,18 @@ def configure_scheduler_logging():
     logging.getLogger('apscheduler.executors.default').addFilter(scheduler_filter)
     logging.getLogger('apscheduler.executors.default').propagate = True
     logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
+
+
+def remove_job(job_id):
+    try:
+        scheduler.remove_job(job_id)
+        logger.info('Job successfully removed: %s', job_id)
+        return True
+    except JobLookupError as e:
+        logger.info(e)
+    except Exception as e:
+        logger.exception(e)
+    return False
 
 
 def init():
@@ -57,14 +70,16 @@ def init():
         event_registry_filter.filter_event_registry,
         'interval',
         seconds=10,
-        args=[NODE_WEB3, event_registry_address, verity_event_abi, event_registry_formatters])
+        args=[
+            scheduler, NODE_WEB3, event_registry_address, verity_event_abi,
+            event_registry_formatters
+        ])
 
     scheduler.add_job(
         node_registry.update_node_ips,
         'interval',
-        seconds=60,
+        seconds=10,
         args=[node_registry_abi, node_registry_address])
-
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
