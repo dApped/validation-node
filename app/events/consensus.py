@@ -9,7 +9,6 @@ from database import database
 from ethereum import rewards
 from ethereum.provider import NODE_WEB3
 
-
 logger = logging.getLogger()
 
 
@@ -103,12 +102,10 @@ def calculate_consensus(event, votes_by_users):
     consensus_vote.set_consensus_vote()
     return consensus_votes_by_users
 
-
 def remove_consensus_not_reached_job(event_id):
     logger.info('[%s] Removing consensus_not_reached_job', event_id)
     consensus_not_reached_job_id = database.VerityEvent.consensus_not_reached_job_id(event_id)
-    scheduler.scheduler.remove_job(consensus_not_reached_job_id)
-
+    scheduler.remove_job(consensus_not_reached_job_id)
 
 def process_consensus_not_reached(event_id):
     logger.info('[%s] Running process_consensus_not_reached_job', event_id)
