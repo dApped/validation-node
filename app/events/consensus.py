@@ -102,10 +102,12 @@ def calculate_consensus(event, votes_by_users):
     consensus_vote.set_consensus_vote()
     return consensus_votes_by_users
 
+
 def remove_consensus_not_reached_job(event_id):
     logger.info('[%s] Removing consensus_not_reached_job', event_id)
     consensus_not_reached_job_id = database.VerityEvent.consensus_not_reached_job_id(event_id)
     scheduler.remove_job(consensus_not_reached_job_id)
+
 
 def process_consensus_not_reached(event_id):
     logger.info('[%s] Running process_consensus_not_reached_job', event_id)
@@ -150,6 +152,7 @@ def compose_event_payload(event):
     payload['data']['voting_round'] = event.dispute_round
     payload['data']['votes_by_users'] = event.votes_for_explorer()
     payload['data']['rewards_dict'] = database.Rewards.get(event_id)
-    payload['data']['rewards_order'] = database.Rewards.get_ordered_user_ids(event_id)
+    payload['data']['rewards_user_ids'] = database.Rewards.get_rewards_user_ids(event_id)
+    payload['data']['rewards_all_user_ids'] = database.Rewards.get_rewards_all_user_ids(event_id)
     payload['signature'] = common.sign_data(payload)
     return payload

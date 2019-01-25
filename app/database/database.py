@@ -85,9 +85,11 @@ class VerityEvent(BaseEvent):
 
     @staticmethod
     def consensus_not_reached_job_id(event_id):
+        """ Generate a job ID for consensus not reached job """
         return '%s_process_consensus_not_reached' % event_id
 
     def votes_consensus(self):
+        """ Returns all valid votes in consensus by users """
         return self.votes(
             min_votes=2,
             max_votes=len(self.node_addresses),
@@ -95,6 +97,7 @@ class VerityEvent(BaseEvent):
             check_uniqueness=True)
 
     def votes(self, min_votes=None, max_votes=None, filter_by_vote=None, check_uniqueness=True):
+        """ Returns votes by users based on filters specified """
         min_votes = min_votes or 2
         max_votes = max_votes or len(self.node_addresses)
         votes_by_users = Vote.group_votes_by_users(self.event_id, self.node_addresses)
@@ -251,23 +254,33 @@ class Filters(BaseEvent):
 
 class Rewards(BaseEvent):
     PREFIX = 'rewards'  # stores dictionary with user_id as a key and rewards as values
-    PREFIX_ORDER = 'rewards_order'  # stores a list of user_ids ordered by rewards
+    PREFIX_REWARDS_USER_IDS = 'rewards_user_ids'  # stores a list of user_ids ordered by rewards
+    # stores a list of user_ids ordered by rewards, dispute stake and join stakes
+    PREFIX_REWARDS_ALL_USER_IDS = 'rewards_all_user_ids'
     ETH_KEY = 'eth'
     TOKEN_KEY = 'token'
 
     @classmethod
-    def key_order(cls, event_id):
-        return '%s_%s' % (cls.PREFIX_ORDER, event_id)
+    def key_rewards_user_ids(cls, event_id):
+        return '%s_%s' % (cls.PREFIX_REWARDS_USER_IDS, event_id)
 
     @classmethod
-    def create(cls, event_id, user_ids, rewards_dict):
+    def key_rewards_all_user_ids(cls, event_id):
+        return '%s_%s' % (cls.PREFIX_REWARDS_ALL_USER_IDS, event_id)
+
+    @classmethod
+    def create(cls, event_id, user_ids_rewards, user_ids_rewards_all, rewards_dict):
         key = cls.key(event_id)
         rewards_json = json.dumps(rewards_dict)
         redis_db.set(key, rewards_json)
 
-        key_order = cls.key_order(event_id)
-        for user_id in user_ids:
-            redis_db.rpush(key_order, user_id)
+        key_rewards_user_ids = cls.key_rewards_user_ids(event_id)
+        for user_id in user_ids_rewards:
+            redis_db.rpush(key_rewards_user_ids, user_id)
+
+        key_rewards_all_user_ids = cls.key_rewards_all_user_ids(event_id)
+        for user_id in user_ids_rewards_all:
+            redis_db.rpush(key_rewards_all_user_ids, user_id)
 
     @classmethod
     def reward_dict(cls, eth_reward=0, token_reward=0):
@@ -301,9 +314,14 @@ class Rewards(BaseEvent):
         return json.loads(rewards_json)
 
     @classmethod
-    def get_ordered_user_ids(cls, event_id):
-        key_order = cls.key_order(event_id)
-        return redis_db.lrange(key_order, 0, -1)
+    def get_rewards_user_ids(cls, event_id):
+        key = cls.key_rewards_user_ids(event_id)
+        return redis_db.lrange(key, 0, -1)
+
+    @classmethod
+    def get_rewards_all_user_ids(cls, event_id):
+        key = cls.key_rewards_all_user_ids(event_id)
+        return redis_db.lrange(key, 0, -1)
 
     @classmethod
     def get_lists(cls, event_id):
@@ -463,7 +481,7 @@ class Vote(BaseEvent):
             elif check_uniqueness and len(
                 {vote.answers_representation()
                  for vote in votes_by_users[user_id]}) != 1:
-                # answers from nodes are not the same
+                # answers from a user from different nodes are not the same
                 logger.warning('[%s] User %s voted differently on different nodes', event_id,
                                user_id)
                 del votes_by_users[user_id]
