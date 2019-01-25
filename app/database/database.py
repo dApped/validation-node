@@ -88,14 +88,6 @@ class VerityEvent(BaseEvent):
         """ Generate a job ID for consensus not reached job """
         return '%s_process_consensus_not_reached' % event_id
 
-    def votes_consensus(self):
-        """ Returns all valid votes in consensus by users """
-        return self.votes(
-            min_votes=2,
-            max_votes=len(self.node_addresses),
-            filter_by_vote=None,
-            check_uniqueness=True)
-
     def votes(self, min_votes=None, max_votes=None, filter_by_vote=None, check_uniqueness=True):
         """ Returns votes by users based on filters specified """
         min_votes = min_votes or 2
@@ -110,7 +102,16 @@ class VerityEvent(BaseEvent):
             filter_by_vote=filter_by_vote)
         return votes_by_users
 
+    def votes_consensus(self):
+        """ Returns votes by users with predefined filters for consensus """
+        return self.votes(
+            min_votes=2,
+            max_votes=len(self.node_addresses),
+            filter_by_vote=None,
+            check_uniqueness=True)
+
     def votes_for_explorer(self):
+        """ Returns votes by users with predefined filters for explorer server """
         votes_by_users_all = self.votes(
             min_votes=1, max_votes=sys.maxsize, filter_by_vote=None, check_uniqueness=False)
         votes_by_users_consensus = self.votes_consensus()
@@ -307,6 +308,7 @@ class Rewards(BaseEvent):
 
     @classmethod
     def get(cls, event_id):
+        """ A dictionary with user_id as a key and reward as a value"""
         key = cls.key(event_id)
         rewards_json = redis_db.get(key)
         if rewards_json is None:
@@ -315,11 +317,13 @@ class Rewards(BaseEvent):
 
     @classmethod
     def get_rewards_user_ids(cls, event_id):
+        """ A list of user_ids with rewards"""
         key = cls.key_rewards_user_ids(event_id)
         return redis_db.lrange(key, 0, -1)
 
     @classmethod
     def get_rewards_all_user_ids(cls, event_id):
+        """ A list of user_ids with rewards, dispute stake and joined stakes"""
         key = cls.key_rewards_all_user_ids(event_id)
         return redis_db.lrange(key, 0, -1)
 
