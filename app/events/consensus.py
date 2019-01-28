@@ -145,8 +145,7 @@ def send_data_to_explorer(event_id, max_retries=2):
 
 def compose_event_payload(event):
     event_id = event.event_id
-    payload = {}
-    payload['data'] = {}
+    payload = {'data': {}}
     payload['data']['event_id'] = event_id
     payload['data']['node_id'] = common.node_id()
     payload['data']['voting_round'] = event.dispute_round
