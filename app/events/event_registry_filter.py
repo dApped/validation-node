@@ -35,7 +35,7 @@ def call_event_contract_for_metadata(w3, contract_instance, event_id):
 
     (application_start_time, application_end_time, event_start_time, event_end_time,
      leftovers_recoverable_after) = contract_instance.functions.getEventTimes().call()
-    if event_end_time < time.time():
+    if event_end_time < int(time.time()):
         logger.info('[%s] Event end time in the past: %d', event_id, event_end_time)
         return None
 
