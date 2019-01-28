@@ -1,6 +1,9 @@
 import logging
 import time
 
+import requests
+
+import common
 import scheduler
 from database import database
 from ethereum import rewards
@@ -34,7 +37,7 @@ def should_calculate_consensus(event):
 
 def check_consensus(event, event_metadata):
     event_id = event.event_id
-    votes_by_users = event.votes()
+    votes_by_users = event.votes_consensus()
 
     if not should_calculate_consensus(event):
         return
@@ -49,6 +52,8 @@ def check_consensus(event, event_metadata):
     event_metadata.is_consensus_reached = True
     event_metadata.update()
 
+    remove_consensus_not_reached_job(event_id)
+
     n_seconds_wait = 5
     logger.info('[%s] Waiting %d seconds for websockets to exchange votes', event_id,
                 n_seconds_wait)
@@ -57,6 +62,7 @@ def check_consensus(event, event_metadata):
     # developer might initialize event and set rewards later. We fetch them just in time
     ether_balance, token_balance = event.instance(NODE_WEB3, event_id).functions.getBalance().call()
     rewards.determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance)
+    send_data_to_explorer(event_id)
     if event.is_master_node:
         scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
     else:
@@ -95,3 +101,57 @@ def calculate_consensus(event, votes_by_users):
     consensus_vote = votes_by_users[next(iter(consensus_user_ids))][0]
     consensus_vote.set_consensus_vote()
     return consensus_votes_by_users
+
+
+def remove_consensus_not_reached_job(event_id):
+    logger.info('[%s] Removing consensus_not_reached_job', event_id)
+    consensus_not_reached_job_id = database.VerityEvent.consensus_not_reached_job_id(event_id)
+    scheduler.remove_job(consensus_not_reached_job_id)
+
+
+def process_consensus_not_reached(event_id):
+    logger.info('[%s] Running process_consensus_not_reached_job', event_id)
+    event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event does not exists', event_id)
+        return
+    metadata = event.metadata()
+    if metadata.is_consensus_reached:
+        logger.info('[%s] Consensus already reached', event_id)
+        return
+    send_data_to_explorer(event_id)
+    # TODO set join stakes for consensus not reached
+    # TODO remove all event data from database
+
+
+def send_data_to_explorer(event_id, max_retries=2):
+    logger.info('[%s] Sending event data to explorer', event_id)
+    event = database.VerityEvent.get(event_id)
+    payload = compose_event_payload(event)
+    target = "%s/event_data" % common.explorer_ip_port()
+
+    for retry in range(1, max_retries + 1):
+        try:
+            response = requests.post(target, json=payload)
+            if response.status_code == 200:
+                logger.info('[%s] Event data successfully sent to explorer', event_id)
+                return
+            logger.info('Cannot send data to explorer. Status %d, %d:%d retry',
+                        response.status_code, retry, max_retries)
+        except Exception:
+            logger.exception('Cannot send data to explorer %d:%d retry', retry, max_retries)
+        time.sleep(60)
+
+
+def compose_event_payload(event):
+    event_id = event.event_id
+    payload = {'data': {}}
+    payload['data']['event_id'] = event_id
+    payload['data']['node_id'] = common.node_id()
+    payload['data']['voting_round'] = event.dispute_round
+    payload['data']['votes_by_users'] = event.votes_for_explorer()
+    payload['data']['rewards_dict'] = database.Rewards.get(event_id)
+    payload['data']['rewards_user_ids'] = database.Rewards.get_rewards_user_ids(event_id)
+    payload['data']['rewards_all_user_ids'] = database.Rewards.get_rewards_all_user_ids(event_id)
+    payload['signature'] = common.sign_data(payload)
+    return payload

@@ -2,6 +2,7 @@ import hashlib
 import json
 import logging
 import os
+import sys
 from collections import OrderedDict, defaultdict
 
 import redis
@@ -82,18 +83,53 @@ class VerityEvent(BaseEvent):
         self.disputer = disputer
         self.staking_amount = staking_amount
 
-    def votes(self, min_votes=None, max_votes=None, consensus_vote=None):
+    @staticmethod
+    def consensus_not_reached_job_id(event_id):
+        """ Generate a job ID for consensus not reached job """
+        return '%s_process_consensus_not_reached' % event_id
+
+    def votes(self, min_votes=None, max_votes=None, filter_by_vote=None, check_uniqueness=True):
+        """ Returns votes by users based on filters specified """
         min_votes = min_votes or 2
         max_votes = max_votes or len(self.node_addresses)
-
         votes_by_users = Vote.group_votes_by_users(self.event_id, self.node_addresses)
         votes_by_users = Vote.filter_votes_by_users(
             self.event_id,
             votes_by_users,
             min_votes=min_votes,
             max_votes=max_votes,
-            consensus_vote=consensus_vote)
+            check_uniqueness=check_uniqueness,
+            filter_by_vote=filter_by_vote)
         return votes_by_users
+
+    def votes_consensus(self):
+        """ Returns votes by users with predefined filters for consensus """
+        return self.votes(
+            min_votes=2,
+            max_votes=len(self.node_addresses),
+            filter_by_vote=None,
+            check_uniqueness=True)
+
+    def votes_for_explorer(self):
+        """ Returns votes by users with predefined filters for explorer server """
+        votes_by_users_all = self.votes(
+            min_votes=1, max_votes=sys.maxsize, filter_by_vote=None, check_uniqueness=False)
+        votes_by_users_consensus = self.votes_consensus()
+
+        for user_id in votes_by_users_all:
+            in_consensus = False
+            if user_id in votes_by_users_consensus:
+                in_consensus = True
+            for i in range(len(votes_by_users_all[user_id])):
+                votes_by_users_all[user_id][i].in_consensus = in_consensus
+        return self.votes_to_json(votes_by_users_all)
+
+    @staticmethod
+    def votes_to_json(votes_by_users):
+        return {
+            user_id: [vote.to_json() for vote in votes]
+            for user_id, votes in votes_by_users.items()
+        }
 
     @staticmethod
     def instance(w3, event_id):
@@ -218,53 +254,85 @@ class Filters(BaseEvent):
 
 
 class Rewards(BaseEvent):
-    PREFIX = 'rewards'
+    PREFIX = 'rewards'  # stores dictionary with user_id as a key and rewards as values
+    PREFIX_REWARDS_USER_IDS = 'rewards_user_ids'  # stores a list of user_ids ordered by rewards
+    # stores a list of user_ids ordered by rewards, dispute stake and join stakes
+    PREFIX_REWARDS_ALL_USER_IDS = 'rewards_all_user_ids'
     ETH_KEY = 'eth'
     TOKEN_KEY = 'token'
 
-    @staticmethod
-    def create(event_id, rewards_dict):
-        key = Rewards.key(event_id)
+    @classmethod
+    def key_rewards_user_ids(cls, event_id):
+        return '%s_%s' % (cls.PREFIX_REWARDS_USER_IDS, event_id)
+
+    @classmethod
+    def key_rewards_all_user_ids(cls, event_id):
+        return '%s_%s' % (cls.PREFIX_REWARDS_ALL_USER_IDS, event_id)
+
+    @classmethod
+    def create(cls, event_id, user_ids_rewards, user_ids_rewards_all, rewards_dict):
+        key = cls.key(event_id)
         rewards_json = json.dumps(rewards_dict)
         redis_db.set(key, rewards_json)
 
-    @staticmethod
-    def reward_dict(eth_reward=0, token_reward=0):
-        return {Rewards.ETH_KEY: eth_reward, Rewards.TOKEN_KEY: token_reward}
+        key_rewards_user_ids = cls.key_rewards_user_ids(event_id)
+        for user_id in user_ids_rewards:
+            redis_db.rpush(key_rewards_user_ids, user_id)
 
-    @staticmethod
-    def transform_dict_to_lists(rewards):
+        key_rewards_all_user_ids = cls.key_rewards_all_user_ids(event_id)
+        for user_id in user_ids_rewards_all:
+            redis_db.rpush(key_rewards_all_user_ids, user_id)
+
+    @classmethod
+    def reward_dict(cls, eth_reward=0, token_reward=0):
+        return {cls.ETH_KEY: eth_reward, cls.TOKEN_KEY: token_reward}
+
+    @classmethod
+    def transform_dict_to_lists(cls, rewards):
         if rewards is None:
             logger.error('Transform_dict_to_lists called with None')
             return [], [], []
         user_ids = list(rewards.keys())
         eth_rewards, token_rewards = [], []
         for user_id in user_ids:
-            eth_rewards.append(rewards[user_id][Rewards.ETH_KEY])
-            token_rewards.append(rewards[user_id][Rewards.TOKEN_KEY])
+            eth_rewards.append(rewards[user_id][cls.ETH_KEY])
+            token_rewards.append(rewards[user_id][cls.TOKEN_KEY])
         return user_ids, eth_rewards, token_rewards
 
-    @staticmethod
-    def transform_lists_to_dict(user_ids, eth_rewards, token_rewards):
+    @classmethod
+    def transform_lists_to_dict(cls, user_ids, eth_rewards, token_rewards):
         return {
-            user_id: Rewards.reward_dict(eth_reward=eth_r, token_reward=token_r)
+            user_id: cls.reward_dict(eth_reward=eth_r, token_reward=token_r)
             for user_id, eth_r, token_r in zip(user_ids, eth_rewards, token_rewards)
         }
 
-    @staticmethod
-    def get(event_id):
-        key = Rewards.key(event_id)
+    @classmethod
+    def get(cls, event_id):
+        """ A dictionary with user_id as a key and reward as a value"""
+        key = cls.key(event_id)
         rewards_json = redis_db.get(key)
         if rewards_json is None:
             return None
         return json.loads(rewards_json)
 
-    @staticmethod
-    def get_lists(event_id):
-        rewards = Rewards.get(event_id)
+    @classmethod
+    def get_rewards_user_ids(cls, event_id):
+        """ A list of user_ids with rewards"""
+        key = cls.key_rewards_user_ids(event_id)
+        return redis_db.lrange(key, 0, -1)
+
+    @classmethod
+    def get_rewards_all_user_ids(cls, event_id):
+        """ A list of user_ids with rewards, dispute stake and joined stakes"""
+        key = cls.key_rewards_all_user_ids(event_id)
+        return redis_db.lrange(key, 0, -1)
+
+    @classmethod
+    def get_lists(cls, event_id):
+        rewards = cls.get(event_id)
         if rewards is None:
             return [], [], []
-        return Rewards.transform_dict_to_lists(rewards)
+        return cls.transform_dict_to_lists(rewards)
 
     @staticmethod
     def hash(user_ids, eth_rewards, token_rewards):
@@ -281,20 +349,23 @@ class Vote(BaseEvent):
     ANSWERS_SORT_KEY = 'field_name'
     ANSWERS_VALUE_KEY = 'field_value'
 
-    def __init__(self,
-                 user_id,
-                 event_id,
-                 node_id,
-                 timestamp,
-                 answers,
-                 signature,
-                 _ordered_answers=None):
+    def __init__(
+            self,
+            user_id,
+            event_id,
+            node_id,
+            timestamp,
+            answers,
+            signature,
+            in_consensus=False,  # This property is set on demand for Explorer
+            _ordered_answers=None):
         self.user_id = user_id
         self.event_id = event_id
         self.node_id = node_id
         self.timestamp = timestamp
         self.answers = answers
         self.signature = signature
+        self.in_consensus = in_consensus
         self._ordered_answers = _ordered_answers
 
     @classmethod
@@ -401,7 +472,8 @@ class Vote(BaseEvent):
         return self.ordered_answers().__repr__()
 
     @staticmethod
-    def filter_votes_by_users(event_id, votes_by_users, min_votes, max_votes, consensus_vote):
+    def filter_votes_by_users(event_id, votes_by_users, min_votes, max_votes, check_uniqueness,
+                              filter_by_vote):
         user_ids = list(votes_by_users.keys())
         for user_id in user_ids:
             n_votes = len(votes_by_users[user_id])
@@ -410,14 +482,16 @@ class Vote(BaseEvent):
                     '[%s] Vote from %s user has too many or too little entries: %d. Skip it',
                     event_id, user_id, n_votes)
                 del votes_by_users[user_id]
-            elif len({vote.answers_representation() for vote in votes_by_users[user_id]}) != 1:
-                # answers from nodes are not the same
+            elif check_uniqueness and len(
+                {vote.answers_representation()
+                 for vote in votes_by_users[user_id]}) != 1:
+                # answers from a user from different nodes are not the same
                 logger.warning('[%s] User %s voted differently on different nodes', event_id,
                                user_id)
                 del votes_by_users[user_id]
-            elif consensus_vote is not None and\
+            elif filter_by_vote is not None and\
                     votes_by_users[user_id][0].answers_representation() !=\
-                    consensus_vote.answers_representation():
+                    filter_by_vote.answers_representation():
                 logger.info('[%s] Vote from %s user is not in consensus. Skip it', event_id,
                             user_id)
                 del votes_by_users[user_id]
