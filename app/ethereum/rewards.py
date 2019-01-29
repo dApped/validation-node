@@ -54,7 +54,7 @@ def user_ids_to_return_join_stakes(event_id, staking_amount, user_ids_consensus,
 
 def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, token_balance):
     event_id = event.event_id
-    logger.info('[%s] Determinig consensus rewards', event_id)
+    logger.info('[%s] Calculating consensus rewards', event_id)
     logger.info('[%s] %d users in consensus', event_id, len(consensus_votes_by_users))
 
     user_ids_without_vote = event.user_ids_without_vote()
@@ -135,7 +135,7 @@ def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, 
 
 def calculate_non_consensus_rewards(event):
     event_id = event.event_id
-    logger.info('[%s] Determinig non consensus rewards', event_id)
+    logger.info('[%s] Calculating non consensus rewards', event_id)
     user_ids = event.participants()
 
     staking_amount = event.staking_amount
