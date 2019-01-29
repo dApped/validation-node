@@ -260,7 +260,7 @@ def mark_rewards_on_blockchain(w3, contract_instance, event_id, user_ids, eth_re
     logger.info('[%s] Master node finished marking rewards', event_id)
 
 
-def validate_event_date_on_blockchain(w3, event_id, validation_round):
+def validate_event_data_on_blockchain(w3, event_id, validation_round):
     logger.info('[%s] Validating rewards for round %d', event_id, validation_round)
     event_contract_abi = common.verity_event_contract_abi()
     event_contract = w3.eth.contract(address=event_id, abi=event_contract_abi)

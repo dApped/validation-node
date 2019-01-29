@@ -57,7 +57,7 @@ def process_validation_start(scheduler, w3, event_id, entries):
         return
     if not event.is_master_node:
         scheduler.add_job(
-            rewards.validate_event_date_on_blockchain, args=[w3, event_id, validation_round])
+            rewards.validate_event_data_on_blockchain, args=[w3, event_id, validation_round])
 
 
 def process_validation_restart(scheduler, w3, event_id, entries):
