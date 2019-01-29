@@ -81,6 +81,10 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
     if not is_node_registered_on_event(w3, contract_abi, node_id, event_id):
         logger.info('[%s] Node %s is not included in the event', event_id, node_id)
         return
+    if database.VerityEvent.get(event_id) is not None:
+        logger.info('[%s] Event already exists in the database. Skipping it', event_id)
+        return
+
     logger.info('[%s] Initializing event', event_id)
 
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)

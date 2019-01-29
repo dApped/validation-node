@@ -51,14 +51,13 @@ def process_validation_start(scheduler, w3, event_id, entries):
     event.rewards_validation_round = validation_round
     event.update()
 
+    logger.info('[%s] Validation round %d started', event_id, validation_round)
     if not scheduler:
         logger.warning('[%s] Scheduler is not set', event_id)
         return
-    if not event.metadata().is_consensus_reached:
-        logger.info('[%s] Cannot validate rewards becasue consensus was not reached', event_id)
-        return
     if not event.is_master_node:
-        scheduler.add_job(rewards.validate_rewards, args=[w3, event_id, validation_round])
+        scheduler.add_job(
+            rewards.validate_event_data_on_blockchain, args=[w3, event_id, validation_round])
 
 
 def process_validation_restart(scheduler, w3, event_id, entries):
@@ -80,7 +79,7 @@ def process_validation_restart(scheduler, w3, event_id, entries):
     # if node is master node, set consensus rewards
     if is_master_node:
         logger.info('[%s] Validation round %d I am Master node', event_id, validation_round)
-        scheduler.add_job(rewards.set_consensus_rewards, args=[w3, event_id])
+        scheduler.add_job(rewards.event_data_to_blockchain, args=[w3, event_id])
     else:
         logger.info('[%s] Validation round %d I am NOT Master node', event_id, validation_round)
 

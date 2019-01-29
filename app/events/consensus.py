@@ -58,15 +58,28 @@ def check_consensus(event, event_metadata):
     logger.info('[%s] Waiting %d seconds for websockets to exchange votes', event_id,
                 n_seconds_wait)
     time.sleep(n_seconds_wait)
+    schedule_event_data_to_blockchain_job(event, consensus_votes_by_users)
+
+
+def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
+    event_id = event.event_id
 
     # developer might initialize event and set rewards later. We fetch them just in time
     ether_balance, token_balance = event.instance(NODE_WEB3, event_id).functions.getBalance().call()
-    rewards.determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance)
+    logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
+
+    if not consensus_votes_by_users:
+        user_ids_rewards, user_ids_all, rewards_dict = rewards.calculate_non_consensus_rewards(
+            event)
+    else:
+        user_ids_rewards, user_ids_all, rewards_dict = rewards.calculate_consensus_rewards(
+            event, consensus_votes_by_users, ether_balance, token_balance)
+    database.Rewards.create(event_id, user_ids_rewards, user_ids_all, rewards_dict)
     send_data_to_explorer(event_id)
     if event.is_master_node:
-        scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
+        scheduler.scheduler.add_job(rewards.event_data_to_blockchain, args=[NODE_WEB3, event_id])
     else:
-        logger.info('[%s] Not a master node. Waiting for rewards to be set.', event_id)
+        logger.info('[%s] Not a master node. Waiting for event data to be set.', event_id)
 
 
 def calculate_consensus(event, votes_by_users):
@@ -96,7 +109,7 @@ def calculate_consensus(event, votes_by_users):
     if consensus_ratio * 100 < event.min_consensus_ratio:
         logger.info(
             '[%s] Not enough consensus votes: %d consensus_ratio < %d event.min_consensus_ratio',
-            event_id, consensus_ratio * 100 < event.min_consensus_ratio)
+            event_id, consensus_ratio * 100, event.min_consensus_ratio)
         return dict()
     consensus_vote = votes_by_users[next(iter(consensus_user_ids))][0]
     consensus_vote.set_consensus_vote()
@@ -119,9 +132,7 @@ def process_consensus_not_reached(event_id):
     if metadata.is_consensus_reached:
         logger.info('[%s] Consensus already reached', event_id)
         return
-    send_data_to_explorer(event_id)
-    # TODO set join stakes for consensus not reached
-    # TODO remove all event data from database
+    schedule_event_data_to_blockchain_job(event, {})
 
 
 def send_data_to_explorer(event_id, max_retries=2):
@@ -136,10 +147,11 @@ def send_data_to_explorer(event_id, max_retries=2):
             if response.status_code == 200:
                 logger.info('[%s] Event data successfully sent to explorer', event_id)
                 return
-            logger.info('Cannot send data to explorer. Status %d, %d:%d retry',
+            logger.info('Cannot send data to explorer. Status %d, %d/%d retry',
                         response.status_code, retry, max_retries)
         except Exception:
-            logger.exception('Cannot send data to explorer %d:%d retry', retry, max_retries)
+            # TODO: limit sending exceptions
+            logger.exception('Cannot send data to explorer %d/%d retry', retry, max_retries)
         time.sleep(60)
 
 
