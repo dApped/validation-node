@@ -53,6 +53,13 @@ def user_ids_to_return_join_stakes(event_id, staking_amount, user_ids_consensus,
 
 
 def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, token_balance):
+    """ Calculate join stakes, dispute stakes and rewards when consenus was reached
+
+    Return:
+        user_ids with rewards,
+        user_ids with rewards, join stakes and disputer_id,
+        dictionary with user_ids as keys and rewards as values.
+    """
     event_id = event.event_id
     logger.info('[%s] Calculating consensus rewards', event_id)
     logger.info('[%s] %d users in consensus', event_id, len(consensus_votes_by_users))
@@ -134,6 +141,13 @@ def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, 
 
 
 def calculate_non_consensus_rewards(event):
+    """ Return join stakes and dispute stakes becasue consenus was not reached
+
+    Return:
+        user_ids with rewards,
+        user_ids with rewards, join stakes and disputer_id,
+        dictionary with user_ids as keys and rewards as values.
+    """
     event_id = event.event_id
     logger.info('[%s] Calculating non consensus rewards', event_id)
     user_ids = event.participants()
