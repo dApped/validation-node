@@ -52,9 +52,9 @@ def user_ids_to_return_join_stakes(event_id, staking_amount, user_ids_consensus,
     return user_ids
 
 
-def determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance):
+def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, token_balance):
     event_id = event.event_id
-    logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
+    logger.info('[%s] Determinig consensus rewards', event_id)
     logger.info('[%s] %d users in consensus', event_id, len(consensus_votes_by_users))
 
     user_ids_without_vote = event.user_ids_without_vote()
@@ -130,7 +130,22 @@ def determine_rewards(event, consensus_votes_by_users, ether_balance, token_bala
             rewards_dict[user_id] = database.Rewards.reward_dict()
             user_ids_all.append(user_id)
         rewards_dict[user_id][database.Rewards.TOKEN_KEY] += event.staking_amount
-    database.Rewards.create(event.event_id, user_ids_rewards, user_ids_all, rewards_dict)
+    return user_ids_rewards, user_ids_all, rewards_dict
+
+
+def calculate_non_consensus_rewards(event):
+    event_id = event.event_id
+    logger.info('[%s] Determinig non consensus rewards', event_id)
+    user_ids = event.participants()
+
+    staking_amount = event.staking_amount
+    rewards_dict = {
+        user_id: database.Rewards.reward_dict(token_reward=staking_amount)
+        for i, user_id in enumerate(user_ids)
+    }
+    if event.disputer != common.default_eth_address():
+        rewards_dict[event.disputer] += event.dispute_amount
+    return [], user_ids, rewards_dict
 
 
 def calculate_linear_rewards(ether_balance, token_balance, consensus_votes_by_users):
@@ -200,11 +215,21 @@ def calculate_exponential_rewards(ether_balance, token_balance, consensus_votes_
     return user_ids, eth_rewards, token_rewards
 
 
-def set_consensus_rewards(w3, event_id):
-    logger.info('[%s] Master node started setting rewards', event_id)
+def event_data_to_blockchain(w3, event_id):
     user_ids, eth_rewards, token_rewards = database.Rewards.get_lists(event_id)
+
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
+
+    set_rewards_on_blockchain(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards)
+    set_result_on_blockchain(w3, contract_instance, event_id)
+    mark_rewards_on_blockchain(w3, contract_instance, event_id, user_ids, eth_rewards,
+                               token_rewards)
+
+
+def set_rewards_on_blockchain(w3, contract_instance, event_id, user_ids, eth_rewards,
+                              token_rewards):
+    logger.info('[%s] Master node started setting rewards', event_id)
 
     chunks = common.lists_to_chunks(user_ids, eth_rewards, token_rewards)
     for i, (user_ids_chunk, eth_rewards_chunk, token_rewards_chunk) in enumerate(chunks, 1):
@@ -212,19 +237,22 @@ def set_consensus_rewards(w3, event_id):
         set_rewards_fun = contract_instance.functions.setRewards(user_ids_chunk, eth_rewards_chunk,
                                                                  token_rewards_chunk)
         common.function_transact(w3, set_rewards_fun)
-    logger.info('[%s] Master node started setting consensus answer', event_id)
+    logger.info('[%s] Master node finished setting rewards', event_id)
+
+
+def set_result_on_blockchain(w3, contract_instance, event_id):
+    logger.info('[%s] Master node started setting result', event_id)
     consensus_answers = database.Vote.get_consensus_answers(event_id)
-    consensus_answers = list(
-        map(lambda x: w3.toBytes(hexstr=w3.toHex(text=str(x))), consensus_answers))
+    if not consensus_answers:
+        consensus_answers = list(
+            map(lambda x: w3.toBytes(hexstr=w3.toHex(text=str(x))), consensus_answers))
     set_consensus_vote_fun = contract_instance.functions.setResults(consensus_answers)
     common.function_transact(w3, set_consensus_vote_fun)
-    logger.info('[%s] Master node finished setting consensus answer', event_id)
-
-    logger.info('[%s] Master node finished setting rewards', event_id)
-    mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards)
+    logger.info('[%s] Master node finished setting result', event_id)
 
 
-def mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, token_rewards):
+def mark_rewards_on_blockchain(w3, contract_instance, event_id, user_ids, eth_rewards,
+                               token_rewards):
     logger.info('[%s] Master node started marking rewards', event_id)
     rewards_hash = database.Rewards.hash(user_ids, eth_rewards, token_rewards)
     mark_rewards_set_fun = contract_instance.functions.markRewardsSet(rewards_hash)
@@ -232,7 +260,7 @@ def mark_rewards_set(w3, contract_instance, event_id, user_ids, eth_rewards, tok
     logger.info('[%s] Master node finished marking rewards', event_id)
 
 
-def validate_rewards(w3, event_id, validation_round):
+def validate_event_date_on_blockchain(w3, event_id, validation_round):
     logger.info('[%s] Validating rewards for round %d', event_id, validation_round)
     event_contract_abi = common.verity_event_contract_abi()
     event_contract = w3.eth.contract(address=event_id, abi=event_contract_abi)

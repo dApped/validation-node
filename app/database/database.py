@@ -421,7 +421,7 @@ class Vote(BaseEvent):
     @classmethod
     def answers_from_vote(cls, vote):
         if vote is None:
-            return None
+            return []
         return [answer[cls.ANSWERS_VALUE_KEY] for answer in vote.ordered_answers()]
 
     @classmethod
