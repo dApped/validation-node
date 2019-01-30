@@ -51,8 +51,7 @@ def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, 
     """ Calculate join stakes, dispute stakes and rewards when consenus was reached
 
     Return:
-        user_ids with rewards,
-        user_ids with rewards, join stakes and disputer_id,
+        user_ids ordered by voting time (size of reward),
         dictionary with user_ids as keys and rewards as values.
     """
     event_id = event.event_id
@@ -109,42 +108,34 @@ def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, 
                      event.rewards_distribution_function)
         return
 
-    # in user_ids_all are user_ids with rewards are first, then disputer if without reward
-    # then user_ids with join stakes if they are without rewards
-    user_ids_all = []
-    user_ids_all.extend(user_ids_rewards)
-
     # compose rewards
     rewards_dict = {
         user_id: database.Rewards.reward_dict(
             eth_reward=eth_rewards[i], token_reward=token_rewards[i])
         for i, user_id in enumerate(user_ids_rewards)
     }
-    if not user_ids_all:
+    if not rewards_dict:
         logger.warning('[%s] Did not set the rewards because user_ids were empty', event_id)
 
     if return_dispute_stake:
         logger.info('[%s] Adding dispute staking amount to %s disputer', event_id, event.disputer)
         if event.disputer not in rewards_dict:
             rewards_dict[event.disputer] = database.Rewards.reward_dict()
-            user_ids_all.append(event.disputer)
         rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
 
     logger.info('[%s] Returing staking amount to users in consensus or without a vote', event_id)
     for user_id in user_ids_to_return_staking_amount:
         if user_id not in rewards_dict:
             rewards_dict[user_id] = database.Rewards.reward_dict()
-            user_ids_all.append(user_id)
         rewards_dict[user_id][database.Rewards.TOKEN_KEY] += event.staking_amount
-    return user_ids_rewards, user_ids_all, rewards_dict
+    return user_ids_rewards, rewards_dict
 
 
 def calculate_non_consensus_rewards(event):
     """ Return join stakes and dispute stakes becasue consenus was not reached
 
     Return:
-        user_ids with rewards,
-        user_ids with rewards, join stakes and disputer_id,
+        user_ids ordered by voting time (size of reward),
         dictionary with user_ids as keys and rewards as values.
     """
     event_id = event.event_id
@@ -158,7 +149,7 @@ def calculate_non_consensus_rewards(event):
     }
     if event.disputer != common.default_eth_address():
         rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
-    return [], user_ids, rewards_dict
+    return [], rewards_dict
 
 
 def calculate_linear_rewards(ether_balance, token_balance, consensus_votes_by_users):

@@ -256,8 +256,6 @@ class Filters(BaseEvent):
 class Rewards(BaseEvent):
     PREFIX = 'rewards'  # stores dictionary with user_id as a key and rewards as values
     PREFIX_REWARDS_USER_IDS = 'rewards_user_ids'  # stores a list of user_ids ordered by rewards
-    # stores a list of user_ids ordered by rewards, dispute stake and join stakes
-    PREFIX_REWARDS_ALL_USER_IDS = 'rewards_all_user_ids'
     ETH_KEY = 'eth'
     TOKEN_KEY = 'token'
 
@@ -270,7 +268,7 @@ class Rewards(BaseEvent):
         return '%s_%s' % (cls.PREFIX_REWARDS_ALL_USER_IDS, event_id)
 
     @classmethod
-    def create(cls, event_id, user_ids_rewards, user_ids_rewards_all, rewards_dict):
+    def create(cls, event_id, user_ids_rewards, rewards_dict):
         key = cls.key(event_id)
         rewards_json = json.dumps(rewards_dict)
         redis_db.set(key, rewards_json)
@@ -278,10 +276,6 @@ class Rewards(BaseEvent):
         key_rewards_user_ids = cls.key_rewards_user_ids(event_id)
         for user_id in user_ids_rewards:
             redis_db.rpush(key_rewards_user_ids, user_id)
-
-        key_rewards_all_user_ids = cls.key_rewards_all_user_ids(event_id)
-        for user_id in user_ids_rewards_all:
-            redis_db.rpush(key_rewards_all_user_ids, user_id)
 
     @classmethod
     def reward_dict(cls, eth_reward=0, token_reward=0):
@@ -322,12 +316,6 @@ class Rewards(BaseEvent):
         return redis_db.lrange(key, 0, -1)
 
     @classmethod
-    def get_rewards_all_user_ids(cls, event_id):
-        """ A list of user_ids with rewards, dispute stake and joined stakes"""
-        key = cls.key_rewards_all_user_ids(event_id)
-        return redis_db.lrange(key, 0, -1)
-
-    @classmethod
     def get_lists(cls, event_id):
         rewards = cls.get(event_id)
         if rewards is None:
@@ -357,8 +345,7 @@ class Vote(BaseEvent):
             timestamp,
             answers,
             signature,
-            in_consensus=False,  # This property is set on demand for Explorer
-            _ordered_answers=None):
+            in_consensus=False):  # This property is set on demand for Explorer
         self.user_id = user_id
         self.event_id = event_id
         self.node_id = node_id
@@ -366,7 +353,6 @@ class Vote(BaseEvent):
         self.answers = answers
         self.signature = signature
         self.in_consensus = in_consensus
-        self._ordered_answers = _ordered_answers
 
     @classmethod
     def key(cls, event_id, node_id):
@@ -440,14 +426,14 @@ class Vote(BaseEvent):
     def user_ids_with_vote(cls, event_id):
         return redis_db.smembers(cls.key_common(event_id))
 
+    @classmethod
+    def user_ids_with_incorrect_vote(cls, event_id, user_ids_correct_vote):
+        return cls.user_ids_with_vote(event_id).difference(user_ids_correct_vote)
+
     def ordered_answers(self):
-        if self._ordered_answers is not None:
-            return self._ordered_answers
-        # Order each dictionary and sort dictionaries by a key
-        self._ordered_answers = sorted(
+        return sorted(
             [OrderedDict(sorted(answer.items(), key=lambda t: t[0])) for answer in self.answers],
             key=lambda x: x[self.ANSWERS_SORT_KEY])
-        return self._ordered_answers
 
     @classmethod
     def get_list_json(cls, event_id, node_id):
