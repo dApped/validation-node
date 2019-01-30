@@ -63,8 +63,8 @@ def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, 
     consensus_vote = list(consensus_votes_by_users.values())[0][0]
     consensus_answers = database.Vote.answers_from_vote(consensus_vote)
 
-    # users filtered by correct vote. If a single vote from disputer cames through and it is correct
-    # then we return him dispute stake
+    # users filtered by correct vote. If a single vote from disputer comes
+    # through (instead of required 2 votes) and it is correct then we return him dispute stake
     votes_by_users_filtered = event.votes(min_votes=1, filter_by_vote=consensus_vote)
     user_ids_consensus = list(votes_by_users_filtered.keys())
 
