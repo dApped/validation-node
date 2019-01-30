@@ -167,7 +167,8 @@ def compose_event_payload(event):
     payload['data']['votes_by_users'] = event.votes_for_explorer()
     payload['data']['rewards_dict'] = database.Rewards.get(event_id)
     payload['data']['vote_position_user_ids'] = database.Rewards.get_rewards_user_ids(event_id)
-    # can differ from rewards_dict, because there can be single vote where required were 2
+    # can differ from rewards_dict because there can be a single correct vote for a
+    # user and consensus required two votes
     payload['data']['correct_vote_user_ids'] = correct_vote_user_ids
     payload['data']['incorrect_vote_user_ids'] = list(
         database.Vote.user_ids_with_incorrect_vote(event_id, correct_vote_user_ids))
