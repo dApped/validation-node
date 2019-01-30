@@ -13,12 +13,13 @@ class VoteTimestampsMetric(Enum):
     MEDIAN = 2
 
 
-def should_return_dispute_stake(event_id, disputer_id, disputer_votes, user_ids_without_vote,
-                                consensus_answers, previous_consensus_answers):
+def should_return_dispute_stake(event_id, disputer_id, disputer_votes_in_consensus,
+                                user_ids_without_vote, consensus_answers,
+                                previous_consensus_answers):
     if disputer_id == common.default_eth_address():
         logger.info('[%s] No disputer', event_id)
         return False
-    if disputer_votes is None and disputer_id not in user_ids_without_vote:
+    if disputer_votes_in_consensus is None and disputer_id not in user_ids_without_vote:
         logger.info('[%s] Disputer %s vote was not in consensus', event_id, disputer_id)
         return False
     if previous_consensus_answers != consensus_answers:
@@ -61,19 +62,22 @@ def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, 
     user_ids_without_vote = event.user_ids_without_vote()
     consensus_vote = list(consensus_votes_by_users.values())[0][0]
     consensus_answers = database.Vote.answers_from_vote(consensus_vote)
-    votes_by_users = event.votes(min_votes=1, filter_by_vote=consensus_vote)
-    user_ids_consensus = list(votes_by_users.keys())
+
+    # users filtered by correct vote. If a single vote from disputer cames through and it is correct
+    # then we return him dispute stake
+    votes_by_users_filtered = event.votes(min_votes=1, filter_by_vote=consensus_vote)
+    user_ids_consensus = list(votes_by_users_filtered.keys())
 
     # handle dispute
     return_dispute_stake = should_return_dispute_stake(event_id, event.disputer,
-                                                       votes_by_users.get(event.disputer),
+                                                       votes_by_users_filtered.get(event.disputer),
                                                        user_ids_without_vote, consensus_answers,
                                                        event.metadata().previous_consensus_answers)
     if return_dispute_stake:
         # disputer voted differently then first consensus and was part of new consensus.
         # we need to return the dispute stake to disputer
         token_balance -= event.dispute_amount
-    elif event.disputer is not None and event.disputer in consensus_votes_by_users:
+    elif event.disputer in consensus_votes_by_users:
         # disputer voted the same as previous consensus. Don't return dispute stake
         logger.info('[%s] Removing %s disputer from rewards', event_id, event.disputer)
         consensus_votes_by_users.pop(event.disputer)
