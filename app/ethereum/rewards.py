@@ -13,24 +13,19 @@ class VoteTimestampsMetric(Enum):
     MEDIAN = 2
 
 
-def should_return_dispute_stake(event_id, disputer_id, disputer_votes, user_ids_without_vote,
+def should_return_dispute_stake(event_id, disputer_id, disputer_votes_in_consensus,
+                                user_ids_without_vote, consensus_answers,
                                 previous_consensus_answers):
     if disputer_id == common.default_eth_address():
         logger.info('[%s] No disputer', event_id)
         return False
-    elif disputer_id in user_ids_without_vote:
-        logger.info('[%s] Disputer %s did not vote', event_id, disputer_id)
-        return True
-    elif disputer_votes is None:
+    if disputer_votes_in_consensus is None and disputer_id not in user_ids_without_vote:
         logger.info('[%s] Disputer %s vote was not in consensus', event_id, disputer_id)
         return False
-
-    disputer_answers = database.Vote.answers_from_vote(disputer_votes[0])
-    if previous_consensus_answers != disputer_answers:
-        logger.info('[%s] Disputer %s answer is different from previous consensus', event_id,
-                    disputer_id)
+    if previous_consensus_answers != consensus_answers:
+        logger.info('[%s] Current consensus is different from previous consensus', event_id)
         return True
-    logger.info('[%s] Disputer %s answer is the same as previous consensus', event_id, disputer_id)
+    logger.info('[%s] Current consensus is the same as previous consensus', event_id)
     return False
 
 
@@ -66,19 +61,23 @@ def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, 
 
     user_ids_without_vote = event.user_ids_without_vote()
     consensus_vote = list(consensus_votes_by_users.values())[0][0]
-    votes_by_users = event.votes(min_votes=1, filter_by_vote=consensus_vote)
-    user_ids_consensus = list(votes_by_users.keys())
+    consensus_answers = database.Vote.answers_from_vote(consensus_vote)
+
+    # users filtered by correct vote. If a single vote from disputer comes
+    # through (instead of required 2 votes) and it is correct then we return him dispute stake
+    votes_by_users_filtered = event.votes(min_votes=1, filter_by_vote=consensus_vote)
+    user_ids_consensus = list(votes_by_users_filtered.keys())
 
     # handle dispute
     return_dispute_stake = should_return_dispute_stake(event_id, event.disputer,
-                                                       votes_by_users.get(event.disputer),
-                                                       user_ids_without_vote,
+                                                       votes_by_users_filtered.get(event.disputer),
+                                                       user_ids_without_vote, consensus_answers,
                                                        event.metadata().previous_consensus_answers)
     if return_dispute_stake:
         # disputer voted differently then first consensus and was part of new consensus.
         # we need to return the dispute stake to disputer
         token_balance -= event.dispute_amount
-    elif event.disputer is not None and event.disputer in consensus_votes_by_users:
+    elif event.disputer in consensus_votes_by_users:
         # disputer voted the same as previous consensus. Don't return dispute stake
         logger.info('[%s] Removing %s disputer from rewards', event_id, event.disputer)
         consensus_votes_by_users.pop(event.disputer)
@@ -158,7 +157,7 @@ def calculate_non_consensus_rewards(event):
         for i, user_id in enumerate(user_ids)
     }
     if event.disputer != common.default_eth_address():
-        rewards_dict[event.disputer] += event.dispute_amount
+        rewards_dict[event.disputer][database.Rewards.TOKEN_KEY] += event.dispute_amount
     return [], user_ids, rewards_dict
 
 
@@ -257,7 +256,7 @@ def set_rewards_on_blockchain(w3, contract_instance, event_id, user_ids, eth_rew
 def set_result_on_blockchain(w3, contract_instance, event_id):
     logger.info('[%s] Master node started setting result', event_id)
     consensus_answers = database.Vote.get_consensus_answers(event_id)
-    if not consensus_answers:
+    if consensus_answers:
         consensus_answers = list(
             map(lambda x: w3.toBytes(hexstr=w3.toHex(text=str(x))), consensus_answers))
     set_consensus_vote_fun = contract_instance.functions.setResults(consensus_answers)
