@@ -205,11 +205,11 @@ def filter_events(scheduler, w3, formatters):
             try:
                 entries = filter_.get_new_entries()
             except ValueError:
-                logger.info('Filter not found')
+                logger.info('[%s] Event filter not found', event_id)
                 recover_filter(w3, event_id, filter_name, filter_func, filter_id)
                 continue
             except Exception:
-                logger.exception('Filter not found')
+                logger.exception('Event filter not found')
                 recover_filter(w3, event_id, filter_name, filter_func, filter_id)
                 continue
             if not entries:
