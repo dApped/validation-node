@@ -34,8 +34,9 @@ def init():
     scheduler.init()
     websocket.init()
 
-    event_registry_filter.init_event_registry_filter(scheduler.scheduler, NODE_WEB3, event_registry_abi,
-                                                     verity_event_abi, event_registry_address)
+    event_registry_filter.init_event_registry_filter(scheduler.scheduler, NODE_WEB3,
+                                                     event_registry_abi, verity_event_abi,
+                                                     event_registry_address)
 
 
 def create_app():
@@ -87,6 +88,7 @@ def health_check():
         'NODE_REGISTRY_ADDRESS': os.getenv('NODE_REGISTRY_ADDRESS'),
         'timestamp': int(time.time()),
         'block_number': NODE_WEB3.eth.blockNumber,
+        'event_registry_last_run_timestamp': database.EventRegistry.last_run_timestamp(),
     }
     logger.debug('Health %s', response)
     return jsonify(response), 200
