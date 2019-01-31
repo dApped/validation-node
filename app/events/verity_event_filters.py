@@ -177,6 +177,10 @@ def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
 
 
 def recover_filter(w3, event_id, filter_name, filter_func, filter_id):
+    event = database.VerityEvent.get(event_id)
+    if event is None or event.state in FINAL_STATES:
+        logger.info('[%s] Event is finished. No need to recover %s filter', event_id, filter_name)
+        return
     logger.info('[%s] Recovering filter %s', event_id, filter_name)
     database.Filters.remove_from_list(event_id, filter_id)
     contract_abi = common.verity_event_contract_abi()
@@ -200,15 +204,14 @@ def filter_events(scheduler, w3, formatters):
 
             try:
                 entries = filter_.get_new_entries()
-            except Exception as e:
-                event = database.VerityEvent.get(event_id)
-                if event is None or event.state in FINAL_STATES:
-                    # Event was just finished
-                    continue
+            except ValueError:
+                logger.info('Filter not found')
+                recover_filter(w3, event_id, filter_name, filter_func, filter_id)
+                continue
+            except Exception:
                 logger.exception('Filter not found')
                 recover_filter(w3, event_id, filter_name, filter_func, filter_id)
                 continue
-
             if not entries:
                 continue
             filter_func(scheduler, w3, event_id, entries)
