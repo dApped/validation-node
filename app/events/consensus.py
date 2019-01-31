@@ -69,12 +69,11 @@ def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
     logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
 
     if not consensus_votes_by_users:
-        user_ids_rewards, user_ids_all, rewards_dict = rewards.calculate_non_consensus_rewards(
-            event)
+        user_ids_rewards, rewards_dict = rewards.calculate_non_consensus_rewards(event)
     else:
-        user_ids_rewards, user_ids_all, rewards_dict = rewards.calculate_consensus_rewards(
+        user_ids_rewards, rewards_dict = rewards.calculate_consensus_rewards(
             event, consensus_votes_by_users, ether_balance, token_balance)
-    database.Rewards.create(event_id, user_ids_rewards, user_ids_all, rewards_dict)
+    database.Rewards.create(event_id, user_ids_rewards, rewards_dict)
     send_data_to_explorer(event_id)
     if event.is_master_node:
         scheduler.scheduler.add_job(rewards.event_data_to_blockchain, args=[NODE_WEB3, event_id])
@@ -157,13 +156,22 @@ def send_data_to_explorer(event_id, max_retries=2):
 
 def compose_event_payload(event):
     event_id = event.event_id
+    correct_vote_user_ids = list(
+        event.votes(min_votes=1, filter_by_vote=database.Vote.get_consensus_vote(event_id)).keys())
+    logger.info('correct_vote_user_ids %s %s', correct_vote_user_ids,
+                database.Vote.get_consensus_vote(event_id).answers_representation())
     payload = {'data': {}}
     payload['data']['event_id'] = event_id
     payload['data']['node_id'] = common.node_id()
     payload['data']['voting_round'] = event.dispute_round
     payload['data']['votes_by_users'] = event.votes_for_explorer()
     payload['data']['rewards_dict'] = database.Rewards.get(event_id)
-    payload['data']['rewards_user_ids'] = database.Rewards.get_rewards_user_ids(event_id)
-    payload['data']['rewards_all_user_ids'] = database.Rewards.get_rewards_all_user_ids(event_id)
+    payload['data']['vote_position_user_ids'] = database.Rewards.get_rewards_user_ids(event_id)
+    # can differ from rewards_dict because there can be a single correct vote for a
+    # user and consensus required two votes
+    payload['data']['correct_vote_user_ids'] = correct_vote_user_ids
+    payload['data']['incorrect_vote_user_ids'] = list(
+        database.Vote.user_ids_with_incorrect_vote(event_id, correct_vote_user_ids))
+    payload['data']['without_vote_user_ids'] = list(event.user_ids_without_vote())
     payload['signature'] = common.sign_data(payload)
     return payload
