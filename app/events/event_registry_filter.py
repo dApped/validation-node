@@ -28,9 +28,8 @@ def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
 def call_event_contract_for_metadata(w3, contract_instance, event_id):
     state = contract_instance.functions.getState().call()
     if state > 2:
-        logger.info(
-            '[%s] Event with state: %d. It is not in waiting|application|running state',
-            event_id, state)
+        logger.info('[%s] Event with state: %d. It is not in waiting|application|running state',
+                    event_id, state)
         return None
 
     (application_start_time, application_end_time, event_start_time, event_end_time,
@@ -116,10 +115,32 @@ def init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_a
     process_new_verity_events(scheduler, w3, verity_event_abi, entries)
 
 
+def recover_filter(scheduler, w3, verity_event_abi, event_registry_address):
+    logger.info('Recovering event registry')
+    database.flush_database()
+
+    event_registry_abi = common.event_registry_contract_abi()
+    init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_abi,
+                               event_registry_address)
+
+
 def filter_event_registry(scheduler, w3, event_registry_address, verity_event_abi, formatters):
     '''filter_event_registry runs in a cron job and checks for new events'''
     filter_id = database.Filters.get_list(event_registry_address)[0]
     filter_ = w3.eth.filter(filter_id=filter_id)
     filter_.log_entry_formatter = formatters[NEW_VERITY_EVENT]
+    try:
+        entries = filter_.get_new_entries()
+        database.EventRegistry.set_last_run_timestamp(int(time.time()))
+    except ValueError:
+        logger.info('Event Registry filter not found')
+        recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
+        return
+    except Exception:
+        logger.exception('Event Registry filter not found')
+        recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
+        return
+    if not entries:
+        return
     entries = filter_.get_new_entries()
     process_new_verity_events(scheduler, w3, verity_event_abi, entries)
