@@ -176,7 +176,7 @@ def is_vote_signed(vote_json):
         data_msg = defunct_hash_message(text=str(message))
         signer = w3_auto.eth.account.recoverHash(data_msg, signature=vote_json['signedData'])
     except Exception as e:
-        logger.exception(e)
+        logger.info(e)
         return False, 'None'
     return vote_data['user_id'] == signer, signer
 
