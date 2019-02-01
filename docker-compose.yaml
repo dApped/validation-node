@@ -6,7 +6,7 @@ services:
     ports: ['6379:6379']
   node1:
     build: ./app
-    entrypoint: "gunicorn -b :5000 -t 1000 -k gevent --access-logfile '-' -- application"
+    entrypoint: "gunicorn -b :5000 -t 1000 -k gevent --access-logfile '-' application"
     environment:
       DB_REDIS_IP: 'redis1'
       ETH_RPC_PROVIDER: ${ETH_RPC_PROVIDER}
