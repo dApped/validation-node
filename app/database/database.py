@@ -255,14 +255,14 @@ class Filters(BaseEvent):
         return redis_db.lrange(key, 0, -1)
 
     @classmethod
-    def delete(cls, event_id, filter_id):
+    def delete_filter(cls, event_id, filter_id):
         key = cls.key(event_id)
         return redis_db.lrem(key, 1, filter_id)
 
     @classmethod
-    def delete_all(cls, event_id, filter_ids):
+    def delete_all_filters(cls, event_id, filter_ids):
         for filter_id in filter_ids:
-            cls.delete(event_id, filter_id)
+            cls.delete_(event_id, filter_id)
 
     @staticmethod
     def uninstall(w3, filter_ids):
