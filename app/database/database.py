@@ -46,6 +46,18 @@ class BaseEvent:
         return cls(**dict_data)
 
 
+class EventRegistry:
+    LAST_RUN_KEY = 'event_registry_last_run'
+
+    @classmethod
+    def set_last_run_timestamp(cls, timestamp):
+        redis_db.set(cls.LAST_RUN_KEY, timestamp)
+
+    @classmethod
+    def last_run_timestamp(cls):
+        return redis_db.get(cls.LAST_RUN_KEY)
+
+
 class VerityEvent(BaseEvent):
     IDS_KEY = 'event_ids'
     PREFIX = 'event'
@@ -337,15 +349,14 @@ class Vote(BaseEvent):
     ANSWERS_SORT_KEY = 'field_name'
     ANSWERS_VALUE_KEY = 'field_value'
 
-    def __init__(
-            self,
-            user_id,
-            event_id,
-            node_id,
-            timestamp,
-            answers,
-            signature,
-            in_consensus=False):  # This property is set on demand for Explorer
+    def __init__(self,
+                 user_id,
+                 event_id,
+                 node_id,
+                 timestamp,
+                 answers,
+                 signature,
+                 in_consensus=False):  # This property is set on demand for Explorer
         self.user_id = user_id
         self.event_id = event_id
         self.node_id = node_id
