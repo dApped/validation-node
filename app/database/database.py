@@ -262,7 +262,7 @@ class Filters(BaseEvent):
     @classmethod
     def delete_all_filters(cls, event_id, filter_ids):
         for filter_id in filter_ids:
-            cls.delete_(event_id, filter_id)
+            cls.delete_filter(event_id, filter_id)
 
     @staticmethod
     def uninstall(w3, filter_ids):
