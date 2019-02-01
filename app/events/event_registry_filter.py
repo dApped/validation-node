@@ -137,10 +137,7 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
         return
     except Exception:
-        logger.exception('Event Registry filter not found')
+        logger.exception('Event Registry unexpected exception')
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
         return
-    if not entries:
-        return
-    entries = filter_.get_new_entries()
     process_new_verity_events(scheduler, w3, verity_event_abi, entries)
