@@ -158,8 +158,6 @@ def compose_event_payload(event):
     event_id = event.event_id
     correct_vote_user_ids = list(
         event.votes(min_votes=1, filter_by_vote=database.Vote.get_consensus_vote(event_id)).keys())
-    logger.info('correct_vote_user_ids %s %s', correct_vote_user_ids,
-                database.Vote.get_consensus_vote(event_id).answers_representation())
     payload = {'data': {}}
     payload['data']['event_id'] = event_id
     payload['data']['node_id'] = common.node_id()
