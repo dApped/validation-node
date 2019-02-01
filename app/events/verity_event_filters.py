@@ -207,7 +207,7 @@ def filter_events(scheduler, w3, formatters):
             logger.info('[%s] Event is not in the database', event_id)
             continue
         if len(filter_ids) != len(EVENT_FILTERS):
-            logger.info('[%s] There are %d/%d filters. Reinitialize them', event_id,
+            logger.info('[%s] There are only %d/%d filters. Reinitialize them', event_id,
                         len(filter_ids), len(EVENT_FILTERS))
             recover_all_filters(w3, event_id, filter_ids)
             continue
