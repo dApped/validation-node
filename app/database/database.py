@@ -244,25 +244,33 @@ class Participants(BaseEvent):
 class Filters(BaseEvent):
     PREFIX = 'filters'
 
-    @staticmethod
-    def create(event_id, filter_id):
-        key = Filters.key(event_id)
+    @classmethod
+    def create(cls, event_id, filter_id):
+        key = cls.key(event_id)
         redis_db.rpush(key, filter_id)
 
-    @staticmethod
-    def get_list(event_id):
-        key = Filters.key(event_id)
+    @classmethod
+    def get_list(cls, event_id):
+        key = cls.key(event_id)
         return redis_db.lrange(key, 0, -1)
 
-    @staticmethod
-    def remove_from_list(event_id, filter_id):
-        key = Filters.key(event_id)
+    @classmethod
+    def delete(cls, event_id, filter_id):
+        key = cls.key(event_id)
         return redis_db.lrem(key, 1, filter_id)
 
     @classmethod
-    def uninstall(cls, w3, filter_ids):
+    def delete_all(cls, event_id, filter_ids):
         for filter_id in filter_ids:
-            w3.eth.uninstallFilter(filter_id)
+            cls.delete(event_id, filter_id)
+
+    @staticmethod
+    def uninstall(w3, filter_ids):
+        for filter_id in filter_ids:
+            try:
+                w3.eth.uninstallFilter(filter_id)
+            except Exception as e:
+                logger.info(e)
 
 
 class Rewards(BaseEvent):
