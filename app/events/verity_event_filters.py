@@ -209,7 +209,7 @@ def filter_events(scheduler, w3, formatters):
                 recover_filter(w3, event_id, filter_name, filter_func, filter_id)
                 continue
             except Exception:
-                logger.exception('Event filter not found')
+                logger.exception('Event filter unexpected exception')
                 recover_filter(w3, event_id, filter_name, filter_func, filter_id)
                 continue
             if not entries:
