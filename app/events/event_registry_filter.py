@@ -138,6 +138,8 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
         return
     except Exception:
         logger.exception('Event Registry unexpected exception')
+        logger.info(['Sleeping for 1 hour then try recovering it'])
+        time.sleep(60 * 60)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
         return
     process_new_verity_events(scheduler, w3, verity_event_abi, entries)
