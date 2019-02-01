@@ -244,25 +244,31 @@ class Participants(BaseEvent):
 class Filters(BaseEvent):
     PREFIX = 'filters'
 
+    @staticmethod
+    def filter_dict(filter_id, filter_name):
+        return {'filter_id': filter_id, 'filter_name': filter_name}
+
     @classmethod
-    def create(cls, event_id, filter_id):
+    def create(cls, event_id, filter_id, filter_name):
         key = cls.key(event_id)
-        redis_db.rpush(key, filter_id)
+        filter_dict = cls.filter_dict(filter_id, filter_name)
+        redis_db.rpush(key, json.dumps(filter_dict))
 
     @classmethod
     def get_list(cls, event_id):
         key = cls.key(event_id)
-        return redis_db.lrange(key, 0, -1)
+        return [json.loads(filter_json) for filter_json in redis_db.lrange(key, 0, -1)]
 
     @classmethod
-    def delete_filter(cls, event_id, filter_id):
+    def delete_filter(cls, event_id, filter_id, filter_name):
         key = cls.key(event_id)
-        return redis_db.lrem(key, 1, filter_id)
+        filter_dict = cls.filter_dict(filter_id, filter_name)
+        return redis_db.lrem(key, 1, json.dumps(filter_dict))
 
     @classmethod
-    def delete_all_filters(cls, event_id, filter_ids):
-        for filter_id in filter_ids:
-            cls.delete_filter(event_id, filter_id)
+    def delete_multiple_filters(cls, event_id, filters_list):
+        for filter_dict in filters_list:
+            cls.delete_filter(event_id, filter_dict['filter_id'], filter_dict['filter_name'])
 
     @staticmethod
     def uninstall(w3, filter_ids):

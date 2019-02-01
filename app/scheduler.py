@@ -14,7 +14,8 @@ logger = logging.getLogger()
 
 
 class SchedulerFilter(logging.Filter):
-    def filter(self, record):
+    @staticmethod
+    def filter(record):
         if record.msg.find('Running job') >= 0:
             return False
         if record.msg.find('executed successfully') >= 0:
@@ -56,7 +57,7 @@ def init():
     event_registry_formatters = verity_event_filters.log_entry_formatters(
         event_registry_abi, event_registry_filter_names)
 
-    verity_event_filter_names = [name for name, _ in verity_event_filters.EVENT_FILTERS]
+    verity_event_filter_names = list(verity_event_filters.EVENT_FILTERS.keys())
     verity_event_formatters = verity_event_filters.log_entry_formatters(
         verity_event_abi, verity_event_filter_names)
 
