@@ -25,7 +25,7 @@ def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
     return node_id in node_ids
 
 
-def call_event_contract_for_metadata(w3, contract_instance, event_id):
+def call_event_contract_for_metadata(contract_instance, event_id):
     state = contract_instance.functions.getState().call()
     if state > 2:
         logger.info('[%s] Event with state: %d. It is not in waiting|application|running state',
@@ -87,7 +87,7 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
     logger.info('[%s] Initializing event', event_id)
 
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
-    event = call_event_contract_for_metadata(w3, contract_instance, event_id)
+    event = call_event_contract_for_metadata(contract_instance, event_id)
     if not event:
         logger.info('[%s] Cannot initialize event. Skipping it', event_id)
         return
