@@ -108,7 +108,7 @@ def init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_a
     contract_instance = w3.eth.contract(address=event_registry_address, abi=event_registry_abi)
     filter_ = contract_instance.events[NEW_VERITY_EVENT].createFilter(
         fromBlock='earliest', toBlock='latest')
-    database.Filters.create(event_registry_address, filter_.filter_id)
+    database.Filters.create(event_registry_address, filter_.filter_id, NEW_VERITY_EVENT)
     logger.info('[%s] Requesting all entries for %s from EventRegistry', event_registry_address,
                 NEW_VERITY_EVENT)
     entries = filter_.get_all_entries()
@@ -126,7 +126,7 @@ def recover_filter(scheduler, w3, verity_event_abi, event_registry_address):
 
 def filter_event_registry(scheduler, w3, event_registry_address, verity_event_abi, formatters):
     ''' Runs in a cron job and checks for new verity events'''
-    filter_id = database.Filters.get_list(event_registry_address)[0]
+    filter_id = database.Filters.get_list(event_registry_address)[0]['filter_id']
     filter_ = w3.eth.filter(filter_id=filter_id)
     filter_.log_entry_formatter = formatters[NEW_VERITY_EVENT]
     try:
