@@ -64,7 +64,8 @@ def init():
         verity_event_filters.filter_events,
         'interval',
         seconds=10,
-        args=[scheduler, NODE_WEB3, verity_event_formatters])
+        args=[scheduler, NODE_WEB3, verity_event_formatters],
+    )
 
     scheduler.add_job(
         event_registry_filter.filter_event_registry,
@@ -73,7 +74,8 @@ def init():
         args=[
             scheduler, NODE_WEB3, event_registry_address, verity_event_abi,
             event_registry_formatters
-        ])
+        ],
+        id='event_registry_filter')
 
     scheduler.add_job(
         node_registry.update_node_ips,

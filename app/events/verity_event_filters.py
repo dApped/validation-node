@@ -176,27 +176,45 @@ def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
     filter_func(None, w3, event_id, entries)
 
 
-def recover_filter(w3, event_id, filter_name, filter_func, filter_id):
+def recover_filter(w3, event_id, filter_name, filter_func, filter_id=None):
     event = database.VerityEvent.get(event_id)
     if event is None or event.state in FINAL_STATES:
         logger.info('[%s] Event is finished. No need to recover %s filter', event_id, filter_name)
         return
     logger.info('[%s] Recovering filter %s', event_id, filter_name)
-    database.Filters.remove_from_list(event_id, filter_id)
+    if filter_id is not None:
+        database.Filters.delete_filter(event_id, filter_id)
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
 
 
+def recover_all_filters(w3, event_id, filter_ids=None):
+    if filter_ids is not None:
+        database.Filters.uninstall(w3, filter_ids)
+        database.Filters.delete_all_filters(event_id, filter_ids)
+    for filter_name, filter_func in EVENT_FILTERS:
+        recover_filter(w3, event_id, filter_name, filter_func)
+
+
 def filter_events(scheduler, w3, formatters):
     '''filter_events runs in a cron job and requests new entries for all events'''
     event_ids = database.VerityEvent.get_ids_list()
+    event_ids_to_remove = set()
     for event_id in event_ids:
         filter_ids = database.Filters.get_list(event_id)
         if database.VerityEvent.get(event_id) is None:
             logger.info('[%s] Event is not in the database', event_id)
             continue
+        if len(filter_ids) != len(EVENT_FILTERS):
+            logger.info('[%s] There are only %d/%d filters. Reinitialize them', event_id,
+                        len(filter_ids), len(EVENT_FILTERS))
+            recover_all_filters(w3, event_id, filter_ids)
+            continue
+
         for (filter_name, filter_func), filter_id in zip(EVENT_FILTERS, filter_ids):
+            if event_id in event_ids_to_remove:
+                continue
             if not should_apply_filter(filter_name, event_id):
                 continue
             filter_ = w3.eth.filter(filter_id=filter_id)
@@ -205,13 +223,17 @@ def filter_events(scheduler, w3, formatters):
             try:
                 entries = filter_.get_new_entries()
             except ValueError:
-                logger.info('[%s] Event filter not found', event_id)
-                recover_filter(w3, event_id, filter_name, filter_func, filter_id)
+                logger.info('[%s] Event %s filter not found', event_id, filter_name)
+                recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
                 continue
             except Exception:
-                logger.exception('Event filter unexpected exception')
-                recover_filter(w3, event_id, filter_name, filter_func, filter_id)
+                logger.exception('Event %s filter unexpected exception', filter_name)
+                event_ids_to_remove.add(event_id)
                 continue
             if not entries:
                 continue
             filter_func(scheduler, w3, event_id, entries)
+
+    for event_id in event_ids_to_remove:
+        logger.info('[%s] Removing event because of unexpected exception in filters', event_id)
+        VerityEvent.delete_all_event_data(w3, event_id)

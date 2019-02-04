@@ -125,7 +125,7 @@ def recover_filter(scheduler, w3, verity_event_abi, event_registry_address):
 
 
 def filter_event_registry(scheduler, w3, event_registry_address, verity_event_abi, formatters):
-    '''filter_event_registry runs in a cron job and checks for new events'''
+    ''' Runs in a cron job and checks for new verity events'''
     filter_id = database.Filters.get_list(event_registry_address)[0]
     filter_ = w3.eth.filter(filter_id=filter_id)
     filter_.log_entry_formatter = formatters[NEW_VERITY_EVENT]
@@ -138,6 +138,10 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
         return
     except Exception:
         logger.exception('Event Registry unexpected exception')
+        logger.info(['Sleeping for 1 hour then try recovering it'])
+        scheduler.get_job(job_id='event_registry_filter').pause()
+        time.sleep(60 * 60)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
+        scheduler.get_job(job_id='event_registry_filter').resume()
         return
     process_new_verity_events(scheduler, w3, verity_event_abi, entries)
