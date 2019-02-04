@@ -5,9 +5,8 @@ import os
 import sys
 from collections import OrderedDict, defaultdict
 
-import redis
-
 import common
+import redis
 
 logger = logging.getLogger()
 
@@ -33,9 +32,12 @@ class BaseEvent:
         return cls.from_json(event_json)
 
     @classmethod
-    def delete(cls, pipeline, event_id):
+    def delete(cls, event_id, pipeline=None):
         key = cls.key(event_id)
-        pipeline.delete(key)
+        if pipeline is None:
+            redis_db.delete(key)
+        else:
+            pipeline.delete(key)
 
     def to_json(self):
         return json.dumps(self.__dict__)
@@ -178,12 +180,12 @@ class VerityEvent(BaseEvent):
 
         pipeline = redis_db.pipeline()
         pipeline.lrem(cls.IDS_KEY, 1, event_id)
-        VerityEvent.delete(pipeline, event_id)
-        VerityEventMetadata.delete(pipeline, event_id)
-        Participants.delete(pipeline, event_id)
-        Filters.delete(pipeline, event_id)
+        VerityEvent.delete(event_id, pipeline)
+        VerityEventMetadata.delete(event_id, pipeline)
+        Participants.delete(event_id, pipeline)
+        Filters.delete(event_id, pipeline)
         Vote.delete_all(pipeline, event_id, VerityEvent.get(event_id).node_addresses)
-        Rewards.delete(pipeline, event_id)
+        Rewards.delete(event_id, pipeline)
         pipeline.execute()
 
         Filters.uninstall(w3, filter_ids)
@@ -244,25 +246,28 @@ class Participants(BaseEvent):
 class Filters(BaseEvent):
     PREFIX = 'filters'
 
+    @staticmethod
+    def filter_dict(filter_id, filter_name):
+        return {'filter_id': filter_id, 'filter_name': filter_name}
+
     @classmethod
-    def create(cls, event_id, filter_id):
+    def create(cls, event_id, filter_id, filter_name):
         key = cls.key(event_id)
-        redis_db.rpush(key, filter_id)
+        filter_dict = cls.filter_dict(filter_id, filter_name)
+        redis_db.rpush(key, json.dumps(filter_dict))
 
     @classmethod
     def get_list(cls, event_id):
         key = cls.key(event_id)
-        return redis_db.lrange(key, 0, -1)
+        return [json.loads(filter_json) for filter_json in redis_db.lrange(key, 0, -1)]
 
     @classmethod
-    def delete_filter(cls, event_id, filter_id):
+    def delete_filter(cls, event_id, filter_id, filter_name):
         key = cls.key(event_id)
-        return redis_db.lrem(key, 1, filter_id)
-
-    @classmethod
-    def delete_all_filters(cls, event_id, filter_ids):
-        for filter_id in filter_ids:
-            cls.delete_filter(event_id, filter_id)
+        filter_dict = cls.filter_dict(filter_id, filter_name)
+        n_deleted = redis_db.lrem(key, 1, json.dumps(filter_dict))
+        logger.info('[%s] %d entries for %s filter deleted', event_id, n_deleted, filter_name)
+        return n_deleted
 
     @staticmethod
     def uninstall(w3, filter_ids):

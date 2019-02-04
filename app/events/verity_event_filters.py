@@ -112,13 +112,15 @@ VALIDATION_RESTART_FILTER = 'ValidationRestart'
 DISPUTE_TRIGGERED_FILTER = 'DisputeTriggered'
 EVENT_FAILED_FILTER = 'EventFailed'
 
-EVENT_FILTERS = [(JOIN_EVENT_FILTER, process_join_events),
-                 (STATE_TRANSITION_FILTER, process_state_transition),
-                 (ERROR_FILTER, process_error_event),
-                 (VALIDATION_STARTED_FILTER, process_validation_start),
-                 (VALIDATION_RESTART_FILTER, process_validation_restart),
-                 (DISPUTE_TRIGGERED_FILTER, process_dispute_triggered),
-                 (EVENT_FAILED_FILTER, process_event_failed)]
+EVENT_FILTERS = {
+    JOIN_EVENT_FILTER: process_join_events,
+    STATE_TRANSITION_FILTER: process_state_transition,
+    ERROR_FILTER: process_error_event,
+    VALIDATION_STARTED_FILTER: process_validation_start,
+    VALIDATION_RESTART_FILTER: process_validation_restart,
+    DISPUTE_TRIGGERED_FILTER: process_dispute_triggered,
+    EVENT_FAILED_FILTER: process_event_failed
+}
 
 
 def log_entry_formatters(contract_abi, filter_names):
@@ -151,7 +153,7 @@ def should_apply_filter(filter_name, event_id):
 
 def init_event_filters(w3, contract_abi, event_id):
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
-    for filter_name, filter_func in EVENT_FILTERS:
+    for filter_name, filter_func in EVENT_FILTERS.items():
         init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
 
 
@@ -164,7 +166,7 @@ def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
     contract_block_number = event.metadata().contract_block_number
     filter_ = contract_instance.events[filter_name].createFilter(
         fromBlock=contract_block_number, toBlock='latest')
-    database.Filters.create(event_id, filter_.filter_id)
+    database.Filters.create(event_id, filter_.filter_id, filter_name)
     logger.info('[%s] Requesting all entries for %s from %d block', event_id, filter_name,
                 contract_block_number)
     entries = filter_.get_all_entries()
@@ -183,17 +185,18 @@ def recover_filter(w3, event_id, filter_name, filter_func, filter_id=None):
         return
     logger.info('[%s] Recovering filter %s', event_id, filter_name)
     if filter_id is not None:
-        database.Filters.delete_filter(event_id, filter_id)
+        database.Filters.delete_filter(event_id, filter_id, filter_name)
     contract_abi = common.verity_event_contract_abi()
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
 
 
-def recover_all_filters(w3, event_id, filter_ids=None):
-    if filter_ids is not None:
+def recover_all_filters(w3, event_id, filter_list=None):
+    if filter_list:
+        filter_ids = [filter_dict['filter_id'] for filter_dict in filter_list]
         database.Filters.uninstall(w3, filter_ids)
-        database.Filters.delete_all_filters(event_id, filter_ids)
-    for filter_name, filter_func in EVENT_FILTERS:
+    database.Filters.delete(event_id)
+    for filter_name, filter_func in EVENT_FILTERS.items():
         recover_filter(w3, event_id, filter_name, filter_func)
 
 
@@ -202,17 +205,19 @@ def filter_events(scheduler, w3, formatters):
     event_ids = database.VerityEvent.get_ids_list()
     event_ids_to_remove = set()
     for event_id in event_ids:
-        filter_ids = database.Filters.get_list(event_id)
+        filter_list = database.Filters.get_list(event_id)
         if database.VerityEvent.get(event_id) is None:
             logger.info('[%s] Event is not in the database', event_id)
             continue
-        if len(filter_ids) != len(EVENT_FILTERS):
+        if len(filter_list) != len(EVENT_FILTERS):
             logger.info('[%s] There are only %d/%d filters. Reinitialize them', event_id,
-                        len(filter_ids), len(EVENT_FILTERS))
-            recover_all_filters(w3, event_id, filter_ids)
+                        len(filter_list), len(EVENT_FILTERS))
+            recover_all_filters(w3, event_id, filter_list)
             continue
 
-        for (filter_name, filter_func), filter_id in zip(EVENT_FILTERS, filter_ids):
+        for filter_dict in filter_list:
+            filter_id, filter_name = filter_dict['filter_id'], filter_dict['filter_name']
+            filter_func = EVENT_FILTERS[filter_name]
             if event_id in event_ids_to_remove:
                 continue
             if not should_apply_filter(filter_name, event_id):
