@@ -195,7 +195,7 @@ def recover_all_filters(w3, event_id, filter_list=None):
     if filter_list:
         filter_ids = [filter_dict['filter_id'] for filter_dict in filter_list]
         database.Filters.uninstall(w3, filter_ids)
-        database.Filters.delete_multiple_filters(event_id, filter_list)
+    database.Filters.delete(event_id)
     for filter_name, filter_func in EVENT_FILTERS.items():
         recover_filter(w3, event_id, filter_name, filter_func)
 
