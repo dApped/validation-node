@@ -106,8 +106,9 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
 def init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_abi,
                                event_registry_address):
     contract_instance = w3.eth.contract(address=event_registry_address, abi=event_registry_abi)
+    fromBlock = contract_instance.functions.creationBlock().call()
     filter_ = contract_instance.events[NEW_VERITY_EVENT].createFilter(
-        fromBlock='earliest', toBlock='latest')
+        fromBlock=fromBlock, toBlock='latest')
     database.Filters.create(event_registry_address, filter_.filter_id, NEW_VERITY_EVENT)
     logger.info('[%s] Requesting all entries for %s from EventRegistry', event_registry_address,
                 NEW_VERITY_EVENT)
