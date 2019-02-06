@@ -184,7 +184,9 @@ class VerityEvent(BaseEvent):
         VerityEventMetadata.delete(event_id, pipeline)
         Participants.delete(event_id, pipeline)
         Filters.delete(event_id, pipeline)
-        Vote.delete_all(pipeline, event_id, VerityEvent.get(event_id).node_addresses)
+        event = VerityEvent.get(event_id)
+        if event is not None:
+            Vote.delete_all(pipeline, event_id, VerityEvent.get(event_id).node_addresses)
         Rewards.delete(event_id, pipeline)
         pipeline.execute()
 
