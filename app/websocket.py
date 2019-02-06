@@ -193,7 +193,7 @@ class Consumer(Common):
                     continue
                 await cls.consumer(message_json)
             except websockets.exceptions.ConnectionClosed:
-                logger.error('Websocket connection closed %s:%s', websocket.host, websocket.port)
+                logger.info('Websocket connection closed %s:%s', websocket.host, websocket.port)
                 return
             except asyncio.TimeoutError:
                 # No data in 20 seconds

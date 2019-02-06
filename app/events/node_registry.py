@@ -22,7 +22,10 @@ def register_node_ip(node_registry_abi, node_registry_address, node_ip, address_
             register_node_ip_fun = contract_instance.functions.registerNodeWs(node_ip)
         else:
             raise Exception('Unsupported address type ' + str(address_type))
-        common.function_transact(NODE_WEB3, register_node_ip_fun)
+        trx_hash = common.function_transact(NODE_WEB3, register_node_ip_fun)
+        if trx_hash is None:
+            raise Exception(
+                'Make sure you have registered your validation node address in Node Registry')
     logger.info('Node %s: %s', str(address_type), node_ip)
 
 
