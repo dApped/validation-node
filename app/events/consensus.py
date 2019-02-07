@@ -148,8 +148,11 @@ def send_data_to_explorer(event_id, max_retries=2):
                 return
             logger.info('Cannot send data to explorer. Status %d, %d/%d retry',
                         response.status_code, retry, max_retries)
+        except requests.exceptions.ConnectionError:
+            logger.info('[%s] Cannot reach explorer %d/%d retry', event_id, retry,
+                        max_retries)
         except Exception:
-            logger.exception('Cannot send data to explorer %d/%d retry', retry, max_retries)
+            logger.exception('Cannot send data to explorer')
         time.sleep(60)
 
 
