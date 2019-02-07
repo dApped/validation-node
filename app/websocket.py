@@ -103,7 +103,7 @@ class Producer(Common):
         event_metadata = database.VerityEvent.get(event_id).metadata()
         node_websocket_ips = event_metadata.node_websocket_ips
         if not node_websocket_ips:
-            logger.warning('Node Websocket IPs are not set')
+            logger.error('Node Websocket IPs are not set')
             return
         websockets_nodes = await cls.get_or_create_websocket_connections(node_websocket_ips)
         if not websockets_nodes:
@@ -130,7 +130,7 @@ class Consumer(Common):
         _, node_id, current_timestamp, json_data = cls.parse_fields_from_message(message_json)
 
         if not common.is_vote_payload_valid(json_data):
-            logger.warning('Invalid vote payload: %s', json_data)
+            logger.error('Invalid vote payload: %s', json_data)
             return
 
         event_id, user_id, data, signature = common.parse_fields_from_json_data(json_data)
@@ -164,8 +164,8 @@ class Consumer(Common):
 
         is_vote_signed_correctly, signer = common.is_vote_signed(json_data)
         if not is_vote_signed_correctly:
-            logger.warning('[%s] Vote not signed correctly from user %s. Message signed by %s',
-                           event_id, user_id, signer)
+            logger.error('[%s] Vote not signed correctly from user %s. Message signed by %s',
+                         event_id, user_id, signer)
             return
 
         if database.Vote.exists(event_id, user_id, node_id):
@@ -189,7 +189,7 @@ class Consumer(Common):
                 message_json = await asyncio.wait_for(websocket.recv(), timeout=20)
                 message_json = json.loads(message_json)
                 if not cls.is_message_valid(message_json):
-                    logger.warning('Invalid message_json: %s', message_json)
+                    logger.error('Invalid message_json: %s', message_json)
                     continue
                 await cls.consumer(message_json)
             except websockets.exceptions.ConnectionClosed:

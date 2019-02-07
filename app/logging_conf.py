@@ -15,7 +15,7 @@ def init_logging():
     if flask_dev != 'dev':
         sentry_logging = LoggingIntegration(
             level=logging.INFO,  # Capture info and above as breadcrumbs
-            event_level=logging.WARN  # Send warn as events
+            event_level=logging.ERROR # Send errors as events
         )
         sentry_sdk.init(
             dsn=os.getenv('SENTRY_DSN'),

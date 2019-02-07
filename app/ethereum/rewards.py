@@ -115,7 +115,7 @@ def calculate_consensus_rewards(event, consensus_votes_by_users, ether_balance, 
         for i, user_id in enumerate(user_ids_rewards)
     }
     if not rewards_dict:
-        logger.warning('[%s] Did not set the rewards because user_ids were empty', event_id)
+        logger.error('[%s] Did not set the rewards because user_ids were empty', event_id)
 
     if return_dispute_stake:
         logger.info('[%s] Adding dispute staking amount to %s disputer', event_id, event.disputer)
