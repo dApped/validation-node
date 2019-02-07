@@ -5,8 +5,10 @@ import os
 import sys
 from collections import OrderedDict, defaultdict
 
-import common
 import redis
+from web3 import Web3
+
+import common
 
 logger = logging.getLogger()
 
@@ -520,3 +522,42 @@ class Vote(BaseEvent):
             vote_repr = votes[0].answers_representation()
             votes_by_repr[vote_repr].extend(votes)
         return votes_by_repr
+
+
+class ContractAddress:
+    """ Stores latest addresses of smart contracts """
+    @staticmethod
+    def key_event_registry():
+        return 'event_registry_address'
+
+    @staticmethod
+    def key_node_registry():
+        return 'node_registry_address'
+
+    @classmethod
+    def set_event_registry(cls, contract_address):
+        key = cls.key_event_registry()
+        redis_db.set(key, contract_address)
+
+    @classmethod
+    def set_node_registry(cls, contract_address):
+        key = cls.key_node_registry()
+        redis_db.set(key, contract_address)
+
+    @classmethod
+    def event_registry(cls):
+        event_registry_address = os.getenv('EVENT_REGISTRY_ADDRESS')
+        logger.info('event_registry_address %s', event_registry_address)
+        if event_registry_address:
+            return Web3.toChecksumAddress(event_registry_address)
+        key = cls.key_event_registry()
+        return redis_db.get(key)
+
+    @classmethod
+    def node_registry(cls):
+        node_registry_address = os.getenv('NODE_REGISTRY_ADDRESS')
+        logger.info('node_registry_address %s', node_registry_address)
+        if node_registry_address:
+            return Web3.toChecksumAddress(node_registry_address)
+        key = cls.key_node_registry()
+        return redis_db.get(key)

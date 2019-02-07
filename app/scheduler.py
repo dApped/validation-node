@@ -5,6 +5,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import utc
 
 import common
+from database import database
 from ethereum.provider import NODE_WEB3
 from events import event_registry_filter, node_registry, verity_event_filters
 
@@ -47,11 +48,11 @@ def init():
     logger.info('Scheduler Init started')
     configure_scheduler_logging()
 
-    event_registry_address = common.event_registry_address()
+    node_registry_address = database.ContractAddress.node_registry()
+    event_registry_address = database.ContractAddress.event_registry()
     event_registry_abi = common.event_registry_contract_abi()
     verity_event_abi = common.verity_event_contract_abi()
     node_registry_abi = common.node_registry_contract_abi()
-    node_registry_address = common.node_registry_address()
 
     event_registry_filter_names = [event_registry_filter.NEW_VERITY_EVENT]
     event_registry_formatters = verity_event_filters.log_entry_formatters(
