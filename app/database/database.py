@@ -547,7 +547,6 @@ class ContractAddress:
     @classmethod
     def event_registry(cls):
         event_registry_address = os.getenv('EVENT_REGISTRY_ADDRESS')
-        logger.info('event_registry_address %s', event_registry_address)
         if event_registry_address:
             return Web3.toChecksumAddress(event_registry_address)
         key = cls.key_event_registry()
@@ -556,7 +555,6 @@ class ContractAddress:
     @classmethod
     def node_registry(cls):
         node_registry_address = os.getenv('NODE_REGISTRY_ADDRESS')
-        logger.info('node_registry_address %s', node_registry_address)
         if node_registry_address:
             return Web3.toChecksumAddress(node_registry_address)
         key = cls.key_node_registry()
