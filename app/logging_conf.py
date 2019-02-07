@@ -11,17 +11,19 @@ import common
 
 
 def init_logging():
-    sentry_logging = LoggingIntegration(
-        level=logging.INFO,  # Capture info and above as breadcrumbs
-        event_level=logging.WARN  # Send warn as events
-    )
-    sentry_sdk.init(
-        dsn=os.getenv('SENTRY_DSN'),
-        environment=os.getenv('FLASK_ENV'),
-        integrations=[sentry_logging, FlaskIntegration()])
+    flask_dev = os.getenv('FLASK_ENV')
+    if flask_dev != 'dev':
+        sentry_logging = LoggingIntegration(
+            level=logging.INFO,  # Capture info and above as breadcrumbs
+            event_level=logging.WARN  # Send warn as events
+        )
+        sentry_sdk.init(
+            dsn=os.getenv('SENTRY_DSN'),
+            environment=os.getenv('FLASK_ENV'),
+            integrations=[sentry_logging, FlaskIntegration()])
 
-    with configure_scope() as scope:
-        scope.user = {'node_id': common.node_id()}
+        with configure_scope() as scope:
+            scope.user = {'node_id': common.node_id()}
 
     logging_config = {
         'version': 1,
