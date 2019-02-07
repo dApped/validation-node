@@ -19,7 +19,7 @@ def vote(json_data):
     current_timestamp = int(time.time())
     if not common.is_vote_payload_valid(json_data):
         message = 'Invalid vote payload'
-        logger.warning('%s: %s', message, json_data)
+        logger.error('%s: %s', message, json_data)
         return _response(message, 400)
 
     event_id, user_id, data, signature = common.parse_fields_from_json_data(json_data)
@@ -35,7 +35,8 @@ def vote(json_data):
         logger.info('[%s] %s', event_id, message)
         return _response(message, 403)
 
-    is_voting_active = common.is_voting_active(current_timestamp, event.event_start_time, event.event_end_time)
+    is_voting_active = common.is_voting_active(current_timestamp, event.event_start_time,
+                                               event.event_end_time)
     if not is_voting_active:
         message = '[%s] Voting is not active. Event Start Time %d, Event End Time: %d'
         message = message % (event.event_id, event.event_start_time, event.event_end_time)
@@ -51,14 +52,14 @@ def vote(json_data):
     is_vote_signed_correctly, signer = common.is_vote_signed(json_data)
     if not is_vote_signed_correctly:
         message = 'Vote not signed correctly'
-        logger.warning('[%s] %s from user %s. Message signed by %s', event_id, message, user_id,
-                       signer)
+        logger.error('[%s] %s from user %s. Message signed by %s', event_id, message, user_id,
+                     signer)
         return _response(message, 400)
 
     node_id = common.node_id()
     if database.Vote.exists(event_id, node_id, user_id):
         message = 'Already received vote from %s user' % user_id
-        logger.warning('[%s] %s', event_id, message)
+        logger.error('[%s] %s', event_id, message)
         return _response(message, 406)
 
     vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'], signature)
