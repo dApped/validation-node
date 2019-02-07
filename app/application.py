@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, request
 
 import common
+import contract_registry_filter
 import logging_conf
 import scheduler
 from common import AddressType
@@ -18,18 +19,22 @@ from version import __version__
 # Flask Setup ------------------------------------------------------------------
 def init():
     database.flush_database()
+    contract_registry_address = common.contract_registry_address()
+    contract_registry_filter.init_contract_registry(NODE_WEB3, contract_registry_address)
+
     event_registry_abi = common.event_registry_contract_abi()
     verity_event_abi = common.verity_event_contract_abi()
     node_registry_abi = common.node_registry_contract_abi()
 
-    node_address = common.node_registry_address()
-    event_registry_address = common.event_registry_address()
+    node_registry_address = database.ContractAddress.node_registry()
+    event_registry_address = database.ContractAddress.event_registry()
 
     node_ip_port = common.node_ip_port()
     node_websocket_ip_port = common.node_websocket_ip_port()
 
-    node_registry.register_node_ip(node_registry_abi, node_address, node_ip_port, AddressType.IP)
-    node_registry.register_node_ip(node_registry_abi, node_address, node_websocket_ip_port,
+    node_registry.register_node_ip(node_registry_abi, node_registry_address, node_ip_port,
+                                   AddressType.IP)
+    node_registry.register_node_ip(node_registry_abi, node_registry_address, node_websocket_ip_port,
                                    AddressType.WEBSOCKET)
     scheduler.init()
     websocket.init()

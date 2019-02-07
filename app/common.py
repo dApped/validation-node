@@ -39,12 +39,13 @@ def node_registry_contract_abi():
                                         'NodeRegistry.json')).read())['abi']
 
 
-def event_registry_address():
-    return Web3.toChecksumAddress(os.getenv('EVENT_REGISTRY_ADDRESS'))
+def contract_registry_contract_abi():
+    return json.loads(
+        open(os.path.join(os.getenv('CONTRACT_DIR'), 'ContractRegistry.json')).read())['abi']
 
 
-def node_registry_address():
-    return Web3.toChecksumAddress(os.getenv('NODE_REGISTRY_ADDRESS'))
+def contract_registry_address():
+    return Web3.toChecksumAddress(os.getenv('CONTRACT_REGISTRY_ADDRESS'))
 
 
 def node_id():
