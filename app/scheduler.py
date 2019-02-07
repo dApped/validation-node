@@ -30,7 +30,6 @@ def configure_scheduler_logging():
     logging.getLogger('apscheduler.executors.default').addFilter(scheduler_filter)
     logging.getLogger('apscheduler.executors.default').propagate = True
     logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
-    logging.getLogger('apscheduler.scheduler').setLevel(logging.ERROR)
 
 
 def remove_job(job_id):
