@@ -144,7 +144,7 @@ def is_vote_payload_valid(data):
     for field in ['data', 'signedData']:
         if field not in data or data[field] is None:
             return False
-    for param in {'user_id', 'event_id', 'answers'}:
+    for param in {'user_id', 'task_id', 'answers'}:
         if param not in data['data'] or data['data'][param] is None:
             return False
     for answer in data['data']['answers']:
@@ -156,7 +156,7 @@ def is_vote_payload_valid(data):
 
 def parse_fields_from_json_data(json_data):
     data = json_data['data']
-    event_id = data['event_id']
+    event_id = data['task_id']
     user_id = data['user_id']
     signature = json_data['signedData']
     return event_id, user_id, data, signature
