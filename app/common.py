@@ -88,8 +88,7 @@ def explorer_port():
 
 
 def explorer_ip_port():
-    # TODO add protocol
-    return 'http://%s:%s' % (explorer_ip(), explorer_port())
+    return '%s:%s' % (explorer_ip(), explorer_port())
 
 
 def function_transact(w3, contract_function, max_retries=3):
