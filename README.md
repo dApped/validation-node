@@ -7,8 +7,9 @@ TODO: add getting started guide
 ## Development
 
 For development you need [Docker](https://www.docker.com/get-started) and [Python 3.7](https://www.python.org/downloads/release/python-370/).
+You can use local blockchain, like [Ganache](https://truffleframework.com/ganache).
 
-Environmental variables get pulled from `.env` file. You can create one from `env` file which is in root of this repo:
+Environment variables get pulled from `.env` file. You can create one from `env` file which is in root of this repo:
 ```bash
 cp env .env
 ```
@@ -23,35 +24,22 @@ Install virtualenv package with pip:
 pip3 install virtualenv
 ```
 
-Create virtual environment
+Create virtual environment:
 ```bash
-virtualenv <DESIRED_PATH_TO_VIRTUALENV>/<VENV_NAME>
+virtualenv <DESIRED_PATH_TO_VIRTUALENV>/<VENV_NAME> --python=python3
 ```
-Optinally you set pass `--python=<PATH_TO_PYTHON3.7_BIN>` argument to specify which python you want installed.
 
-Now activate virtual environment
+Now activate virtual environment:
 ```bash
 source <DESIRED_PATH_TO_VIRTUALENV>/<VENV_NAME>/bin/activate
 ``` 
 
-When virtual environment is created, make sure it is pointing to correct version of python in virtual environment.
-```bash
-which python
-```
-should output ```<PATH_TO_VIRTUALENV>/<VENV_NAME>/bin/python``` and
-```bash
-pip -V
-```
-should output ```<PATH_TO_VIRTUALENV>/<VENV_NAME>/lib/python3.7/site-packages/pip (python 3.7)```
-
-Then install dependencies by running
+Then install dependencies by running:
 ```bash
 pip install -r app/requirements.txt
 ```
 
 ### Running a node localy
-
-For development you can use local blockchain, like [Ganache](https://truffleframework.com/ganache).
 
 To run node localy:
 
