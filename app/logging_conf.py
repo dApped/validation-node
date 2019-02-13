@@ -11,15 +11,16 @@ import common
 
 
 def init_logging():
-    flask_dev = os.getenv('FLASK_ENV')
-    if flask_dev != 'dev':
+    flask_env = os.getenv('FLASK_ENV')
+    sentry_dns = os.getenv('SENTRY_DSN')
+    if flask_env != 'dev' and sentry_dns is not None:
         sentry_logging = LoggingIntegration(
             level=logging.INFO,  # Capture info and above as breadcrumbs
-            event_level=logging.ERROR # Send errors as events
+            event_level=logging.ERROR  # Send errors as events
         )
         sentry_sdk.init(
-            dsn=os.getenv('SENTRY_DSN'),
-            environment=os.getenv('FLASK_ENV'),
+            dsn=sentry_dns,
+            environment=flask_env,
             integrations=[sentry_logging, FlaskIntegration()])
 
         with configure_scope() as scope:

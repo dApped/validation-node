@@ -1,37 +1,26 @@
-### FLASK
-FLASK_ENV=dev
+FLASK_ENV=dev # dev or production
 
-DB_REDIS_IP=redis
+DB_REDIS_IP=redis # redis database ip
 
 NODE_IP=localhost
 HTTP_PORT=80
 WEBSOCKET_PORT=8765
 USE_HTTPS=false
 
-### ETHEREUM
-NODE_ADDRESS=
-NODE_PRIVATE_KEY=
+NODE_ADDRESS= # node ethereum address
+NODE_PRIVATE_KEY= # node ethereum private key
 
+# node sends vote data to this ip
 EXPLORER_IP=
 EXPLORER_PORT=
 
-### ETHEREUM
-# Local chain
-ETH_RPC_PROVIDER=HTTP://host.docker.internal:8545
+# ethereum node ip address
+ETH_RPC_PROVIDER=
+
+# Smart Contract addresses
 EVENT_REGISTRY_ADDRESS=
 NODE_REGISTRY_ADDRESS=
-# needed for development
+# needed only for dev tools
 USER_ROLES_ADDRESS=
 VERITY_EVENT_ADDRESS=
 VERITY_TOKEN_ADDRESS=
-
-# Ropsten
-# ETH_RPC_PROVIDER=http://ec2-18-194-233-191.eu-central-1.compute.amazonaws.com:8545
-# EVENT_REGISTRY_ADDRESS=
-# NODE_REGISTRY_ADDRESS=
-# needed for development
-# USER_ROLES_ADDRESS=
-# VERITY_EVENT_ADDRESS=
-# VERITY_TOKEN_ADDRESS=
-
-SENTRY_DSN=https://48800a82050043a1b0ffcd673ccad017@sentry.io/1383816
