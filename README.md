@@ -13,7 +13,7 @@ Environment variables get pulled from `.env` file. You can create one from `env`
 ```bash
 cp env .env
 ```
-Make sure you set all the env variables.
+Make sure you set all the environment variables in `.env` file.
 
 ### Local Python Environment
 
@@ -60,4 +60,4 @@ docker-compose up
 ```
 
 Nodes are exposed on localhost ports `81`, `82` and `83`.
-Each has its own ETH address which is assigned from locally available addresses.
+Each node has its own ETH address.
