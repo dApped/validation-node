@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, request
 
 import common
+import contract_registry_filter
+import logging_conf
 import scheduler
 from common import AddressType
 from database import database
@@ -17,23 +19,29 @@ from version import __version__
 # Flask Setup ------------------------------------------------------------------
 def init():
     database.flush_database()
+    contract_registry_address = common.contract_registry_address()
+    contract_registry_filter.init_contract_registry(NODE_WEB3, contract_registry_address)
+
     event_registry_abi = common.event_registry_contract_abi()
     verity_event_abi = common.verity_event_contract_abi()
     node_registry_abi = common.node_registry_contract_abi()
 
-    node_address = common.node_registry_address()
-    event_registry_address = common.event_registry_address()
+    node_registry_address = database.ContractAddress.node_registry()
+    event_registry_address = database.ContractAddress.event_registry()
 
     node_ip_port = common.node_ip_port()
     node_websocket_ip_port = common.node_websocket_ip_port()
 
-    node_registry.register_node_ip(node_registry_abi, node_address, node_ip_port, AddressType.IP)
-    node_registry.register_node_ip(node_registry_abi, node_address, node_websocket_ip_port,
+    node_registry.register_node_ip(node_registry_abi, node_registry_address, node_ip_port,
+                                   AddressType.IP)
+    node_registry.register_node_ip(node_registry_abi, node_registry_address, node_websocket_ip_port,
                                    AddressType.WEBSOCKET)
-    event_registry_filter.init_event_registry_filter(NODE_WEB3, event_registry_abi,
-                                                     verity_event_abi, event_registry_address)
     scheduler.init()
     websocket.init()
+
+    event_registry_filter.init_event_registry_filter(scheduler.scheduler, NODE_WEB3,
+                                                     event_registry_abi, verity_event_abi,
+                                                     event_registry_address)
 
 
 def create_app():
@@ -43,6 +51,7 @@ def create_app():
     os.environ['CONTRACT_DIR'] = os.path.join(project_root, 'contracts')
 
     app = Flask(__name__)
+    logging_conf.init_logging()
     init()
     return app
 
@@ -58,10 +67,10 @@ def limit_remote_addr():
 
     if 'HTTP_X_FORWARDED_FOR' in request.environ and request.environ[
             'HTTP_X_FORWARDED_FOR'] in blacklist:
-        logger.debug('Vietnamese bot detected!')
+        logger.warning('Vietnamese bot detected!')
         abort(403)
     if request.environ['REMOTE_ADDR'] in blacklist:
-        logger.debug('Vietnamese bot detected!')
+        logger.warning('Vietnamese bot detected!')
         abort(403)
 
 
@@ -75,16 +84,18 @@ def apply_headers(response):
 
 
 # Routes -----------------------------------------------------------------------
-@application.route('/health_check', methods=['GET'])
+@application.route('/health', methods=['GET'])
 def health_check():
     response = {
         'version': __version__,
         'NODE_ADDRESS': os.getenv('NODE_ADDRESS'),
         'EVENT_REGISTRY_ADDRESS': os.getenv('EVENT_REGISTRY_ADDRESS'),
         'NODE_REGISTRY_ADDRESS': os.getenv('NODE_REGISTRY_ADDRESS'),
-        'timestamp': int(time.time())
+        'timestamp': int(time.time()),
+        'block_number': NODE_WEB3.eth.blockNumber,
+        'event_registry_last_run_timestamp': database.EventRegistry.last_run_timestamp(),
     }
-    logger.debug('Health check %s', response)
+    logger.debug('Health %s', response)
     return jsonify(response), 200
 
 

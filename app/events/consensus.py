@@ -1,5 +1,9 @@
 import logging
+import time
 
+import requests
+
+import common
 import scheduler
 from database import database
 from ethereum import rewards
@@ -33,7 +37,7 @@ def should_calculate_consensus(event):
 
 def check_consensus(event, event_metadata):
     event_id = event.event_id
-    votes_by_users = event.votes()
+    votes_by_users = event.votes_consensus()
 
     if not should_calculate_consensus(event):
         return
@@ -48,21 +52,42 @@ def check_consensus(event, event_metadata):
     event_metadata.is_consensus_reached = True
     event_metadata.update()
 
+    remove_consensus_not_reached_job(event_id)
+
+    n_seconds_wait = 5
+    logger.info('[%s] Waiting %d seconds for websockets to exchange votes', event_id,
+                n_seconds_wait)
+    time.sleep(n_seconds_wait)
+    schedule_event_data_to_blockchain_job(event, consensus_votes_by_users)
+
+
+def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
+    event_id = event.event_id
+
     # developer might initialize event and set rewards later. We fetch them just in time
     ether_balance, token_balance = event.instance(NODE_WEB3, event_id).functions.getBalance().call()
-    rewards.determine_rewards(event, consensus_votes_by_users, ether_balance, token_balance)
-    if event.is_master_node:
-        scheduler.scheduler.add_job(rewards.set_consensus_rewards, args=[NODE_WEB3, event_id])
+    logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
+
+    if not consensus_votes_by_users:
+        user_ids_rewards, rewards_dict = rewards.calculate_non_consensus_rewards(event)
     else:
-        logger.info('[%s] Not a master node. Waiting for rewards to be set.', event_id)
+        user_ids_rewards, rewards_dict = rewards.calculate_consensus_rewards(
+            event, consensus_votes_by_users, ether_balance, token_balance)
+    database.Rewards.create(event_id, user_ids_rewards, rewards_dict)
+    send_data_to_explorer(event_id)
+    if event.is_master_node:
+        scheduler.scheduler.add_job(rewards.event_data_to_blockchain, args=[NODE_WEB3, event_id])
+    else:
+        logger.info('[%s] Not a master node. Waiting for event data to be set.', event_id)
 
 
 def calculate_consensus(event, votes_by_users):
+    event_id = event.event_id
     vote_count = len(votes_by_users)
     if vote_count < event.min_total_votes:
         logger.info(
             '[%s] Not enough valid votes to calculate consensus: %d vote_count < %d event.min_total_votes',
-            event.event_id, vote_count, event.min_total_votes)
+            event_id, vote_count, event.min_total_votes)
         return dict()
 
     votes_by_repr = database.Vote.group_votes_by_representation(votes_by_users)
@@ -78,13 +103,75 @@ def calculate_consensus(event, votes_by_users):
     if consensus_votes_count < event.min_consensus_votes:
         logger.info(
             '[%s] Not enough consensus votes: %d consensus_votes_count < %d event.min_consensus_votes',
-            event.event_id, consensus_votes_count, event.min_consensus_votes)
+            event_id, consensus_votes_count, event.min_consensus_votes)
         return dict()
     if consensus_ratio * 100 < event.min_consensus_ratio:
         logger.info(
             '[%s] Not enough consensus votes: %d consensus_ratio < %d event.min_consensus_ratio',
-            event.event_id, consensus_ratio * 100 < event.min_consensus_ratio)
+            event_id, consensus_ratio * 100, event.min_consensus_ratio)
         return dict()
     consensus_vote = votes_by_users[next(iter(consensus_user_ids))][0]
     consensus_vote.set_consensus_vote()
     return consensus_votes_by_users
+
+
+def remove_consensus_not_reached_job(event_id):
+    logger.info('[%s] Removing consensus_not_reached_job', event_id)
+    consensus_not_reached_job_id = database.VerityEvent.consensus_not_reached_job_id(event_id)
+    scheduler.remove_job(consensus_not_reached_job_id)
+
+
+def process_consensus_not_reached(event_id):
+    logger.info('[%s] Running process_consensus_not_reached_job', event_id)
+    event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event does not exists', event_id)
+        return
+    metadata = event.metadata()
+    if metadata.is_consensus_reached:
+        logger.info('[%s] Consensus already reached', event_id)
+        return
+    schedule_event_data_to_blockchain_job(event, {})
+
+
+def send_data_to_explorer(event_id, max_retries=2):
+    logger.info('[%s] Sending event data to explorer', event_id)
+    event = database.VerityEvent.get(event_id)
+    payload = compose_event_payload(event)
+    target = "%s/event_data" % common.explorer_ip_port()
+
+    for retry in range(1, max_retries + 1):
+        try:
+            response = requests.post(target, json=payload)
+            if response.status_code == 200:
+                logger.info('[%s] Event data successfully sent to explorer', event_id)
+                return
+            logger.info('Cannot send data to explorer. Status %d, %d/%d retry',
+                        response.status_code, retry, max_retries)
+        except requests.exceptions.ConnectionError as e:
+            logger.info('[%s] Cannot reach explorer %d/%d retry: %s', event_id, retry, max_retries,
+                        e)
+        except Exception:
+            logger.exception('Cannot send data to explorer')
+        time.sleep(60)
+
+
+def compose_event_payload(event):
+    event_id = event.event_id
+    correct_vote_user_ids = list(
+        event.votes(min_votes=1, filter_by_vote=database.Vote.get_consensus_vote(event_id)).keys())
+    payload = {'data': {}}
+    payload['data']['event_id'] = event_id
+    payload['data']['node_id'] = common.node_id()
+    payload['data']['voting_round'] = event.dispute_round
+    payload['data']['votes_by_users'] = event.votes_for_explorer()
+    payload['data']['rewards_dict'] = database.Rewards.get(event_id)
+    payload['data']['vote_position_user_ids'] = database.Rewards.get_rewards_user_ids(event_id)
+    # can differ from rewards_dict because there can be a single correct vote for a
+    # user and consensus required two votes
+    payload['data']['correct_vote_user_ids'] = correct_vote_user_ids
+    payload['data']['incorrect_vote_user_ids'] = list(
+        database.Vote.user_ids_with_incorrect_vote(event_id, correct_vote_user_ids))
+    payload['data']['without_vote_user_ids'] = list(event.user_ids_without_vote())
+    payload['signature'] = common.sign_data(payload)
+    return payload

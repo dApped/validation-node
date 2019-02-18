@@ -16,7 +16,7 @@ EXPOSE 5000
 EXPOSE 8765
 
 WORKDIR app
-ENTRYPOINT ["gunicorn", "-b", ":5000", "-t", "1000", "-k", "gevent", "--log-config", "logging.conf", "application"]
+ENTRYPOINT ["gunicorn", "-b", ":5000", "-t", "1000", "-k", "gevent", "--access-logfile='-'", "application"]
 
 # TODO related to [1], when it will work copy from predefined place
 #COPY --from=builder /install /usr/local
