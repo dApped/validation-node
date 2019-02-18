@@ -24,12 +24,12 @@ ETH_RPC_PROVIDER=
 EVENT_REGISTRY_ADDRESS=
 NODE_REGISTRY_ADDRESS=
 
-# for development
+# smart contract addresses for development tools
 USER_ROLES_ADDRESS=
 VERITY_EVENT_ADDRESS=
 VERITY_TOKEN_ADDRESS=
 
-# local nodes cluster
+# nodes cluster for development
 NODE_ADDRESS_1=
 NODE_PRIVATE_KEY_1=
 NODE_ADDRESS_2=
