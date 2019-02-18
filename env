@@ -1,14 +1,17 @@
-FLASK_ENV=dev # dev or production
+# dev or production
+FLASK_ENV=dev 
 
-DB_REDIS_IP=redis # redis database ip
+# redis database ip
+DB_REDIS_IP=redis 
 
 NODE_IP=localhost
 HTTP_PORT=80
 WEBSOCKET_PORT=8765
 USE_HTTPS=false
 
-NODE_ADDRESS= # node ethereum address
-NODE_PRIVATE_KEY= # node ethereum private key
+# node ethereum address and private key
+NODE_ADDRESS=
+NODE_PRIVATE_KEY= 
 
 # node sends vote data to this ip
 EXPLORER_IP=
@@ -17,10 +20,19 @@ EXPLORER_PORT=
 # ethereum node ip address
 ETH_RPC_PROVIDER=
 
-# Smart Contract addresses
+# smart contract addresses
 EVENT_REGISTRY_ADDRESS=
 NODE_REGISTRY_ADDRESS=
-# needed only for dev tools
+
+# for development
 USER_ROLES_ADDRESS=
 VERITY_EVENT_ADDRESS=
 VERITY_TOKEN_ADDRESS=
+
+# local nodes cluster
+NODE_ADDRESS_1=
+NODE_PRIVATE_KEY_1=
+NODE_ADDRESS_2=
+NODE_PRIVATE_KEY_2=
+NODE_ADDRESS_3=
+NODE_PRIVATE_KEY_3=
