@@ -76,6 +76,12 @@ def schedule_consensus_not_reached_job(scheduler, event_id, event_end_time):
 
 
 def schedule_post_application_end_time_job(scheduler, w3, event_id, application_end_time):
+    application_end_datetime = datetime.fromtimestamp(application_end_time, timezone.utc)
+    job_datetime = application_end_datetime + timedelta(minutes=1)
+    if datetime.now(timezone.utc) > job_datetime:
+        logger.info('[%s] Skipping post_application_end_time_job', event_id)
+        return
+
     logger.info('[%s] Scheduling post_application_end_time_job', event_id)
     application_end_datetime = datetime.fromtimestamp(application_end_time, timezone.utc)
     job_datetime = application_end_datetime + timedelta(minutes=1)
@@ -110,8 +116,7 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
         contract_instance)
     event_metadata.update()
     verity_event_filters.init_event_filters(w3, contract_abi, event.event_id)
-    if int(time.time()) <= event.application_end_time:
-        schedule_post_application_end_time_job(scheduler, w3, event_id, event.application_end_time)
+    schedule_post_application_end_time_job(scheduler, w3, event_id, event.application_end_time)
     schedule_consensus_not_reached_job(scheduler, event_id, event.event_end_time)
     logger.info('[%s] Event initialized', event_id)
 
