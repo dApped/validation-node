@@ -65,10 +65,10 @@ def process_validation_restart(scheduler, w3, event_id, entries):
     event = database.VerityEvent.get(event_id)
 
     validation_round = entry['args']['validationRound']
+    new_master = entry['args']['newMaster']
     logger.info('[%s] Validation round %d restart', event_id, validation_round)
-    # validation round starts from 1, instead of 0
-    is_master_node = w3.eth.defaultAccount == event.node_addresses[validation_round - 1]
 
+    is_master_node = w3.eth.defaultAccount == new_master
     event.rewards_validation_round = validation_round
     event.is_master_node = is_master_node
     event.update()
