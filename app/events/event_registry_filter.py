@@ -78,7 +78,7 @@ def schedule_consensus_not_reached_job(scheduler, event_id, event_end_time):
 def schedule_post_application_end_time_job(scheduler, w3, event_id, application_end_time):
     logger.info('[%s] Scheduling post_application_end_time_job', event_id)
     application_end_datetime = datetime.fromtimestamp(application_end_time, timezone.utc)
-    job_datetime = application_end_datetime + timedelta(seconds=10)
+    job_datetime = application_end_datetime + timedelta(minutes=1)
     scheduler.add_job(
         verity_event_filters.post_application_end_time_job,
         'date',
