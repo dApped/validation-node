@@ -242,3 +242,29 @@ def filter_events(scheduler, w3, formatters):
     for event_id in event_ids_to_remove:
         logger.info('[%s] Removing event because of unexpected exception in filters', event_id)
         VerityEvent.delete_all_event_data(w3, event_id)
+
+
+def post_application_end_time_job(w3, event_id):
+    """ Triggers state change on the event contract and reinializes join event filter """
+
+    logger.info('[%s] Running post_application_end_time_job', event_id)
+    event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event not found', event_id)
+        return
+
+    logger.info('[%s] Triggering contract state change', event_id)
+    event_instance = event.instance(w3, event_id)
+    trigger_state_change_fun = event_instance.functions.triggerStateChange()
+    common.function_transact(w3, trigger_state_change_fun)
+
+    logger.info('[%s] Requesting all entries for JoinEvent filter', event_id)
+    filter_list = database.Filters.get_list(event_id)
+    for filter_dict in filter_list:
+        filter_id, filter_name = filter_dict['filter_id'], filter_dict['filter_name']
+        if filter_name != JOIN_EVENT_FILTER:
+            continue
+        filter_func = EVENT_FILTERS[filter_name]
+        recover_filter(w3, event_id, filter_name, filter_func, filter_id)
+        break
+    logger.info('[%s] Finished post_application_end_time_job', event_id)
