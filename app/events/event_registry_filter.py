@@ -75,6 +75,18 @@ def schedule_consensus_not_reached_job(scheduler, event_id, event_end_time):
     logger.info('[%s] Scheduled process_consensus_not_reached_job at %s', event_id, job_datetime)
 
 
+def schedule_post_application_end_time_job(scheduler, w3, event_id, application_end_time):
+    logger.info('[%s] Scheduling post_application_end_time_job', event_id)
+    application_end_datetime = datetime.fromtimestamp(application_end_time, timezone.utc)
+    job_datetime = application_end_datetime + timedelta(seconds=10)
+    scheduler.add_job(
+        verity_event_filters.post_application_end_time_job,
+        'date',
+        run_date=job_datetime,
+        args=[w3, event_id])
+    logger.info('[%s] Scheduled post_application_end_time_job at %s', event_id, job_datetime)
+
+
 def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
     node_id = common.node_id()
     if not is_node_registered_on_event(w3, contract_abi, node_id, event_id):
@@ -85,7 +97,6 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
         return
 
     logger.info('[%s] Initializing event', event_id)
-
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     event = call_event_contract_for_metadata(contract_instance, event_id)
     if not event:
@@ -99,6 +110,8 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
         contract_instance)
     event_metadata.update()
     verity_event_filters.init_event_filters(w3, contract_abi, event.event_id)
+    if int(time.time()) <= event.application_end_time:
+        schedule_post_application_end_time_job(scheduler, w3, event_id, event.application_end_time)
     schedule_consensus_not_reached_job(scheduler, event_id, event.event_end_time)
     logger.info('[%s] Event initialized', event_id)
 
