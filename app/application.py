@@ -89,8 +89,9 @@ def health_check():
     response = {
         'version': __version__,
         'NODE_ADDRESS': os.getenv('NODE_ADDRESS'),
-        'EVENT_REGISTRY_ADDRESS': os.getenv('EVENT_REGISTRY_ADDRESS'),
-        'NODE_REGISTRY_ADDRESS': os.getenv('NODE_REGISTRY_ADDRESS'),
+        'CONTRACT_REGISTRY_ADDRESS': os.getenv('CONTRACT_REGISTRY_ADDRESS'),
+        'EVENT_REGISTRY_ADDRESS': database.ContractAddress.event_registry(),
+        'NODE_REGISTRY_ADDRESS': database.ContractAddress.node_registry(),
         'timestamp': int(time.time()),
         'block_number': NODE_WEB3.eth.blockNumber,
         'event_registry_last_run_timestamp': database.EventRegistry.last_run_timestamp(),
