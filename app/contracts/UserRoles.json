@@ -315,7 +315,7 @@
         "id": 942,
         "nodeType": "ImportDirective",
         "scope": 1283,
-        "sourceUnit": 2265,
+        "sourceUnit": 2268,
         "src": "26:34:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -326,7 +326,7 @@
         "id": 943,
         "nodeType": "ImportDirective",
         "scope": 1283,
-        "sourceUnit": 2410,
+        "sourceUnit": 2413,
         "src": "61:43:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -340,10 +340,10 @@
               "id": 944,
               "name": "StoringCreationMeta",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 2409,
+              "referencedDeclaration": 2412,
               "src": "129:19:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_StoringCreationMeta_$2409",
+                "typeIdentifier": "t_contract$_StoringCreationMeta_$2412",
                 "typeString": "contract StoringCreationMeta"
               }
             },
@@ -358,10 +358,10 @@
               "id": 946,
               "name": "Approvable",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 2264,
+              "referencedDeclaration": 2267,
               "src": "150:10:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Approvable_$2264",
+                "typeIdentifier": "t_contract$_Approvable_$2267",
                 "typeString": "contract Approvable"
               }
             },
@@ -371,9 +371,9 @@
           }
         ],
         "contractDependencies": [
-          2264,
-          2354,
-          2409
+          2267,
+          2357,
+          2412
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -381,9 +381,9 @@
         "id": 1282,
         "linearizedBaseContracts": [
           1282,
-          2264,
-          2354,
-          2409
+          2267,
+          2357,
+          2412
         ],
         "name": "UserRoles",
         "nodeType": "ContractDefinition",
@@ -647,7 +647,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "399:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1040,7 +1040,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "530:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1669,7 +1669,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "1010:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -2062,7 +2062,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "1147:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -4376,7 +4376,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "2341:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -4469,7 +4469,7 @@
         "id": 942,
         "nodeType": "ImportDirective",
         "scope": 1283,
-        "sourceUnit": 2265,
+        "sourceUnit": 2268,
         "src": "26:34:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -4480,7 +4480,7 @@
         "id": 943,
         "nodeType": "ImportDirective",
         "scope": 1283,
-        "sourceUnit": 2410,
+        "sourceUnit": 2413,
         "src": "61:43:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -4494,10 +4494,10 @@
               "id": 944,
               "name": "StoringCreationMeta",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 2409,
+              "referencedDeclaration": 2412,
               "src": "129:19:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_StoringCreationMeta_$2409",
+                "typeIdentifier": "t_contract$_StoringCreationMeta_$2412",
                 "typeString": "contract StoringCreationMeta"
               }
             },
@@ -4512,10 +4512,10 @@
               "id": 946,
               "name": "Approvable",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 2264,
+              "referencedDeclaration": 2267,
               "src": "150:10:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Approvable_$2264",
+                "typeIdentifier": "t_contract$_Approvable_$2267",
                 "typeString": "contract Approvable"
               }
             },
@@ -4525,9 +4525,9 @@
           }
         ],
         "contractDependencies": [
-          2264,
-          2354,
-          2409
+          2267,
+          2357,
+          2412
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -4535,9 +4535,9 @@
         "id": 1282,
         "linearizedBaseContracts": [
           1282,
-          2264,
-          2354,
-          2409
+          2267,
+          2357,
+          2412
         ],
         "name": "UserRoles",
         "nodeType": "ContractDefinition",
@@ -4801,7 +4801,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "399:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -5194,7 +5194,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "530:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -5823,7 +5823,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "1010:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -6216,7 +6216,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "1147:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -8530,7 +8530,7 @@
                   "name": "onlyApproved",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 2221,
+                  "referencedDeclaration": 2224,
                   "src": "2341:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -8602,7 +8602,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.1",
-  "updatedAt": "2019-02-11T09:01:38.924Z",
+  "updatedAt": "2019-02-20T13:43:23.300Z",
   "devdoc": {
     "methods": {
       "isOwner()": {
