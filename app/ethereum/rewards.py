@@ -291,7 +291,8 @@ def validate_event_data_on_blockchain(w3, event_id, validation_round):
     consensus_match = event_consensus_answer == consensus_answer
 
     logger.info('[%s] Rewards DO%s match', event_id, '' if rewards_match else ' NOT')
-    logger.info('[%s] Consensus answers DO%s match', event_id, '' if consensus_match else ' NOT')
+    logger.info('[%s] Consensus answers DO%s match. Contract: %s, node: %s', event_id,
+                '' if consensus_match else ' NOT', event_consensus_answer, consensus_answer)
 
     if rewards_match and consensus_match:
         logger.info('[%s] Approving rewards for round %d', event_id, validation_round)

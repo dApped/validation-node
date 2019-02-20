@@ -436,7 +436,7 @@ class Vote(BaseEvent):
     def answers_from_vote(cls, vote):
         if vote is None:
             return []
-        return [answer[cls.ANSWERS_VALUE_KEY] for answer in vote.ordered_answers()]
+        return [str(answer[cls.ANSWERS_VALUE_KEY]) for answer in vote.ordered_answers()]
 
     @classmethod
     def delete_all(cls, pipeline, event_id, node_ids):
