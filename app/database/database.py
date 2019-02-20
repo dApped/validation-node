@@ -138,12 +138,12 @@ class VerityEvent(BaseEvent):
                 in_consensus = True
             for i in range(len(votes_by_users_all[user_id])):
                 votes_by_users_all[user_id][i].in_consensus = in_consensus
-        return self.votes_to_json(votes_by_users_all)
+        return self.votes_to_dicts(votes_by_users_all)
 
     @staticmethod
-    def votes_to_json(votes_by_users):
+    def votes_to_dicts(votes_by_users):
         return {
-            user_id: [vote.to_json() for vote in votes]
+            user_id: [vote.__dict__ for vote in votes]
             for user_id, votes in votes_by_users.items()
         }
 
