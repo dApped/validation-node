@@ -279,7 +279,7 @@ class Filters(BaseEvent):
             try:
                 w3.eth.uninstallFilter(filter_id)
             except Exception as e:
-                logger.info(e)
+                logger.info('Uninstalling filter: %s', e)
 
 
 class Rewards(BaseEvent):
@@ -526,6 +526,7 @@ class Vote(BaseEvent):
 
 class ContractAddress:
     """ Stores latest addresses of smart contracts """
+
     @staticmethod
     def key_event_registry():
         return 'event_registry_address'
