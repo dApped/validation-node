@@ -2,6 +2,7 @@ import functools
 import logging
 import time
 
+from eth_abi.exceptions import NonEmptyPaddingBytes
 from web3.utils.contracts import find_matching_event_abi
 from web3.utils.events import get_event_data
 
@@ -229,6 +230,10 @@ def filter_events(scheduler, w3, formatters):
                 entries = filter_.get_new_entries()
             except ValueError:
                 logger.info('[%s] Event %s filter not found', event_id, filter_name)
+                recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
+                continue
+            except NonEmptyPaddingBytes as e:
+                logger.info('Web3 internal filter error: %s', e)
                 recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
                 continue
             except Exception:
