@@ -64,6 +64,10 @@ def check_consensus(event, event_metadata):
 def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
     event_id = event.event_id
 
+    event_metadata = event.metadata()
+    event_metadata.processing_end_time = int(time.time())
+    event_metadata.update()
+
     # developer might initialize event and set rewards later. We fetch them just in time
     ether_balance, token_balance = event.instance(NODE_WEB3, event_id).functions.getBalance().call()
     logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
@@ -127,8 +131,8 @@ def process_consensus_not_reached(event_id):
     if event is None:
         logger.info('[%s] Event does not exists', event_id)
         return
-    metadata = event.metadata()
-    if metadata.is_consensus_reached:
+    event_metadata = event.metadata()
+    if event_metadata.is_consensus_reached:
         logger.info('[%s] Consensus already reached', event_id)
         return
     schedule_event_data_to_blockchain_job(event, {})
@@ -158,11 +162,13 @@ def send_data_to_explorer(event_id, max_retries=2):
 
 def compose_event_payload(event):
     event_id = event.event_id
+    event_metadata = event.metadata()
     correct_vote_user_ids = list(
         event.votes(min_votes=1, filter_by_vote=database.Vote.get_consensus_vote(event_id)).keys())
     payload = {'data': {}}
     payload['data']['event_id'] = event_id
     payload['data']['node_id'] = common.node_id()
+    payload['data']['processing_end_time'] = event_metadata.processing_end_time
     payload['data']['voting_round'] = event.dispute_round
     payload['data']['votes_by_users'] = event.votes_for_explorer()
     payload['data']['rewards_dict'] = database.Rewards.get(event_id)
