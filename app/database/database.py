@@ -199,13 +199,14 @@ class VerityEventMetadata(BaseEvent):
     PREFIX = 'metadata'
 
     def __init__(self, event_id, is_consensus_reached, node_ips, node_websocket_ips,
-                 contract_block_number, previous_consensus_answers):
+                 contract_block_number, previous_consensus_answers, processing_end_time):
         self.event_id = event_id
         self.is_consensus_reached = is_consensus_reached
         self.node_ips = node_ips
         self.node_websocket_ips = node_websocket_ips
         self.contract_block_number = contract_block_number
         self.previous_consensus_answers = previous_consensus_answers
+        self.processing_end_time = processing_end_time
 
     def create(self):
         redis_db.set(self.key(self.event_id), self.to_json())
@@ -220,7 +221,8 @@ class VerityEventMetadata(BaseEvent):
                 node_ips=[],
                 node_websocket_ips=[],
                 contract_block_number=0,
-                previous_consensus_answers=None)
+                previous_consensus_answers=None,
+                processing_end_time=None)
             event_metadata.create()
         return event_metadata
 
