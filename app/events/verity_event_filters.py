@@ -251,17 +251,17 @@ def filter_events(scheduler, w3, formatters):
 
 def post_application_end_time_job(w3, event_id):
     """ Triggers state change on the event contract and reinializes join event filter """
-
     logger.info('[%s] Running post_application_end_time_job', event_id)
     event = database.VerityEvent.get(event_id)
     if event is None:
         logger.info('[%s] Event not found', event_id)
         return
 
-    logger.info('[%s] Triggering contract state change', event_id)
-    event_instance = event.instance(w3, event_id)
-    trigger_state_change_fun = event_instance.functions.triggerStateChange()
-    common.function_transact(w3, trigger_state_change_fun)
+    if event.is_master_node:
+        logger.info('[%s] Master node is triggering contract state change', event_id)
+        event_instance = event.instance(w3, event_id)
+        trigger_state_change_fun = event_instance.functions.triggerStateChange()
+        common.function_transact(w3, trigger_state_change_fun)
 
     logger.info('[%s] Requesting all entries for JoinEvent filter', event_id)
     filter_list = database.Filters.get_list(event_id)
