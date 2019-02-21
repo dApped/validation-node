@@ -26,7 +26,7 @@ NODE_REGISTRY_ADDRESS=
 
 # smart contract addresses for development tools
 USER_ROLES_ADDRESS=
-VERITY_EVENT_ADDRESS=
+IMPLEMENTATION_ADDRESS=
 VERITY_TOKEN_ADDRESS=
 
 # nodes cluster for development
