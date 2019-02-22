@@ -118,19 +118,24 @@ class VerityEvent(BaseEvent):
             filter_by_vote=filter_by_vote)
         return votes_by_users
 
-    def votes_consensus(self):
-        """ Returns votes by users with predefined filters for consensus """
+    def votes_consensus(self, filter_by_vote=None):
+        """ Returns votes by users with predefined filters for potential consensus
+            Use filter_by_vote to get users in consensus """
         return self.votes(
             min_votes=2,
             max_votes=len(self.node_addresses),
-            filter_by_vote=None,
+            filter_by_vote=filter_by_vote,
             check_uniqueness=True)
 
     def votes_for_explorer(self):
         """ Returns votes by users with predefined filters for explorer server """
         votes_by_users_all = self.votes(
             min_votes=1, max_votes=sys.maxsize, filter_by_vote=None, check_uniqueness=False)
-        votes_by_users_consensus = self.votes_consensus()
+
+        consensus_vote = Vote.get_consensus_vote(event_id=self.event_id)
+        votes_by_users_consensus = dict()
+        if consensus_vote is not None:
+            votes_by_users_consensus = self.votes_consensus(filter_by_vote=consensus_vote)
 
         for user_id in votes_by_users_all:
             in_consensus = False
@@ -146,6 +151,13 @@ class VerityEvent(BaseEvent):
             user_id: [vote.__dict__ for vote in votes]
             for user_id, votes in votes_by_users.items()
         }
+
+    def consensus_vote_user_ids(self):
+        user_ids = []
+        consensus_vote = Vote.get_consensus_vote(self.event_id)
+        if consensus_vote is not None:
+            user_ids = list(self.votes(min_votes=1, filter_by_vote=consensus_vote).keys())
+        return user_ids
 
     @staticmethod
     def instance(w3, event_id):

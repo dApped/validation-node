@@ -163,21 +163,27 @@ def send_data_to_explorer(event_id, max_retries=2):
 def compose_event_payload(event):
     event_id = event.event_id
     event_metadata = event.metadata()
-    correct_vote_user_ids = list(
-        event.votes(min_votes=1, filter_by_vote=database.Vote.get_consensus_vote(event_id)).keys())
-    payload = {'data': {}}
-    payload['data']['event_id'] = event_id
-    payload['data']['node_id'] = common.node_id()
-    payload['data']['processing_end_time'] = event_metadata.processing_end_time
-    payload['data']['voting_round'] = event.dispute_round
-    payload['data']['votes_by_users'] = event.votes_for_explorer()
-    payload['data']['rewards_dict'] = database.Rewards.get(event_id)
-    payload['data']['vote_position_user_ids'] = database.Rewards.get_rewards_user_ids(event_id)
-    # can differ from rewards_dict because there can be a single correct vote for a
-    # user and consensus required two votes
-    payload['data']['correct_vote_user_ids'] = correct_vote_user_ids
-    payload['data']['incorrect_vote_user_ids'] = list(
+
+    correct_vote_user_ids = event.consensus_vote_user_ids()
+    incorrect_vote_user_ids = list(
         database.Vote.user_ids_with_incorrect_vote(event_id, correct_vote_user_ids))
-    payload['data']['without_vote_user_ids'] = list(event.user_ids_without_vote())
+    user_ids_without_vote = list(event.user_ids_without_vote())
+
+    payload = {
+        'data': {
+            'event_id': event_id,
+            'node_id': common.node_id(),
+            'processing_end_time': event_metadata.processing_end_time,
+            'voting_round': event.dispute_round,
+            'votes_by_users': event.votes_for_explorer(),
+            'rewards_dict': database.Rewards.get(event_id),
+            'vote_position_user_ids': database.Rewards.get_rewards_user_ids(event_id),
+            # can differ from rewards_dict because there can be a single correct vote for a
+            # user and consensus required two votes
+            'correct_vote_user_ids': correct_vote_user_ids,
+            'incorrect_vote_user_ids': incorrect_vote_user_ids,
+            'without_vote_user_ids': user_ids_without_vote,
+        }
+    }
     payload['signature'] = common.sign_data(payload)
     return payload
