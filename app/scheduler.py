@@ -6,7 +6,6 @@ from pytz import utc
 
 import common
 from database import database
-from ethereum.provider import NODE_WEB3
 from events import event_registry_filter, node_registry, verity_event_filters
 
 scheduler = BackgroundScheduler(timezone=utc)
@@ -44,7 +43,7 @@ def remove_job(job_id):
     return False
 
 
-def init():
+def init(w3):
     logger.info('Scheduler Init started')
     configure_scheduler_logging()
 
@@ -66,7 +65,7 @@ def init():
         verity_event_filters.filter_events,
         'interval',
         seconds=10,
-        args=[scheduler, NODE_WEB3, verity_event_formatters],
+        args=[scheduler, w3, verity_event_formatters],
     )
 
     scheduler.add_job(
@@ -74,7 +73,7 @@ def init():
         'interval',
         seconds=10,
         args=[
-            scheduler, NODE_WEB3, event_registry_address, verity_event_abi,
+            scheduler, w3, event_registry_address, verity_event_abi,
             event_registry_formatters
         ],
         id='event_registry_filter')
@@ -83,7 +82,7 @@ def init():
         node_registry.update_node_ips,
         'interval',
         seconds=60,
-        args=[node_registry_abi, node_registry_address])
+        args=[w3, node_registry_abi, node_registry_address])
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
