@@ -9,7 +9,10 @@ HTTP_PORT=80
 WEBSOCKET_PORT=8765
 USE_HTTPS=false
 
-# node ethereum address and private key
+# read encrypted node address and key from file (RECOMMENDED)
+KEY_FILENAME=validation_node.key
+
+# Or set node address and private key
 NODE_ADDRESS=
 NODE_PRIVATE_KEY= 
 

@@ -6,8 +6,8 @@ import requests
 import common
 import scheduler
 from database import database
-from ethereum import rewards
-from ethereum.provider import NODE_WEB3
+from ethereum import provider, rewards
+from key_store import node_key_store
 
 logger = logging.getLogger()
 
@@ -68,8 +68,9 @@ def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
     event_metadata.processing_end_time = int(time.time())
     event_metadata.update()
 
+    w3 = provider.EthProvider(node_key_store).web3_provider()
     # developer might initialize event and set rewards later. We fetch them just in time
-    ether_balance, token_balance = event.instance(NODE_WEB3, event_id).functions.getBalance().call()
+    ether_balance, token_balance = event.instance(w3, event_id).functions.getBalance().call()
     logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
 
     if not consensus_votes_by_users:
@@ -80,7 +81,7 @@ def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
     database.Rewards.create(event_id, user_ids_rewards, rewards_dict)
     send_data_to_explorer(event_id)
     if event.is_master_node:
-        scheduler.scheduler.add_job(rewards.event_data_to_blockchain, args=[NODE_WEB3, event_id])
+        scheduler.scheduler.add_job(rewards.event_data_to_blockchain, args=[w3, event_id])
     else:
         logger.info('[%s] Not a master node. Waiting for event data to be set.', event_id)
 
