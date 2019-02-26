@@ -10,9 +10,9 @@ WEBSOCKET_PORT=8765
 USE_HTTPS=false
 
 # read encrypted node address and key from file (RECOMMENDED)
-KEY_FILENAME=
+KEY_FILENAME=validation_node.key
 
-# Or set node  address and private key
+# Or set node address and private key
 NODE_ADDRESS=
 NODE_PRIVATE_KEY= 
 
