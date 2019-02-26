@@ -170,21 +170,18 @@ def compose_event_payload(event):
         database.Vote.user_ids_with_incorrect_vote(event_id, correct_vote_user_ids))
     user_ids_without_vote = list(event.user_ids_without_vote())
 
-    payload = {
-        'data': {
-            'event_id': event_id,
-            'node_id': common.node_id(),
-            'processing_end_time': event_metadata.processing_end_time,
-            'voting_round': event.dispute_round,
-            'votes_by_users': event.votes_for_explorer(),
-            'rewards_dict': database.Rewards.get(event_id),
-            'vote_position_user_ids': database.Rewards.get_rewards_user_ids(event_id),
-            # can differ from rewards_dict because there can be a single correct vote for a
-            # user and consensus required two votes
-            'correct_vote_user_ids': correct_vote_user_ids,
-            'incorrect_vote_user_ids': incorrect_vote_user_ids,
-            'without_vote_user_ids': user_ids_without_vote,
-        }
+    data = {
+        'event_id': event_id,
+        'node_id': common.node_id(),
+        'processing_end_time': event_metadata.processing_end_time,
+        'voting_round': event.dispute_round,
+        'votes_by_users': event.votes_for_explorer(),
+        'rewards_dict': database.Rewards.get(event_id),
+        'vote_position_user_ids': database.Rewards.get_rewards_user_ids(event_id),
+        # can differ from rewards_dict because there can be a single correct vote for a
+        # user and consensus required two votes
+        'correct_vote_user_ids': correct_vote_user_ids,
+        'incorrect_vote_user_ids': incorrect_vote_user_ids,
+        'without_vote_user_ids': user_ids_without_vote,
     }
-    payload['signature'] = common.sign_data(payload)
-    return payload
+    return {'data': data, 'signature': common.sign_data(data)}
