@@ -4,8 +4,6 @@ import os
 import web3
 from eth_account.account import Account
 
-KEY_PATH = 'validation_node.key'
-
 
 class NodeKeyStore:
     def __init__(self, address, private_key):
@@ -21,9 +19,9 @@ class NodeKeyStore:
         return {'address': self.address, 'pvt_key': self.private_key}
 
     @staticmethod
-    def _read_key_file():
+    def _read_key_file(key_filename):
         encrypted_key = None
-        with open(KEY_PATH) as keyfile:
+        with open(key_filename) as keyfile:
             encrypted_key = keyfile.read()
         return encrypted_key
 
@@ -31,8 +29,9 @@ class NodeKeyStore:
     def _node_address_and_key(cls):
         node_address = os.getenv('NODE_ADDRESS')
         private_key = os.getenv('NODE_PRIVATE_KEY')
-        if not node_address or not private_key:
-            encrypted_key = cls._read_key_file()
+        key_filename = os.getenv('KEY_FILENAME')
+        if key_filename is not None:
+            encrypted_key = cls._read_key_file(key_filename)
             password = getpass.getpass('Input password to decrypt the node key: ')
             private_key = web3.eth.Account.decrypt(encrypted_key, password)
             node_address = Account.privateKeyToAccount(private_key).address
