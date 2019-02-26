@@ -60,8 +60,11 @@ class Common:
             pong_waiter = await websocket.ping()
             await asyncio.wait_for(pong_waiter, timeout=timeout)
         except asyncio.TimeoutError:
-            logger.warning('No response to ping in %d seconds. Websocket connection closed %s:%s',
-                           timeout, websocket.host, websocket.port)
+            logger.info('No response to ping in %d seconds. Websocket connection closed %s:%s',
+                        timeout, websocket.host, websocket.port)
+            return False
+        except:
+            logger.exception('Websocket connection closed')
             return False
         return True
 

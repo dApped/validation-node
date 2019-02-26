@@ -2,18 +2,17 @@ import logging
 
 import common
 from database import database
-from ethereum.provider import NODE_WEB3
 
 logger = logging.getLogger()
 
 
-def register_node_ip(node_registry_abi, node_registry_address, node_ip, address_type):
+def register_node_ip(w3, node_registry_abi, node_registry_address, node_ip, address_type):
     node_addresses = [common.node_id()]
-    node_ips = get_node_ips(node_registry_abi, node_registry_address, node_addresses, address_type)
+    node_ips = get_node_ips(w3, node_registry_abi, node_registry_address, node_addresses,
+                            address_type)
 
     if not node_ips or node_ip != node_ips[0]:
-        contract_instance = NODE_WEB3.eth.contract(
-            address=node_registry_address, abi=node_registry_abi)
+        contract_instance = w3.eth.contract(address=node_registry_address, abi=node_registry_abi)
         if common.AddressType.IP == address_type:
             logger.info('Registering node IP: %s', node_ip)
             register_node_ip_fun = contract_instance.functions.registerNodeIp(node_ip)
@@ -22,15 +21,15 @@ def register_node_ip(node_registry_abi, node_registry_address, node_ip, address_
             register_node_ip_fun = contract_instance.functions.registerNodeWs(node_ip)
         else:
             raise Exception('Unsupported address type ' + str(address_type))
-        trx_hash = common.function_transact(NODE_WEB3, register_node_ip_fun)
+        trx_hash = common.function_transact(w3, register_node_ip_fun)
         if trx_hash is None:
             raise Exception(
                 'Make sure you have registered your validation node address in Node Registry')
     logger.info('Node %s: %s', str(address_type), node_ip)
 
 
-def get_node_ips(node_registry_abi, node_registry_address, node_ids, address_type):
-    contract_instance = NODE_WEB3.eth.contract(address=node_registry_address, abi=node_registry_abi)
+def get_node_ips(w3, node_registry_abi, node_registry_address, node_ids, address_type):
+    contract_instance = w3.eth.contract(address=node_registry_address, abi=node_registry_abi)
     node_ips = []
     for node_id in node_ids:
         if common.AddressType.IP == address_type:
@@ -45,7 +44,7 @@ def get_node_ips(node_registry_abi, node_registry_address, node_ids, address_typ
     return node_ips
 
 
-def update_node_ips(node_registry_abi, node_registry_address):
+def update_node_ips(w3, node_registry_abi, node_registry_address):
     event_ids = database.VerityEvent.get_ids_list()
     for event_id in event_ids:
         event = database.VerityEvent.get(event_id)
@@ -56,8 +55,8 @@ def update_node_ips(node_registry_abi, node_registry_address):
         was_updated = False
         metadata = event.metadata()
         for address_type in [common.AddressType.IP, common.AddressType.WEBSOCKET]:
-            node_ips = get_node_ips(node_registry_abi, node_registry_address, event.node_addresses,
-                                    address_type)
+            node_ips = get_node_ips(w3, node_registry_abi, node_registry_address,
+                                    event.node_addresses, address_type)
             if common.AddressType.IP == address_type:
                 if set(node_ips) == set(metadata.node_ips):
                     continue

@@ -118,19 +118,24 @@ class VerityEvent(BaseEvent):
             filter_by_vote=filter_by_vote)
         return votes_by_users
 
-    def votes_consensus(self):
-        """ Returns votes by users with predefined filters for consensus """
+    def votes_consensus(self, filter_by_vote=None):
+        """ Returns votes by users with predefined filters for potential consensus
+            Use filter_by_vote to get users in consensus """
         return self.votes(
             min_votes=2,
             max_votes=len(self.node_addresses),
-            filter_by_vote=None,
+            filter_by_vote=filter_by_vote,
             check_uniqueness=True)
 
     def votes_for_explorer(self):
         """ Returns votes by users with predefined filters for explorer server """
         votes_by_users_all = self.votes(
             min_votes=1, max_votes=sys.maxsize, filter_by_vote=None, check_uniqueness=False)
-        votes_by_users_consensus = self.votes_consensus()
+
+        consensus_vote = Vote.get_consensus_vote(event_id=self.event_id)
+        votes_by_users_consensus = dict()
+        if consensus_vote is not None:
+            votes_by_users_consensus = self.votes_consensus(filter_by_vote=consensus_vote)
 
         for user_id in votes_by_users_all:
             in_consensus = False
@@ -138,14 +143,21 @@ class VerityEvent(BaseEvent):
                 in_consensus = True
             for i in range(len(votes_by_users_all[user_id])):
                 votes_by_users_all[user_id][i].in_consensus = in_consensus
-        return self.votes_to_json(votes_by_users_all)
+        return self.votes_to_dicts(votes_by_users_all)
 
     @staticmethod
-    def votes_to_json(votes_by_users):
+    def votes_to_dicts(votes_by_users):
         return {
-            user_id: [vote.to_json() for vote in votes]
+            user_id: [vote.__dict__ for vote in votes]
             for user_id, votes in votes_by_users.items()
         }
+
+    def consensus_vote_user_ids(self):
+        user_ids = []
+        consensus_vote = Vote.get_consensus_vote(self.event_id)
+        if consensus_vote is not None:
+            user_ids = list(self.votes(min_votes=1, filter_by_vote=consensus_vote).keys())
+        return user_ids
 
     @staticmethod
     def instance(w3, event_id):
@@ -199,13 +211,14 @@ class VerityEventMetadata(BaseEvent):
     PREFIX = 'metadata'
 
     def __init__(self, event_id, is_consensus_reached, node_ips, node_websocket_ips,
-                 contract_block_number, previous_consensus_answers):
+                 contract_block_number, previous_consensus_answers, processing_end_time):
         self.event_id = event_id
         self.is_consensus_reached = is_consensus_reached
         self.node_ips = node_ips
         self.node_websocket_ips = node_websocket_ips
         self.contract_block_number = contract_block_number
         self.previous_consensus_answers = previous_consensus_answers
+        self.processing_end_time = processing_end_time
 
     def create(self):
         redis_db.set(self.key(self.event_id), self.to_json())
@@ -220,7 +233,8 @@ class VerityEventMetadata(BaseEvent):
                 node_ips=[],
                 node_websocket_ips=[],
                 contract_block_number=0,
-                previous_consensus_answers=None)
+                previous_consensus_answers=None,
+                processing_end_time=None)
             event_metadata.create()
         return event_metadata
 
@@ -279,7 +293,7 @@ class Filters(BaseEvent):
             try:
                 w3.eth.uninstallFilter(filter_id)
             except Exception as e:
-                logger.info(e)
+                logger.info('Uninstalling filter: %s', e)
 
 
 class Rewards(BaseEvent):
@@ -436,7 +450,7 @@ class Vote(BaseEvent):
     def answers_from_vote(cls, vote):
         if vote is None:
             return []
-        return [answer[cls.ANSWERS_VALUE_KEY] for answer in vote.ordered_answers()]
+        return [str(answer[cls.ANSWERS_VALUE_KEY]) for answer in vote.ordered_answers()]
 
     @classmethod
     def delete_all(cls, pipeline, event_id, node_ids):
@@ -526,6 +540,7 @@ class Vote(BaseEvent):
 
 class ContractAddress:
     """ Stores latest addresses of smart contracts """
+
     @staticmethod
     def key_event_registry():
         return 'event_registry_address'

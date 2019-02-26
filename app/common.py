@@ -10,7 +10,7 @@ from web3.auto import w3 as w3_auto
 from web3.gas_strategies.time_based import medium_gas_price_strategy
 
 from database import database
-from ethereum.provider import EthProvider
+from key_store import node_key_store
 
 logger = logging.getLogger()
 
@@ -49,7 +49,7 @@ def contract_registry_address():
 
 
 def node_id():
-    return Web3.toChecksumAddress(os.getenv('NODE_ADDRESS'))
+    return node_key_store.address
 
 
 def node_ip():
@@ -92,7 +92,7 @@ def explorer_ip_port():
 
 
 def function_transact(w3, contract_function, max_retries=3):
-    account = EthProvider.account_dict()
+    account = node_key_store.account_dict()
 
     account['address'] = Web3.toChecksumAddress(account['address'])
     next_nonce = w3.eth.getTransactionCount(account['address'])

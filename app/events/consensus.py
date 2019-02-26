@@ -6,8 +6,8 @@ import requests
 import common
 import scheduler
 from database import database
-from ethereum import rewards
-from ethereum.provider import NODE_WEB3
+from ethereum import provider, rewards
+from key_store import node_key_store
 
 logger = logging.getLogger()
 
@@ -64,8 +64,13 @@ def check_consensus(event, event_metadata):
 def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
     event_id = event.event_id
 
+    event_metadata = event.metadata()
+    event_metadata.processing_end_time = int(time.time())
+    event_metadata.update()
+
+    w3 = provider.EthProvider(node_key_store).web3_provider()
     # developer might initialize event and set rewards later. We fetch them just in time
-    ether_balance, token_balance = event.instance(NODE_WEB3, event_id).functions.getBalance().call()
+    ether_balance, token_balance = event.instance(w3, event_id).functions.getBalance().call()
     logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
 
     if not consensus_votes_by_users:
@@ -76,7 +81,7 @@ def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
     database.Rewards.create(event_id, user_ids_rewards, rewards_dict)
     send_data_to_explorer(event_id)
     if event.is_master_node:
-        scheduler.scheduler.add_job(rewards.event_data_to_blockchain, args=[NODE_WEB3, event_id])
+        scheduler.scheduler.add_job(rewards.event_data_to_blockchain, args=[w3, event_id])
     else:
         logger.info('[%s] Not a master node. Waiting for event data to be set.', event_id)
 
@@ -127,8 +132,8 @@ def process_consensus_not_reached(event_id):
     if event is None:
         logger.info('[%s] Event does not exists', event_id)
         return
-    metadata = event.metadata()
-    if metadata.is_consensus_reached:
+    event_metadata = event.metadata()
+    if event_metadata.is_consensus_reached:
         logger.info('[%s] Consensus already reached', event_id)
         return
     schedule_event_data_to_blockchain_job(event, {})
@@ -158,20 +163,25 @@ def send_data_to_explorer(event_id, max_retries=2):
 
 def compose_event_payload(event):
     event_id = event.event_id
-    correct_vote_user_ids = list(
-        event.votes(min_votes=1, filter_by_vote=database.Vote.get_consensus_vote(event_id)).keys())
-    payload = {'data': {}}
-    payload['data']['event_id'] = event_id
-    payload['data']['node_id'] = common.node_id()
-    payload['data']['voting_round'] = event.dispute_round
-    payload['data']['votes_by_users'] = event.votes_for_explorer()
-    payload['data']['rewards_dict'] = database.Rewards.get(event_id)
-    payload['data']['vote_position_user_ids'] = database.Rewards.get_rewards_user_ids(event_id)
-    # can differ from rewards_dict because there can be a single correct vote for a
-    # user and consensus required two votes
-    payload['data']['correct_vote_user_ids'] = correct_vote_user_ids
-    payload['data']['incorrect_vote_user_ids'] = list(
+    event_metadata = event.metadata()
+
+    correct_vote_user_ids = event.consensus_vote_user_ids()
+    incorrect_vote_user_ids = list(
         database.Vote.user_ids_with_incorrect_vote(event_id, correct_vote_user_ids))
-    payload['data']['without_vote_user_ids'] = list(event.user_ids_without_vote())
-    payload['signature'] = common.sign_data(payload)
-    return payload
+    user_ids_without_vote = list(event.user_ids_without_vote())
+
+    data = {
+        'event_id': event_id,
+        'node_id': common.node_id(),
+        'processing_end_time': event_metadata.processing_end_time,
+        'voting_round': event.dispute_round,
+        'votes_by_users': event.votes_for_explorer(),
+        'rewards_dict': database.Rewards.get(event_id),
+        'vote_position_user_ids': database.Rewards.get_rewards_user_ids(event_id),
+        # can differ from rewards_dict because there can be a single correct vote for a
+        # user and consensus required two votes
+        'correct_vote_user_ids': correct_vote_user_ids,
+        'incorrect_vote_user_ids': incorrect_vote_user_ids,
+        'without_vote_user_ids': user_ids_without_vote,
+    }
+    return {'data': data, 'signature': common.sign_data(data)}
