@@ -100,7 +100,7 @@ def health_check():
         'block_number': w3.eth.blockNumber,
         'event_registry_last_run_timestamp': database.EventRegistry.last_run_timestamp(),
     }
-    logger.info('Health %s', response)
+    logger.debug('Health %s', response)
     return jsonify(response), 200
 
 
