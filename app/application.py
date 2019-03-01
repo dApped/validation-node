@@ -81,7 +81,8 @@ def limit_remote_addr():
 def apply_headers(response):
     response.headers['Content-Type'] = 'application/json'
     response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,X-Forwarded-For,HTTP_X_FORWARDED_FOR'
+    response.headers[
+        'Access-Control-Allow-Headers'] = 'Content-Type,X-Forwarded-For,HTTP_X_FORWARDED_FOR'
     response.headers['Access-Control-Allow-Methods'] = 'POST,GET'
     return response
 
