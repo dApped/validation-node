@@ -26,38 +26,42 @@ def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
 
 
 def call_event_contract_for_metadata(contract_instance, event_id):
-    state = contract_instance.functions.getState().call()
-    if state > 2:
-        logger.info('[%s] Event with state: %d. It is not in waiting|application|running state',
-                    event_id, state)
-        return None
+    try:
+        state = contract_instance.functions.getState().call()
+        if state > 2:
+            logger.info('[%s] Event with state: %d. It is not in waiting|application|running state',
+                        event_id, state)
+            return None
 
-    (application_start_time, application_end_time, event_start_time, event_end_time,
-     leftovers_recoverable_after) = contract_instance.functions.getEventTimes().call()
-    if event_end_time < int(time.time()):
-        logger.info('[%s] Event end time in the past: %d', event_id, event_end_time)
-        return None
+        (application_start_time, application_end_time, event_start_time, event_end_time,
+         leftovers_recoverable_after) = contract_instance.functions.getEventTimes().call()
+        if event_end_time < int(time.time()):
+            logger.info('[%s] Event end time in the past: %d', event_id, event_end_time)
+            return None
 
-    owner = contract_instance.functions.owner().call()
-    token_address = contract_instance.functions.tokenAddress().call()
-    node_addresses = contract_instance.functions.getEventResolvers().call()
-    event_name = contract_instance.functions.eventName().call()
-    data_feed_hash = contract_instance.functions.dataFeedHash().call()
-    is_master_node = contract_instance.functions.isMasterNode().call()
-    consensus_rules = contract_instance.functions.getConsensusRules().call()
-    (min_total_votes, min_consensus_votes, min_consensus_ratio, min_participant_ratio,
-     max_participants, rewards_distribution_function) = consensus_rules
-    validation_round = contract_instance.functions.rewardsValidationRound().call()
-    ((dispute_amount, dispute_timeout, dispute_multiplier, dispute_round, _),
-     disputer) = contract_instance.functions.getDisputeData().call()
-    staking_amount = contract_instance.functions.stakingAmount().call()
-    event = database.VerityEvent(
-        event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
-        application_start_time, application_end_time, event_start_time, event_end_time, event_name,
-        data_feed_hash, state, is_master_node, min_total_votes, min_consensus_votes,
-        min_consensus_ratio, min_participant_ratio, max_participants, rewards_distribution_function,
-        validation_round, dispute_amount, dispute_timeout, dispute_multiplier, dispute_round,
-        disputer, staking_amount)
+        owner = contract_instance.functions.owner().call()
+        token_address = contract_instance.functions.tokenAddress().call()
+        node_addresses = contract_instance.functions.getEventResolvers().call()
+        event_name = contract_instance.functions.eventName().call()
+        data_feed_hash = contract_instance.functions.dataFeedHash().call()
+        is_master_node = contract_instance.functions.isMasterNode().call()
+        consensus_rules = contract_instance.functions.getConsensusRules().call()
+        (min_total_votes, min_consensus_votes, min_consensus_ratio, min_participant_ratio,
+         max_participants, rewards_distribution_function) = consensus_rules
+        validation_round = contract_instance.functions.rewardsValidationRound().call()
+        ((dispute_amount, dispute_timeout, dispute_multiplier, dispute_round, _),
+         disputer) = contract_instance.functions.getDisputeData().call()
+        staking_amount = contract_instance.functions.stakingAmount().call()
+        event = database.VerityEvent(
+            event_id, owner, token_address, node_addresses, leftovers_recoverable_after,
+            application_start_time, application_end_time, event_start_time, event_end_time,
+            event_name, data_feed_hash, state, is_master_node, min_total_votes, min_consensus_votes,
+            min_consensus_ratio, min_participant_ratio, max_participants,
+            rewards_distribution_function, validation_round, dispute_amount, dispute_timeout,
+            dispute_multiplier, dispute_round, disputer, staking_amount)
+    except Exception:
+        logger.exception("Node does not support this type of event")
+        return None
     return event
 
 
