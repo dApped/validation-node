@@ -167,7 +167,7 @@ class Consumer(Common):
 
         is_vote_signed_correctly, signer = common.is_vote_signed(json_data)
         if not is_vote_signed_correctly:
-            logger.error('[%s] Vote not signed correctly from user %s. Message signed by %s',
+            logger.error('[%s] Vote not signed correctly from %s user. Message signed by %s',
                          event_id, user_id, signer)
             return
 

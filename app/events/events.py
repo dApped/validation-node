@@ -52,7 +52,7 @@ def vote(json_data):
     is_vote_signed_correctly, signer = common.is_vote_signed(json_data)
     if not is_vote_signed_correctly:
         message = 'Vote not signed correctly'
-        logger.warning('[%s] %s from user %s. Message signed by %s', event_id, message, user_id,
+        logger.warning('[%s] %s from %s user. Message signed by %s', event_id, message, user_id,
                        signer)
         return _response(message, 400)
 
@@ -64,7 +64,7 @@ def vote(json_data):
 
     vote = database.Vote(user_id, event_id, node_id, current_timestamp, data['answers'], signature)
     vote.create()
-    logger.info('[%s] Accepted vote %s from user: %s', event_id, user_id, data['answers'])
+    logger.info('[%s] Accepted vote from %s user: %s', event_id, user_id, data['answers'])
 
     QUEUE.sync_q.put({
         'event_id': event_id,
