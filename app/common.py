@@ -4,6 +4,7 @@ import os
 import time
 from enum import Enum
 
+import requests
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
 from web3.auto import w3 as w3_auto
@@ -71,12 +72,33 @@ def node_ip_port():
     return '%s%s:%s' % (protocol(), node_ip(), node_port())
 
 
+def get_node_ip():
+    try:
+        logger.info("Requesting Node IP")
+        resp = requests.get('https://api.ipify.org?format=json')
+    except Exception:
+        logger.exception("Cannot get Node IP")
+        return None
+    resp_json = resp.json()
+    return resp_json.get("ip")
+
+
+def node_websocket_ip():
+    websocket_ip = os.getenv("WEBSOCKET_IP")
+    if websocket_ip is None:
+        websocket_ip = get_node_ip()
+    if websocket_ip is None:
+        raise Exception("Websocket IP is undefined")
+    logger.info("Websocket IP: %s", websocket_ip)
+    return websocket_ip
+
+
 def node_websocket_port():
     return os.getenv("WEBSOCKET_PORT")
 
 
 def node_websocket_ip_port():
-    return 'ws://%s:%s' % (node_ip(), node_websocket_port())
+    return 'ws://%s:%s' % (node_websocket_ip(), node_websocket_port())
 
 
 def explorer_ip():

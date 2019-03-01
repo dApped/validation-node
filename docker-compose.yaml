@@ -21,6 +21,7 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       HTTP_PORT: 81
+      WEBSOCKET_IP: 'host.docker.internal'
       WEBSOCKET_PORT: 8781
       USE_HTTPS: 'false'
       EXPLORER_IP: ${EXPLORER_IP}
@@ -53,6 +54,7 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       HTTP_PORT: 82
+      WEBSOCKET_IP: 'host.docker.internal'
       WEBSOCKET_PORT: 8782
       USE_HTTPS: 'false'
       EXPLORER_IP: ${EXPLORER_IP}
@@ -84,6 +86,7 @@ services:
       NODE_REGISTRY_ADDRESS: ${NODE_REGISTRY_ADDRESS}
       NODE_IP: 'host.docker.internal'
       HTTP_PORT: 83
+      WEBSOCKET_IP: 'host.docker.internal'
       WEBSOCKET_PORT: 8783
       USE_HTTPS: 'false'
       EXPLORER_IP: ${EXPLORER_IP}
