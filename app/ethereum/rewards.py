@@ -171,6 +171,7 @@ def _exponential_factor(min_reward, factor, i):
 def _determine_params(rewards_list):
     last = rewards_list[-1]
     first = rewards_list[0] - last
+    first = 1 if first < 1 else first
     multi = 29 / first
     return last, multi
 
