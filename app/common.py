@@ -1,14 +1,14 @@
 import json
 import logging
 import os
-import time
 from enum import Enum
 
 import requests
+import web3
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
 from web3.auto import w3 as w3_auto
-from web3.gas_strategies.time_based import medium_gas_price_strategy
+from web3.gas_strategies.time_based import fast_gas_price_strategy
 
 from database import database
 from key_store import node_key_store
@@ -113,32 +113,39 @@ def explorer_ip_port():
     return '%s:%s' % (explorer_ip(), explorer_port())
 
 
+def estimate_gas_price(w3, wei_addition=0):
+    w3.eth.setGasPriceStrategy(fast_gas_price_strategy)
+    return int(GAS_PRICE_FACTOR * w3.eth.generateGasPrice() + wei_addition)
+
+
 def function_transact(w3, contract_function, max_retries=3):
     account = node_key_store.account_dict()
-
-    account['address'] = Web3.toChecksumAddress(account['address'])
     next_nonce = w3.eth.getTransactionCount(account['address'])
 
     for attempt in range(max_retries):
         try:
-            raw_txn = _raw_transaction(w3, contract_function, account, next_nonce + attempt)
+            gas_price_addition = Web3.toWei(attempt, 'gwei')
+            gas_price = estimate_gas_price(w3, wei_addition=gas_price_addition)
+            raw_txn = _raw_transaction(w3, contract_function, account, gas_price, next_nonce)
             tx_receipt = w3.eth.waitForTransactionReceipt(
                 raw_txn, timeout=WAIT_FOR_TRANSACTION_RECEIPT_TIMEOUT)
             logger.info('Transmitted transaction %s', Web3.toHex(tx_receipt['transactionHash']))
             return tx_receipt['transactionHash']
-        except Exception as e:
-            logger.exception('Transaction failed. Retry: %d/%d', attempt, max_retries)
-            time.sleep(1)
+        except web3.utils.threads.Timeout as e:
+            logger.info('Replacing transaction with increased gas price. Retry %d/%d: %s',
+                        attempt + 1, max_retries, e)
+        except Exception:
+            logger.exception('New transaction with new nonce. Retry: %d/%d', attempt + 1,
+                             max_retries)
+            next_nonce = w3.eth.getTransactionCount(account['address']) + attempt
 
 
-def _raw_transaction(w3, contract_function, account, nonce):
-    w3.eth.setGasPriceStrategy(medium_gas_price_strategy)
-
+def _raw_transaction(w3, contract_function, account, gas_price, nonce):
     transaction = {
         'from': account['address'],
         'nonce': nonce,
     }
-    transaction['gasPrice'] = int(w3.eth.generateGasPrice() * GAS_PRICE_FACTOR)
+    transaction['gasPrice'] = gas_price
     transaction['gas'] = 2000000
     signed_txn = w3.eth.account.signTransaction(
         contract_function.buildTransaction(transaction), private_key=account['pvt_key'])
