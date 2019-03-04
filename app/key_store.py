@@ -35,6 +35,9 @@ class NodeKeyStore:
             password = getpass.getpass('Input password to decrypt the node key: ')
             private_key = web3.eth.Account.decrypt(encrypted_key, password)
             node_address = Account.privateKeyToAccount(private_key).address
+        if node_address is None:
+            raise Exception('Node address is not defined')
+        node_address = web3.Web3.toChecksumAddress(node_address)
         return node_address, private_key
 
 
