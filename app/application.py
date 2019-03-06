@@ -93,7 +93,7 @@ def health_check():
     w3 = EthProvider(node_key_store).web3_provider()
     response = {
         'version': __version__,
-        'NODE_ADDRESS': os.getenv('NODE_ADDRESS'),
+        'NODE_ADDRESS': common.node_id(),
         'CONTRACT_REGISTRY_ADDRESS': os.getenv('CONTRACT_REGISTRY_ADDRESS'),
         'EVENT_REGISTRY_ADDRESS': database.ContractAddress.event_registry(),
         'NODE_REGISTRY_ADDRESS': database.ContractAddress.node_registry(),
