@@ -232,6 +232,5 @@ def default_eth_address():
 def sign_data(data):
     message = json.dumps(data, separators=(',', ':'))
     message_hash = defunct_hash_message(text=str(message))
-    signature = w3_auto.eth.account.signHash(
-        message_hash, private_key=os.getenv('NODE_PRIVATE_KEY'))
+    signature = w3_auto.eth.account.signHash(message_hash, private_key=node_key_store.private_key)
     return signature['signature'].hex()
