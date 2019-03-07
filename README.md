@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Company website: https://verity.network.
+Company website: https://verity.network
 
 Distributed validation nodes for Verity protocol.
 
@@ -18,10 +18,10 @@ Detailed documentation about interior workings of Validation nodes will be avail
 
 Currently, only whitelisted validation nodes can be included in the network.
 
-1. [Creating a Keystore file](https://github.com/verity-network/validation-node/wiki/Creating-a-Keystore-file).
-1. [Set up a Verity Validation Node instance on AWS](https://github.com/verity-network/validation-node/wiki/Set-up-a-Verity-Validation-Node-instance-on-AWS).
-1. [Setup guide on AWS](https://github.com/verity-network/validation-node/wiki/Setup-guide-on-AWS).
-1. [Validating your Node has started successfully](https://github.com/verity-network/validation-node/wiki/validating-your-Node-has-started-successfully).
+1. [Creating a Keystore file](https://github.com/verity-network/validation-node/wiki/Creating-a-Keystore-file)
+1. [Set up a Verity Validation Node instance on AWS](https://github.com/verity-network/validation-node/wiki/Set-up-a-Verity-Validation-Node-instance-on-AWS)
+1. [Setup guide on AWS](https://github.com/verity-network/validation-node/wiki/Setup-guide-on-AWS)
+1. [Validating your Node has started successfully](https://github.com/verity-network/validation-node/wiki/validating-your-Node-has-started-successfully)
 1. [Update the validation node to the latest version](https://github.com/verity-network/validation-node/wiki/Update-the-validation-node-to-the-latest-version)
 
 ## Development
@@ -44,4 +44,4 @@ Currently, only whitelisted validation nodes can be included in the network.
 
 ## License
 
-Apache 2.0 license for Verity validation node
+Apache 2.0 license for Verity Validation Node
