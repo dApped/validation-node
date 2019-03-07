@@ -12,6 +12,8 @@ You can read more about upcoming features and improvements of Verity protocol in
 
 Detailed documentation about interior workings of Validation nodes will be available soon.
 
+[[/verity-network.png |Verity Network]]
+
 ## Installation
 
 Currently, only whitelisted validation nodes can be included in the network.
