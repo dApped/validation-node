@@ -12,27 +12,34 @@ from key_store import node_key_store
 logger = logging.getLogger()
 
 
-def should_calculate_consensus(event):
-    '''Heuristic which checks if there is a potential for consensus (assumes all votes are valid)'''
-    event_id = event.event_id
-    vote_count = database.Vote.count(event_id)
-    n_participants = len(event.participants())
+def calculate_consensus_rules(event_id, min_total_votes, min_participant_ratio, vote_count,
+                              n_participants):
     if n_participants == 0:
         logger.info('[%s] Should not calculate consensus: %d participants', event_id,
                     n_participants)
         return False
     participant_ratio = (vote_count / n_participants) * 100
-    if vote_count < event.min_total_votes:
+    if vote_count < min_total_votes:
         logger.info('[%s] Should not calculate consensus: %d vote_count < %d min_total_votes',
-                    event_id, vote_count, event.min_total_votes)
+                    event_id, vote_count, min_total_votes)
         return False
-    if participant_ratio < event.min_participant_ratio:
-        logger.info(
-            '[%s] Should not calculate consensus: %.4f participant_ratio < %.4f min_participant_ratio',
-            event_id, participant_ratio, event.min_participant_ratio)
+    if participant_ratio < min_participant_ratio:
+        logger.info(('[%s] Should not calculate consensus: '
+                     '%.4f participant_ratio < %.4f min_participant_ratio'), event_id,
+                    participant_ratio, min_participant_ratio)
         return False
-    logger.info('[%s] Should try to calculate consensus', event_id)
+    logger.info('[%s] Should calculate consensus', event_id)
     return True
+
+
+def should_calculate_consensus(event):
+    '''Heuristic which checks if there is a potential for consensus (assumes all votes are valid)'''
+    event_id = event.event_id
+    vote_count = database.Vote.count(event_id)
+    n_participants = len(event.participants())
+    logger.info('[%s] Calculating consensus heuristics', event_id)
+    return calculate_consensus_rules(event_id, event.min_total_votes, event.min_participant_ratio,
+                                     vote_count, n_participants)
 
 
 def check_consensus(event, event_metadata):
@@ -89,10 +96,10 @@ def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
 def calculate_consensus(event, votes_by_users):
     event_id = event.event_id
     vote_count = len(votes_by_users)
-    if vote_count < event.min_total_votes:
-        logger.info(
-            '[%s] Not enough valid votes to calculate consensus: %d vote_count < %d event.min_total_votes',
-            event_id, vote_count, event.min_total_votes)
+    n_participants = len(event.participants())
+    logger.info('[%s] Calculating consensus', event_id)
+    if not calculate_consensus_rules(event_id, event.min_total_votes, event.min_participant_ratio,
+                                     vote_count, n_participants):
         return dict()
 
     votes_by_repr = database.Vote.group_votes_by_representation(votes_by_users)
