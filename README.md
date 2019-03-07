@@ -44,12 +44,12 @@ pip3 install virtualenv
 
 Create virtual environment:
 ```bash
-virtualenv <DESIRED_PATH_TO_VIRTUALENV>/<VENV_NAME> --python=python3
+virtualenv venv --python=python3
 ```
 
 Now activate virtual environment:
 ```bash
-source <DESIRED_PATH_TO_VIRTUALENV>/<VENV_NAME>/bin/activate
+source venv/bin/activate
 ``` 
 
 Then install dependencies by running:
@@ -77,7 +77,7 @@ To run a cluster with 3 nodes:
 docker-compose up
 ```
 
-Nodes are accessible on localhost with ports `81`, `82` and `83`. Each node has its own Ethereum address, which need to be set in `env ` file.
+Nodes are accessible on localhost with ports `81`, `82` and `83`. Each node has its own Ethereum address, which need to be set in `env` file.
 
 
 ## Roadmap
