@@ -2,6 +2,8 @@ import logging
 import time
 from datetime import datetime, timedelta, timezone
 
+import requests
+
 import common
 from database import database
 from events import consensus, verity_event_filters
@@ -140,11 +142,12 @@ def init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_a
 
 def recover_filter(scheduler, w3, verity_event_abi, event_registry_address):
     logger.info('Recovering event registry')
-    database.flush_database()
-
-    event_registry_abi = common.event_registry_contract_abi()
-    init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_abi,
-                               event_registry_address)
+    try:
+        event_registry_abi = common.event_registry_contract_abi()
+        init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_abi,
+                                   event_registry_address)
+    except Exception as e:
+        logger.info('Unexpected exception during event registry recovery: %s', e)
 
 
 def filter_event_registry(scheduler, w3, event_registry_address, verity_event_abi, formatters):
@@ -159,11 +162,18 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
         logger.info('Event Registry filter not found')
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
         return
-    except Exception:
-        logger.exception('Event Registry unexpected exception')
-        logger.info(['Sleeping for 1 hour then try recovering it'])
+    except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+        logger.info('EventRegistry %s exception. Sleeping for 5 minutes then recover it', e.__class__.__name__)
         scheduler.get_job(job_id='event_registry_filter').pause()
-        time.sleep(60 * 60)
+        time.sleep(60 * 5)
+        recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
+        scheduler.get_job(job_id='event_registry_filter').resume()
+        return
+    except Exception:
+        logger.exception(
+            'Event Registry unexpected exception. Sleeping for 10 minutes then recover it')
+        scheduler.get_job(job_id='event_registry_filter').pause()
+        time.sleep(60 * 10)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
         scheduler.get_job(job_id='event_registry_filter').resume()
         return
