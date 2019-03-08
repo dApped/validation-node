@@ -444,7 +444,8 @@ class Vote(BaseEvent):
     @classmethod
     def get_consensus_answers(cls, event_id):
         consensus_vote = cls.get_consensus_vote(event_id)
-        return cls.answers_from_vote(consensus_vote)
+        answers = cls.answers_from_vote(consensus_vote)
+        return [str(answer)[:32] for answer in answers]  # bytes32 is used in SC
 
     @classmethod
     def answers_from_vote(cls, vote):
