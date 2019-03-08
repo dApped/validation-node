@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from enum import Enum
 
 import requests
@@ -134,6 +135,10 @@ def function_transact(w3, contract_function, max_retries=3):
         except web3.utils.threads.Timeout as e:
             logger.info('Replacing transaction with increased gas price. Retry %d/%d: %s',
                         attempt + 1, max_retries, e)
+        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+            logger.info('Transaction %s exception. Sleeping 1 minute then retry it',
+                        e.__class__.__name__)
+            time.sleep(60 * 1)
         except Exception:
             logger.exception('New transaction with new nonce. Retry: %d/%d', attempt + 1,
                              max_retries)
