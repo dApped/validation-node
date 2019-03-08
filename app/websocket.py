@@ -37,7 +37,7 @@ class Common:
         try:
             logger.info('Connecting to %s websocket', address)
             websocket = await websockets.connect(address, timeout=2)
-        except:
+        except Exception:
             logger.exception('Cannot connect to websocket: %s', address)
             return
         cls.register(websocket)
@@ -63,14 +63,14 @@ class Common:
             logger.info('No response to ping in %d seconds. Websocket connection closed %s:%s',
                         timeout, websocket.host, websocket.port)
             return False
-        except:
+        except Exception:
             logger.exception('Websocket connection closed')
             return False
         return True
 
     @classmethod
-    async def get_or_create_websocket_connections(cls, node_websocket_ips_ports):
-        my_websocket_ip_port = common.node_websocket_ip_port()
+    async def get_or_create_websocket_connections(cls, node_websocket_ips_ports,
+                                                  my_websocket_ip_port):
         websockets_nodes = []
         for websocket_ip_port in node_websocket_ips_ports:
             if my_websocket_ip_port == websocket_ip_port:
@@ -100,7 +100,7 @@ class Producer(Common):
     ''' Propagate votes to other nodes'''
 
     @classmethod
-    async def producer(cls, message):
+    async def producer(cls, message, my_websocket_ip_port):
         event_id, _, _, _ = cls.parse_fields_from_message(message)
         # event exists because vote was accepted with vote API
         event_metadata = database.VerityEvent.get(event_id).metadata()
@@ -108,7 +108,8 @@ class Producer(Common):
         if not node_websocket_ips:
             logger.error('Node Websocket IPs are not set')
             return
-        websockets_nodes = await cls.get_or_create_websocket_connections(node_websocket_ips)
+        websockets_nodes = await cls.get_or_create_websocket_connections(
+            node_websocket_ips, my_websocket_ip_port)
         if not websockets_nodes:
             logger.warning('Websockets are not connected')
             return
@@ -116,13 +117,13 @@ class Producer(Common):
         await asyncio.wait([websocket.send(message_json) for websocket in websockets_nodes])
 
     @classmethod
-    async def producer_handler(cls, async_q):
+    async def producer_handler(cls, async_q, my_websocket_ip_port):
         while True:
             message_json = await async_q.get()
             if not cls.is_message_valid(message_json):
                 logger.info('Invalid message_json: %s', message_json)
                 continue
-            await cls.producer(message_json)
+            await cls.producer(message_json, my_websocket_ip_port)
 
 
 class Consumer(Common):
@@ -202,21 +203,21 @@ class Consumer(Common):
                 # No data in 20 seconds
                 if not await cls.is_websocket_online(websocket, 10):
                     return
-            except:
+            except Exception:
                 logger.exception("Consumer handler exception")
 
 
-def loop_in_thread(event_loop):
+def loop_in_thread(event_loop, my_websocket_ip_port):
     node_websocket_port = common.node_websocket_port()
     asyncio.set_event_loop(event_loop)
     event_loop.run_until_complete(
         websockets.serve(Consumer.consumer_handler, '0.0.0.0', node_websocket_port))
-    event_loop.run_until_complete(Producer.producer_handler(QUEUE.async_q))
+    event_loop.run_until_complete(Producer.producer_handler(QUEUE.async_q, my_websocket_ip_port))
     event_loop.run_forever()
 
 
-def init():
+def init(my_websocket_ip_port):
     logger.info('Websocket Init started')
-    t = threading.Thread(target=loop_in_thread, args=(LOOP, ))
+    t = threading.Thread(target=loop_in_thread, args=(LOOP, my_websocket_ip_port))
     t.start()
     logger.info('Websocket Init done')
