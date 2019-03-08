@@ -41,7 +41,7 @@ def init():
     node_registry.register_node_ip(w3, node_registry_abi, node_registry_address,
                                    node_websocket_ip_port, AddressType.WEBSOCKET)
     scheduler.init(w3)
-    websocket.init()
+    websocket.init(node_websocket_ip_port)
 
     event_registry_filter.init_event_registry_filter(scheduler.scheduler, w3, event_registry_abi,
                                                      verity_event_abi, event_registry_address)
