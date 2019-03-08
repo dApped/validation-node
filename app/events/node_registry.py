@@ -1,5 +1,7 @@
 import logging
 
+import requests
+
 import common
 from database import database
 
@@ -32,12 +34,14 @@ def get_node_ips(w3, node_registry_abi, node_registry_address, node_ids, address
     contract_instance = w3.eth.contract(address=node_registry_address, abi=node_registry_abi)
     node_ips = []
     for node_id in node_ids:
-        if common.AddressType.IP == address_type:
-            node_ip = contract_instance.functions.nodeIp(node_id).call()
-        elif common.AddressType.WEBSOCKET == address_type:
-            node_ip = contract_instance.functions.nodeWs(node_id).call()
-        else:
-            raise Exception('Unsupported address type ' + str(address_type))
+        try:
+            if common.AddressType.IP == address_type:
+                node_ip = contract_instance.functions.nodeIp(node_id).call()
+            elif common.AddressType.WEBSOCKET == address_type:
+                node_ip = contract_instance.functions.nodeWs(node_id).call()
+        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+            logger.info('Get_node_ips %s exception', e.__class__.__name__)
+            continue
         if not node_ip:
             continue
         node_ips.append(node_ip)
