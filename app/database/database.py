@@ -104,6 +104,10 @@ class VerityEvent(BaseEvent):
         """ Generate a job ID for consensus not reached job """
         return '%s_process_consensus_not_reached' % event_id
 
+    def post_application_end_time_job_id(event_id):
+        """ Generate a job ID for post applicationend time job """
+        return '%s_post_application_end_time' % event_id
+
     def votes(self, min_votes=None, max_votes=None, filter_by_vote=None, check_uniqueness=True):
         """ Returns votes by users based on filters specified """
         min_votes = min_votes or 2

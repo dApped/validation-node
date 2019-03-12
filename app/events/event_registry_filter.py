@@ -76,6 +76,7 @@ def schedule_consensus_not_reached_job(scheduler, event_id, event_end_time):
         consensus.process_consensus_not_reached,
         'date',
         run_date=job_datetime,
+        replace_existing=True,
         args=[event_id],
         id=job_id)
     logger.info('[%s] Scheduled process_consensus_not_reached_job at %s', event_id, job_datetime)
@@ -84,6 +85,7 @@ def schedule_consensus_not_reached_job(scheduler, event_id, event_end_time):
 def schedule_post_application_end_time_job(scheduler, w3, event_id, application_end_time):
     application_end_datetime = datetime.fromtimestamp(application_end_time, timezone.utc)
     job_datetime = application_end_datetime + timedelta(minutes=1)
+    job_id = database.VerityEvent.post_application_end_time_job_id(event_id)
     if datetime.now(timezone.utc) > job_datetime:
         logger.info('[%s] Skipping post_application_end_time_job', event_id)
         return
@@ -95,7 +97,9 @@ def schedule_post_application_end_time_job(scheduler, w3, event_id, application_
         verity_event_filters.post_application_end_time_job,
         'date',
         run_date=job_datetime,
-        args=[w3, event_id])
+        replace_existing=True,
+        args=[w3, event_id],
+        id=job_id)
     logger.info('[%s] Scheduled post_application_end_time_job at %s', event_id, job_datetime)
 
 
