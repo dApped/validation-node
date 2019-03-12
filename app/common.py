@@ -140,25 +140,22 @@ def function_transact(w3, contract_function, max_retries=3):
         try:
             gas_price_addition = Web3.toWei(attempt, 'gwei')
             gas_price = estimate_gas_price(w3, wei_addition=gas_price_addition)
-            raw_txn = _raw_transaction(w3, contract_function, account, gas_price, next_nonce)
+            raw_txn = _raw_transaction(w3, contract_function, account, gas_price,
+                                       next_nonce + attempt)
             tx_receipt = w3.eth.waitForTransactionReceipt(
                 raw_txn, timeout=WAIT_FOR_TRANSACTION_RECEIPT_TIMEOUT)
             logger.info('Transmitted transaction %s', Web3.toHex(tx_receipt['transactionHash']))
             return tx_receipt['transactionHash']
         except web3.utils.threads.Timeout as e:
-            logger.info('Replacing transaction with increased gas price. Retry %d/%d: %s',
-                        attempt + 1, max_retries, e)
+            logger.info('Timeout exception. Retry %d/%d: %s', attempt + 1, max_retries, e)
         except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
-            logger.info('Transaction %s exception. Sleeping 1 minute then retry it',
-                        e.__class__.__name__)
+            logger.info('Transaction %s exception. Sleeping 1 minute. Retry %d/%d:',
+                        e.__class__.__name__, attempt + 1, max_retries)
             time.sleep(60 * 1)
         except Exception:
             logger.exception('New transaction with new nonce. Retry: %d/%d', attempt + 1,
                              max_retries)
-            next_nonce = get_nonce(w3, account['address'])
-            if next_nonce is None:
-                return None
-            next_nonce += attempt
+            time.sleep(60 * 1)
     return None
 
 
