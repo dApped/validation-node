@@ -150,6 +150,12 @@ def recover_filter(scheduler, w3, verity_event_abi, event_registry_address):
         logger.info('Unexpected exception during event registry recovery: %s', e)
 
 
+def pause_event_registry_filter(scheduler, minutes=5):
+    scheduler.get_job(job_id='event_registry_filter').pause()
+    time.sleep(60 * minutes)
+    scheduler.get_job(job_id='event_registry_filter').resume()
+
+
 def filter_event_registry(scheduler, w3, event_registry_address, verity_event_abi, formatters):
     ''' Runs in a cron job and checks for new verity events'''
     filter_id = database.Filters.get_list(event_registry_address)[0]['filter_id']
@@ -165,17 +171,13 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
     except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
         logger.info('EventRegistry %s exception. Sleeping for 5 minutes then recover it',
                     e.__class__.__name__)
-        scheduler.get_job(job_id='event_registry_filter').pause()
-        time.sleep(60 * 5)
+        pause_event_registry_filter(scheduler)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
-        scheduler.get_job(job_id='event_registry_filter').resume()
         return
     except Exception:
         logger.exception(
-            'Event Registry unexpected exception. Sleeping for 10 minutes then recover it')
-        scheduler.get_job(job_id='event_registry_filter').pause()
-        time.sleep(60 * 10)
+            'Event Registry unexpected exception. Sleeping for 5 minutes then recover it')
+        pause_event_registry_filter(scheduler)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
-        scheduler.get_job(job_id='event_registry_filter').resume()
         return
     process_new_verity_events(scheduler, w3, verity_event_abi, entries)
