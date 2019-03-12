@@ -256,3 +256,14 @@ def sign_data(data):
     message_hash = defunct_hash_message(text=str(message))
     signature = w3_auto.eth.account.signHash(message_hash, private_key=node_key_store.private_key)
     return signature['signature'].hex()
+
+
+def pause_job(scheduler, job_id, minutes=5):
+    try:
+        scheduler.get_job(job_id=job_id).pause()
+        time.sleep(60 * minutes)
+        scheduler.get_job(job_id=job_id).resume()
+    except Exception:
+        logger.exception('Pause job')
+        return False
+    return True

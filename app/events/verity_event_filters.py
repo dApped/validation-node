@@ -260,9 +260,10 @@ def proccess_filters_for_event(scheduler, w3, formatters, event_id, filter_list,
             recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
             continue
         except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
-            logger.info('[%s] %s with %s filter. Sleeping 5 minutes', event_id,
-                        e.__class__.__name__, filter_name)
-            pause_filter_event_job(scheduler)
+            sleep_minutes = 5
+            logger.info('[%s] %s with %s filter. Sleeping %d minutes', event_id,
+                        e.__class__.__name__, filter_name, sleep_minutes)
+            common.pause_job(scheduler, 'filter_events', minutes=sleep_minutes)
             recover_all_filters(w3, event_id, filter_list)
             return
         except Exception:
@@ -290,12 +291,6 @@ def schedule_post_unexpected_exception_job(scheduler, w3, event_id, event_metada
         'date',
         run_date=job_datetime,
         args=[w3, event_id, filter_list])
-
-
-def pause_filter_event_job(scheduler, minutes=5):
-    scheduler.get_job(job_id='filter_events').pause()
-    time.sleep(60 * minutes)
-    scheduler.get_job(job_id='filter_events').resume()
 
 
 def post_unexpected_exception_job(w3, event_id, filter_list):
