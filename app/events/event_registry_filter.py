@@ -163,7 +163,8 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
         return
     except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
-        logger.info('EventRegistry %s exception. Sleeping for 5 minutes then recover it', e.__class__.__name__)
+        logger.info('EventRegistry %s exception. Sleeping for 5 minutes then recover it',
+                    e.__class__.__name__)
         scheduler.get_job(job_id='event_registry_filter').pause()
         time.sleep(60 * 5)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
