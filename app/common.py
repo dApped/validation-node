@@ -119,10 +119,23 @@ def estimate_gas_price(w3, wei_addition=0):
     return int(GAS_PRICE_FACTOR * w3.eth.generateGasPrice() + wei_addition)
 
 
+def get_nonce(w3, address, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            return w3.eth.getTransactionCount(address)
+        except Exception as e:
+            logger.info('Get nonce %s exception. Retry %d/%d', e, attempt + 1, max_retries)
+            time.sleep(60 * 1)
+    logger.exception('Could not get nonce')
+    return None
+
+
 def function_transact(w3, contract_function, max_retries=3):
     account = node_key_store.account_dict()
-    next_nonce = w3.eth.getTransactionCount(account['address'])
 
+    next_nonce = get_nonce(w3, account['address'])
+    if next_nonce is None:
+        return None
     for attempt in range(max_retries):
         try:
             gas_price_addition = Web3.toWei(attempt, 'gwei')
@@ -142,7 +155,11 @@ def function_transact(w3, contract_function, max_retries=3):
         except Exception:
             logger.exception('New transaction with new nonce. Retry: %d/%d', attempt + 1,
                              max_retries)
-            next_nonce = w3.eth.getTransactionCount(account['address']) + attempt
+            next_nonce = get_nonce(w3, account['address'])
+            if next_nonce is None:
+                return None
+            next_nonce += attempt
+    return None
 
 
 def _raw_transaction(w3, contract_function, account, gas_price, nonce):
