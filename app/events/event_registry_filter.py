@@ -2,6 +2,8 @@ import logging
 import time
 from datetime import datetime, timedelta, timezone
 
+import requests
+
 import common
 from database import database
 from events import consensus, verity_event_filters
@@ -74,6 +76,7 @@ def schedule_consensus_not_reached_job(scheduler, event_id, event_end_time):
         consensus.process_consensus_not_reached,
         'date',
         run_date=job_datetime,
+        replace_existing=True,
         args=[event_id],
         id=job_id)
     logger.info('[%s] Scheduled process_consensus_not_reached_job at %s', event_id, job_datetime)
@@ -82,6 +85,7 @@ def schedule_consensus_not_reached_job(scheduler, event_id, event_end_time):
 def schedule_post_application_end_time_job(scheduler, w3, event_id, application_end_time):
     application_end_datetime = datetime.fromtimestamp(application_end_time, timezone.utc)
     job_datetime = application_end_datetime + timedelta(minutes=1)
+    job_id = database.VerityEvent.post_application_end_time_job_id(event_id)
     if datetime.now(timezone.utc) > job_datetime:
         logger.info('[%s] Skipping post_application_end_time_job', event_id)
         return
@@ -93,7 +97,9 @@ def schedule_post_application_end_time_job(scheduler, w3, event_id, application_
         verity_event_filters.post_application_end_time_job,
         'date',
         run_date=job_datetime,
-        args=[w3, event_id])
+        replace_existing=True,
+        args=[w3, event_id],
+        id=job_id)
     logger.info('[%s] Scheduled post_application_end_time_job at %s', event_id, job_datetime)
 
 
@@ -140,15 +146,16 @@ def init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_a
 
 def recover_filter(scheduler, w3, verity_event_abi, event_registry_address):
     logger.info('Recovering event registry')
-    database.flush_database()
-
-    event_registry_abi = common.event_registry_contract_abi()
-    init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_abi,
-                               event_registry_address)
+    try:
+        event_registry_abi = common.event_registry_contract_abi()
+        init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_abi,
+                                   event_registry_address)
+    except Exception as e:
+        logger.info('Unexpected exception during event registry recovery: %s', e)
 
 
 def filter_event_registry(scheduler, w3, event_registry_address, verity_event_abi, formatters):
-    ''' Runs in a cron job and checks for new verity events'''
+    ''' Runs in a cron job and checks for new Verity events'''
     filter_id = database.Filters.get_list(event_registry_address)[0]['filter_id']
     filter_ = w3.eth.filter(filter_id=filter_id)
     filter_.log_entry_formatter = formatters[NEW_VERITY_EVENT]
@@ -156,15 +163,22 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
         entries = filter_.get_new_entries()
         database.EventRegistry.set_last_run_timestamp(int(time.time()))
     except ValueError:
-        logger.info('Event Registry filter not found')
+        logger.info('EventRegistry filter not found')
+        recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
+        return
+    except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+        sleep_minutes = 5
+        logger.info('EventRegistry %s exception. Sleeping for %d minutes then recover it',
+                    e.__class__.__name__, sleep_minutes)
+        common.pause_job(scheduler, 'event_registry_filter', minutes=sleep_minutes)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
         return
     except Exception:
-        logger.exception('Event Registry unexpected exception')
-        logger.info(['Sleeping for 1 hour then try recovering it'])
-        scheduler.get_job(job_id='event_registry_filter').pause()
-        time.sleep(60 * 60)
+        sleep_minutes = 5
+        logger.exception(
+            'EventRegistry unexpected exception. Sleeping for %d minutes then recover it',
+            sleep_minutes)
+        common.pause_job(scheduler, 'event_registry_filter', minutes=sleep_minutes)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
-        scheduler.get_job(job_id='event_registry_filter').resume()
         return
     process_new_verity_events(scheduler, w3, verity_event_abi, entries)

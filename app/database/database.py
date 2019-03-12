@@ -104,6 +104,10 @@ class VerityEvent(BaseEvent):
         """ Generate a job ID for consensus not reached job """
         return '%s_process_consensus_not_reached' % event_id
 
+    def post_application_end_time_job_id(event_id):
+        """ Generate a job ID for post applicationend time job """
+        return '%s_post_application_end_time' % event_id
+
     def votes(self, min_votes=None, max_votes=None, filter_by_vote=None, check_uniqueness=True):
         """ Returns votes by users based on filters specified """
         min_votes = min_votes or 2
@@ -211,7 +215,8 @@ class VerityEventMetadata(BaseEvent):
     PREFIX = 'metadata'
 
     def __init__(self, event_id, is_consensus_reached, node_ips, node_websocket_ips,
-                 contract_block_number, previous_consensus_answers, processing_end_time):
+                 contract_block_number, previous_consensus_answers, processing_end_time,
+                 should_run_filters, filters_exception_reported):
         self.event_id = event_id
         self.is_consensus_reached = is_consensus_reached
         self.node_ips = node_ips
@@ -219,6 +224,8 @@ class VerityEventMetadata(BaseEvent):
         self.contract_block_number = contract_block_number
         self.previous_consensus_answers = previous_consensus_answers
         self.processing_end_time = processing_end_time
+        self.should_run_filters = should_run_filters
+        self.filters_exception_reported = filters_exception_reported
 
     def create(self):
         redis_db.set(self.key(self.event_id), self.to_json())
@@ -234,7 +241,9 @@ class VerityEventMetadata(BaseEvent):
                 node_websocket_ips=[],
                 contract_block_number=0,
                 previous_consensus_answers=None,
-                processing_end_time=None)
+                processing_end_time=None,
+                should_run_filters=True,
+                filters_exception_reported=False)
             event_metadata.create()
         return event_metadata
 

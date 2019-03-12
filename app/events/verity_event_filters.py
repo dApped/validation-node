@@ -1,7 +1,9 @@
 import functools
 import logging
 import time
+from datetime import datetime, timedelta, timezone
 
+import requests
 from eth_abi.exceptions import NonEmptyPaddingBytes
 from web3.utils.contracts import find_matching_event_abi
 from web3.utils.events import get_event_data
@@ -180,16 +182,23 @@ def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
 
 
 def recover_filter(w3, event_id, filter_name, filter_func, filter_id=None):
-    event = database.VerityEvent.get(event_id)
-    if event is None or event.state in FINAL_STATES:
-        logger.info('[%s] Event is finished. No need to recover %s filter', event_id, filter_name)
-        return
-    logger.info('[%s] Recovering filter %s', event_id, filter_name)
-    if filter_id is not None:
-        database.Filters.delete_filter(event_id, filter_id, filter_name)
-    contract_abi = common.verity_event_contract_abi()
-    contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
-    init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
+    try:
+        event = database.VerityEvent.get(event_id)
+        if event is None or event.state in FINAL_STATES:
+            logger.info('[%s] Event is finished. No need to recover %s filter', event_id,
+                        filter_name)
+            return True
+        logger.info('[%s] Recovering filter %s', event_id, filter_name)
+        if filter_id is not None:
+            database.Filters.delete_filter(event_id, filter_id, filter_name)
+        contract_abi = common.verity_event_contract_abi()
+        contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
+        init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
+    except Exception as e:
+        logger.info('[%s] Exception %s with recovering %s filter', event_id, e.__class__.__name__,
+                    filter_name)
+        return False
+    return True
 
 
 def recover_all_filters(w3, event_id, filter_list=None):
@@ -197,56 +206,104 @@ def recover_all_filters(w3, event_id, filter_list=None):
         filter_ids = [filter_dict['filter_id'] for filter_dict in filter_list]
         database.Filters.uninstall(w3, filter_ids)
     database.Filters.delete(event_id)
+
     for filter_name, filter_func in EVENT_FILTERS.items():
-        recover_filter(w3, event_id, filter_name, filter_func)
+        success = recover_filter(w3, event_id, filter_name, filter_func)
+        if not success:
+            return False
+    return True
 
 
 def filter_events(scheduler, w3, formatters):
     '''filter_events runs in a cron job and requests new entries for all events'''
     event_ids = database.VerityEvent.get_ids_list()
-    event_ids_to_remove = set()
     for event_id in event_ids:
         filter_list = database.Filters.get_list(event_id)
-        if database.VerityEvent.get(event_id) is None:
+
+        event = database.VerityEvent.get(event_id)
+        if event is None:
             logger.info('[%s] Event is not in the database', event_id)
             continue
+
+        event_metadata = event.metadata()
+        if not event_metadata.should_run_filters:
+            continue
+
         if len(filter_list) != len(EVENT_FILTERS):
             logger.info('[%s] There are only %d/%d filters. Reinitialize them', event_id,
                         len(filter_list), len(EVENT_FILTERS))
-            recover_all_filters(w3, event_id, filter_list)
+            success = recover_all_filters(w3, event_id, filter_list)
+            if not success:
+                schedule_post_unexpected_exception_job(
+                    scheduler, w3, event_id, event_metadata, filter_list=None)
             continue
+        proccess_filters_for_event(scheduler, w3, formatters, event_id, filter_list, event_metadata)
 
-        for filter_dict in filter_list:
-            filter_id, filter_name = filter_dict['filter_id'], filter_dict['filter_name']
-            filter_func = EVENT_FILTERS[filter_name]
-            if event_id in event_ids_to_remove:
-                continue
-            if not should_apply_filter(filter_name, event_id):
-                continue
-            filter_ = w3.eth.filter(filter_id=filter_id)
-            filter_.log_entry_formatter = formatters[filter_name]
 
-            try:
-                entries = filter_.get_new_entries()
-            except ValueError:
-                logger.info('[%s] Event %s filter not found', event_id, filter_name)
-                recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
-                continue
-            except NonEmptyPaddingBytes as e:
-                logger.info('Web3 internal filter error: %s', e)
-                recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
-                continue
-            except Exception:
+def proccess_filters_for_event(scheduler, w3, formatters, event_id, filter_list, event_metadata):
+    for filter_dict in filter_list:
+        filter_id, filter_name = filter_dict['filter_id'], filter_dict['filter_name']
+        filter_func = EVENT_FILTERS[filter_name]
+        if not should_apply_filter(filter_name, event_id):
+            continue
+        filter_ = w3.eth.filter(filter_id=filter_id)
+        filter_.log_entry_formatter = formatters[filter_name]
+
+        try:
+            entries = filter_.get_new_entries()
+        except ValueError:
+            logger.info('[%s] Event %s filter not found', event_id, filter_name)
+            recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
+            continue
+        except NonEmptyPaddingBytes as e:
+            logger.info('[%s] NonEmptyPaddingBytes error with %s filter', event_id, filter_name)
+            recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
+            continue
+        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+            sleep_minutes = 5
+            logger.info('[%s] %s with %s filter. Sleeping %d minutes', event_id,
+                        e.__class__.__name__, filter_name, sleep_minutes)
+            common.pause_job(scheduler, 'filter_events', minutes=sleep_minutes)
+            recover_all_filters(w3, event_id, filter_list)
+            return
+        except Exception:
+            if not event_metadata.filters_exception_reported:
+                # Only log unexpected exception once
                 logger.exception('Event %s filter unexpected exception', filter_name)
-                event_ids_to_remove.add(event_id)
-                continue
-            if not entries:
-                continue
-            filter_func(scheduler, w3, event_id, entries)
+                event_metadata.filters_exception_reported = True
+                event_metadata.update()
+            schedule_post_unexpected_exception_job(scheduler, w3, event_id, event_metadata,
+                                                   filter_list)
+            return
+        if not entries:
+            continue
+        filter_func(scheduler, w3, event_id, entries)
 
-    for event_id in event_ids_to_remove:
-        logger.info('[%s] Removing event because of unexpected exception in filters', event_id)
-        VerityEvent.delete_all_event_data(w3, event_id)
+
+def schedule_post_unexpected_exception_job(scheduler, w3, event_id, event_metadata, filter_list):
+    event_metadata.should_run_filters = False
+    event_metadata.update()
+
+    job_datetime = datetime.now(timezone.utc) + timedelta(minutes=5)
+    logger.info('[%s] Scheduling post_unexpected_exception_job at %s', event_id, job_datetime)
+    scheduler.add_job(
+        post_unexpected_exception_job,
+        'date',
+        run_date=job_datetime,
+        args=[w3, event_id, filter_list])
+
+
+def post_unexpected_exception_job(w3, event_id, filter_list):
+    logger.info('[%s] Running post_unexpected_exception_job', event_id)
+    event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event is not in the database', event_id)
+        return
+    recover_all_filters(w3, event_id, filter_list)
+    event_metadata = event.metadata()
+    event_metadata.should_run_filters = True
+    event_metadata.update()
+    logger.info('[%s] Finished post_unexpected_exception_job', event_id)
 
 
 def post_application_end_time_job(w3, event_id):
