@@ -158,7 +158,7 @@ def send_data_to_explorer(event_id, max_retries=2):
             if response.status_code == 200:
                 logger.info('[%s] Event data successfully sent to explorer', event_id)
                 return
-            logger.info('Cannot send data to explorer. Status %d, %d/%d retry',
+            logger.info('[%s] Cannot send data to explorer. Status %d, %d/%d retry', event_id,
                         response.status_code, retry, max_retries)
         except requests.exceptions.ConnectionError as e:
             logger.info('[%s] Cannot reach explorer %d/%d retry: %s', event_id, retry, max_retries,

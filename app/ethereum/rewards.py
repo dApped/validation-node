@@ -235,6 +235,8 @@ def event_data_to_blockchain(w3, event_id):
 def set_rewards_on_blockchain(w3, contract_instance, event_id, user_ids, eth_rewards,
                               token_rewards):
     logger.info('[%s] Master node started setting rewards', event_id)
+    logger.info('[%s] Master node ETH rewards: %s', event_id, eth_rewards)
+    logger.info('[%s] Master node VTY rewards: %s', event_id, token_rewards)
 
     chunks = common.lists_to_chunks(user_ids, eth_rewards, token_rewards)
     for i, (user_ids_chunk, eth_rewards_chunk, token_rewards_chunk) in enumerate(chunks, 1):
@@ -291,6 +293,8 @@ def validate_event_data_on_blockchain(w3, event_id, validation_round):
     rewards_match = do_rewards_match(node_rewards_dict, contract_rewards_dict)
     consensus_match = event_consensus_answer == consensus_answer
 
+    logger.info('[%s] Node rewards: %s', event_id, node_rewards_dict)
+    logger.info('[%s] Blockchain rewards: %s', event_id, contract_rewards_dict)
     logger.info('[%s] Rewards DO%s match', event_id, '' if rewards_match else ' NOT')
     logger.info('[%s] Consensus answers DO%s match. Contract: %s, node: %s', event_id,
                 '' if consensus_match else ' NOT', event_consensus_answer, consensus_answer)
