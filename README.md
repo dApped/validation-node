@@ -36,11 +36,9 @@ Currently, only whitelisted validation nodes can be included in the network.
  - Reputation
     - Calculating reputation
     - Returning  stakes to Validation Nodes reward pool 
-    -  Airdropping confiscated stakes among Data providers
+    - Airdropping confiscated stakes among Data providers
  - Continuous voting
 
-
-## Contribution
 
 ## License
 
