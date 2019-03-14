@@ -84,6 +84,7 @@ def apply_headers(response):
     response.headers[
         'Access-Control-Allow-Headers'] = 'Content-Type,X-Forwarded-For,HTTP_X_FORWARDED_FOR'
     response.headers['Access-Control-Allow-Methods'] = 'POST,GET'
+    response.headers['Cache-Control'] = 'no-cache'
     return response
 
 
