@@ -305,6 +305,13 @@ class Filters(BaseEvent):
             except Exception as e:
                 logger.info('Uninstalling filter: %s', e)
 
+    @classmethod
+    def delete_and_uninstall_filters(cls, w3, event_id, filter_list=None):
+        cls.delete(event_id)
+        if not filter_list:
+            return
+        cls.uninstall(w3, filter_list)
+
 
 class Rewards(BaseEvent):
     PREFIX = 'rewards'  # stores dictionary with user_id as a key and rewards as values
