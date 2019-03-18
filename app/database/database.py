@@ -104,6 +104,7 @@ class VerityEvent(BaseEvent):
         """ Generate a job ID for consensus not reached job """
         return '%s_process_consensus_not_reached' % event_id
 
+    @staticmethod
     def post_application_end_time_job_id(event_id):
         """ Generate a job ID for post applicationend time job """
         return '%s_post_application_end_time' % event_id
@@ -303,6 +304,13 @@ class Filters(BaseEvent):
                 w3.eth.uninstallFilter(filter_id)
             except Exception as e:
                 logger.info('Uninstalling filter: %s', e)
+
+    @classmethod
+    def delete_and_uninstall_filters(cls, w3, event_id, filter_list=None):
+        cls.delete(event_id)
+        if not filter_list:
+            return
+        cls.uninstall(w3, filter_list)
 
 
 class Rewards(BaseEvent):
