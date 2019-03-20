@@ -4,6 +4,7 @@ from statistics import mean, median
 
 import common
 from database import database
+from queue_service import transactions
 
 logger = logging.getLogger()
 
@@ -243,7 +244,7 @@ def set_rewards_on_blockchain(w3, contract_instance, event_id, user_ids, eth_rew
         logger.info('[%s] Setting rewards for %d of %d chunks', event_id, i, len(chunks))
         set_rewards_fun = contract_instance.functions.setRewards(user_ids_chunk, eth_rewards_chunk,
                                                                  token_rewards_chunk)
-        common.function_transact(w3, set_rewards_fun)
+        transactions.queue_transaction(w3, set_rewards_fun)
     logger.info('[%s] Master node finished setting rewards', event_id)
 
 
@@ -254,7 +255,7 @@ def set_result_on_blockchain(w3, contract_instance, event_id):
         consensus_answers = list(
             map(lambda x: w3.toBytes(hexstr=w3.toHex(text=str(x))), consensus_answers))
     set_consensus_vote_fun = contract_instance.functions.setResults(consensus_answers)
-    common.function_transact(w3, set_consensus_vote_fun)
+    transactions.queue_transaction(w3, set_consensus_vote_fun)
     logger.info('[%s] Master node finished setting result', event_id)
 
 
@@ -263,7 +264,7 @@ def mark_rewards_on_blockchain(w3, contract_instance, event_id, user_ids, eth_re
     logger.info('[%s] Master node started marking rewards', event_id)
     rewards_hash = database.Rewards.hash(user_ids, eth_rewards, token_rewards)
     mark_rewards_set_fun = contract_instance.functions.markRewardsSet(rewards_hash)
-    common.function_transact(w3, mark_rewards_set_fun)
+    transactions.queue_transaction(w3, mark_rewards_set_fun)
     logger.info('[%s] Master node finished marking rewards', event_id)
 
 
@@ -302,14 +303,14 @@ def validate_event_data_on_blockchain(w3, event_id, validation_round):
     if rewards_match and consensus_match:
         logger.info('[%s] Approving rewards for round %d', event_id, validation_round)
         approve_fun = event_contract.functions.approveRewards(validation_round)
-        common.function_transact(w3, approve_fun)
+        transactions.queue_transaction(w3, approve_fun)
     else:
         logger.info('[%s] Rejecting rewards for round %d', event_id, validation_round)
         (user_ids, eth_rewards,
          token_rewards) = database.Rewards.transform_dict_to_lists(node_rewards_dict)
         alt_hash = database.Rewards.hash(user_ids, eth_rewards, token_rewards)
         reject_fun = event_contract.functions.rejectRewards(validation_round, alt_hash)
-        common.function_transact(w3, reject_fun)
+        transactions.queue_transaction(w3, reject_fun)
 
 
 def do_rewards_match(node_rewards, contract_rewards):

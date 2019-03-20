@@ -4,6 +4,7 @@ import requests
 
 import common
 from database import database
+from queue_service import transactions
 
 logger = logging.getLogger()
 
@@ -23,7 +24,7 @@ def register_node_ip(w3, node_registry_abi, node_registry_address, node_ip, addr
             register_node_ip_fun = contract_instance.functions.registerNodeWs(node_ip)
         else:
             raise Exception('Unsupported address type ' + str(address_type))
-        trx_hash = common.function_transact(w3, register_node_ip_fun)
+        trx_hash = transactions.queue_transaction(w3, register_node_ip_fun)
         if trx_hash is None:
             raise Exception(
                 'Make sure you have registered your validation node address in Node Registry')

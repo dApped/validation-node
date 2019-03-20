@@ -5,20 +5,17 @@ import time
 from enum import Enum
 
 import requests
-import web3
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
 from web3.auto import w3 as w3_auto
-from web3.gas_strategies.time_based import fast_gas_price_strategy
 
 from database import database
 from key_store import node_key_store
 
+CHUNK_SIZE = 20
+
 logger = logging.getLogger()
 
-CHUNK_SIZE = 20
-GAS_PRICE_FACTOR = 1.2
-WAIT_FOR_TRANSACTION_RECEIPT_TIMEOUT = 60 * 15  # 15 minutes
 
 
 class AddressType(Enum):
@@ -112,64 +109,6 @@ def explorer_port():
 
 def explorer_ip_port():
     return '%s:%s' % (explorer_ip(), explorer_port())
-
-
-def estimate_gas_price(w3, wei_addition=0):
-    w3.eth.setGasPriceStrategy(fast_gas_price_strategy)
-    return int(GAS_PRICE_FACTOR * w3.eth.generateGasPrice() + wei_addition)
-
-
-def get_nonce(w3, address, max_retries=3):
-    for attempt in range(max_retries):
-        try:
-            return w3.eth.getTransactionCount(address)
-        except Exception as e:
-            logger.info('Get nonce %s exception. Retry %d/%d', e, attempt + 1, max_retries)
-            time.sleep(60 * 1)
-    logger.exception('Could not get nonce')
-    return None
-
-
-def function_transact(w3, contract_function, max_retries=3):
-    account = node_key_store.account_dict()
-
-    next_nonce = get_nonce(w3, account['address'])
-    if next_nonce is None:
-        return None
-    for attempt in range(max_retries):
-        try:
-            gas_price_addition = Web3.toWei(attempt, 'gwei')
-            gas_price = estimate_gas_price(w3, wei_addition=gas_price_addition)
-            raw_txn = _raw_transaction(w3, contract_function, account, gas_price,
-                                       next_nonce + attempt)
-            tx_receipt = w3.eth.waitForTransactionReceipt(
-                raw_txn, timeout=WAIT_FOR_TRANSACTION_RECEIPT_TIMEOUT)
-            logger.info('Transmitted transaction %s', Web3.toHex(tx_receipt['transactionHash']))
-            return tx_receipt['transactionHash']
-        except web3.utils.threads.Timeout as e:
-            logger.info('Timeout exception. Retry %d/%d: %s', attempt + 1, max_retries, e)
-        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
-            logger.info('Transaction %s exception. Sleeping 1 minute. Retry %d/%d:',
-                        e.__class__.__name__, attempt + 1, max_retries)
-            time.sleep(60 * 1)
-        except Exception:
-            logger.exception('New transaction with new nonce. Retry: %d/%d', attempt + 1,
-                             max_retries)
-            time.sleep(60 * 1)
-    return None
-
-
-def _raw_transaction(w3, contract_function, account, gas_price, nonce):
-    transaction = {
-        'from': account['address'],
-        'nonce': nonce,
-    }
-    transaction['gasPrice'] = gas_price
-    transaction['gas'] = 2000000
-    signed_txn = w3.eth.account.signTransaction(
-        contract_function.buildTransaction(transaction), private_key=account['pvt_key'])
-    raw_txn = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    return raw_txn
 
 
 def list_to_chunks(list_, chunk_size=CHUNK_SIZE):
