@@ -319,7 +319,7 @@ def post_application_end_time_job(w3, event_id):
         logger.info('[%s] Master node is triggering contract state change', event_id)
         event_instance = event.instance(w3, event_id)
         trigger_state_change_fun = event_instance.functions.triggerStateChange()
-        transactions.queue_transaction(w3, trigger_state_change_fun)
+        transactions.queue_transaction(w3, trigger_state_change_fun, event_id=event_id)
 
     logger.info('[%s] Requesting all entries for JoinEvent filter', event_id)
     filter_list = database.Filters.get_list(event_id)
