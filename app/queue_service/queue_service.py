@@ -2,14 +2,31 @@ import logging
 import queue
 import threading
 import time
+import uuid
 
 logger = logging.getLogger()
 
 QUEUE_IN = queue.Queue()
-QUEUE_OUT = queue.Queue()
+RESULTS_DICT = {}
 
 
-def run_queue_worker(queue_in, queue_out):
+class Job:
+    def __init__(self, event_id, contract_function_name, function, *args):
+        self.id_ = uuid.uuid4()
+        self.event_id = event_id
+        self.contract_function_name = contract_function_name
+        self.function = function
+        self.args = args
+
+
+class JobResult:
+    def __init__(self, id_, event_id, result):
+        self.id_ = id_
+        self.event_id = event_id
+        self.result = result
+
+
+def run_queue_worker(queue_in, results_dict):
     while True:
         try:
             job = queue_in.get(block=False)
@@ -20,12 +37,12 @@ def run_queue_worker(queue_in, queue_out):
             time.sleep(1)
             continue
 
-        func = job[0]
-        args = job[1:]
-        logger.info('Received job with %s %s', func, args)
-        result = func(*args)
+        logger.info('[%s][%s] Queue executing %s job. Queue size: %d', job.event_id, job.id_,
+                    job.contract_function_name, queue_in.qsize())
+        result = job.function(*job.args)
         queue_in.task_done()
-        queue_out.put(result)
+        results_dict[job.id_] = JobResult(job.id_, job.event_id, result)
+        logger.info('[%s][%s] Job done', job.event_id, job.id_)
 
 
 def init():
@@ -33,7 +50,7 @@ def init():
     t = threading.Thread(
         target=run_queue_worker, args=(
             QUEUE_IN,
-            QUEUE_OUT,
+            RESULTS_DICT,
         ))
     t.start()
     logger.info('Queue Service Init done')
