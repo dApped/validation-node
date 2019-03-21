@@ -13,6 +13,7 @@ from database import database
 from database.database import VerityEvent
 from ethereum import rewards
 from events import event_registry_filter
+from queue_service import transactions
 
 logger = logging.getLogger()
 
@@ -313,12 +314,13 @@ def post_application_end_time_job(w3, event_id):
     if event is None:
         logger.info('[%s] Event not found', event_id)
         return
+    event_metadata = event.metadata()
 
-    if event.is_master_node:
+    if event.is_master_node and not event_metadata.is_consensus_reached:
         logger.info('[%s] Master node is triggering contract state change', event_id)
         event_instance = event.instance(w3, event_id)
         trigger_state_change_fun = event_instance.functions.triggerStateChange()
-        common.function_transact(w3, trigger_state_change_fun)
+        transactions.queue_transaction(w3, trigger_state_change_fun, event_id=event_id)
 
     logger.info('[%s] Requesting all entries for JoinEvent filter', event_id)
     filter_list = database.Filters.get_list(event_id)

@@ -1,7 +1,6 @@
 import os
 import time
 
-import websocket
 from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, request
 
@@ -9,11 +8,12 @@ import common
 import contract_registry_filter
 import logging_conf
 import scheduler
-from common import AddressType
+import websocket
 from database import database
 from ethereum.provider import EthProvider
 from events import event_registry_filter, events, node_registry
 from key_store import node_key_store
+from queue_service import queue_service
 from version import __version__
 
 
@@ -21,6 +21,7 @@ from version import __version__
 def init():
     database.flush_database()
 
+    queue_service.init()
     eth_provider = EthProvider(node_key_store)
     w3 = eth_provider.web3_provider()
     contract_registry_address = common.contract_registry_address()
@@ -37,9 +38,9 @@ def init():
     node_websocket_ip_port = common.node_websocket_ip_port()
 
     node_registry.register_node_ip(w3, node_registry_abi, node_registry_address, node_ip_port,
-                                   AddressType.IP)
+                                   common.AddressType.IP)
     node_registry.register_node_ip(w3, node_registry_abi, node_registry_address,
-                                   node_websocket_ip_port, AddressType.WEBSOCKET)
+                                   node_websocket_ip_port, common.AddressType.WEBSOCKET)
     scheduler.init(w3)
     websocket.init(node_websocket_ip_port)
 
