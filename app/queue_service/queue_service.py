@@ -42,7 +42,7 @@ def run_queue_worker(queue_in, results_dict):
         result = job.function(*job.args)
         queue_in.task_done()
         results_dict[job.id_] = JobResult(job.id_, job.event_id, result)
-        logger.info('[%s][%s] Job done', job.event_id, job.id_)
+        logger.info('[%s][%s] Queue completed the job', job.event_id, job.id_)
 
 
 def init():
