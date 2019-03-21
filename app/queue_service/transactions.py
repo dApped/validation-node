@@ -1,5 +1,6 @@
 import logging
 import time
+from datetime import datetime, timedelta
 
 import requests
 import web3
@@ -86,8 +87,15 @@ def queue_transaction(w3, contract_function, event_id='default'):
     job = Job(event_id, contract_function_name, _execute_transaction, w3, contract_function,
               event_id)
     QUEUE_IN.put(job)
+
+    datetime_last_message = datetime.now()
     while job.id_ not in RESULTS_DICT:
         time.sleep(1)
+        current_datetime = datetime.now()
+        if datetime_last_message + timedelta(minutes=1) < current_datetime:
+            datetime_last_message = current_datetime
+            logger.info('[%s][%s] Waiting task to complete. Queue size %d', event_id, job.id_,
+                        QUEUE_IN.qsize())
 
     job_result = RESULTS_DICT.pop(job.id_)
     logger.info('Task for %s completed %s', job.contract_function_name, job_result.result)
