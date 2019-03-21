@@ -97,8 +97,13 @@ def queue_transaction(w3, contract_function, event_id='default'):
             logger.info('[%s][%s] Waiting %s to complete. Queue size %d', event_id, job.id_,
                         contract_function_name, QUEUE_IN.qsize())
 
-    logger.info('[%s][%s] %s completed. Queue size %d', event_id, job.id_,
-                contract_function_name, QUEUE_IN.qsize())
+    logger.info('[%s][%s] %s completed. Queue size %d', event_id, job.id_, contract_function_name,
+                QUEUE_IN.qsize())
     job_result = RESULTS_DICT.pop(job.id_)
-    logger.info('Task for %s completed %s', job.contract_function_name, job_result.result)
-    return job_result.result
+    result = job_result.result
+    if result is None:
+        logger.info('[%s][%s] %s empty result', event_id, job.id_, contract_function_name)
+        return None
+    tx_hash = web3.Web3.toHex(result['transactionHash'])
+    logger.info('[%s][%s] %s, tx_hash: %s', event_id, job.id_, contract_function_name, tx_hash)
+    return tx_hash
