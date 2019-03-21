@@ -314,8 +314,9 @@ def post_application_end_time_job(w3, event_id):
     if event is None:
         logger.info('[%s] Event not found', event_id)
         return
+    event_metadata = event.metadata()
 
-    if event.is_master_node:
+    if event.is_master_node and not event_metadata.is_consensus_reached:
         logger.info('[%s] Master node is triggering contract state change', event_id)
         event_instance = event.instance(w3, event_id)
         trigger_state_change_fun = event_instance.functions.triggerStateChange()
