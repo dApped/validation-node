@@ -28,6 +28,10 @@ def process_join_events(_scheduler, _w3, event_id, entries):
 
 def process_state_transition(_scheduler, w3, event_id, entries):
     event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event does not exist', event_id)
+        return
+
     entry = entries[-1]
     event.state = entry['args']['newState']
     event.update()
@@ -67,6 +71,9 @@ def process_validation_start(scheduler, w3, event_id, entries):
 def process_validation_restart(scheduler, w3, event_id, entries):
     entry = entries[-1]
     event = database.VerityEvent.get(event_id)
+    if event is None:
+        logger.info('[%s] Event does not exist', event_id)
+        return
 
     validation_round = entry['args']['validationRound']
     new_master = entry['args']['newMaster']
