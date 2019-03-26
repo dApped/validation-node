@@ -138,8 +138,8 @@ def init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_a
     filter_ = contract_instance.events[NEW_VERITY_EVENT].createFilter(
         fromBlock=from_block, toBlock='latest')
     database.Filters.create(event_registry_address, filter_.filter_id, NEW_VERITY_EVENT)
-    logger.info('[%s] Requesting all entries for %s from EventRegistry', event_registry_address,
-                NEW_VERITY_EVENT)
+    logger.info('[%s] Requesting all entries for %s from EventRegistry with filter_id: %s',
+                event_registry_address, NEW_VERITY_EVENT, filter_.filter_id)
     entries = filter_.get_all_entries()
     process_new_verity_events(scheduler, w3, verity_event_abi, entries)
 
@@ -175,7 +175,8 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
         entries = filter_.get_new_entries()
         database.EventRegistry.set_last_run_timestamp(int(time.time()))
     except ValueError as e:
-        logger.info('[%s] EventRegistry filter not found: %s', event_registry_address, e)
+        logger.info('[%s] EventRegistry ValueError filter_id: %s %s', event_registry_address,
+                    filter_id, e)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address, filter_id)
         return
     except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
