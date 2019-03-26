@@ -174,8 +174,8 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
     try:
         entries = filter_.get_new_entries()
         database.EventRegistry.set_last_run_timestamp(int(time.time()))
-    except ValueError:
-        logger.info('[%s] EventRegistry filter not found', event_registry_address)
+    except ValueError as e:
+        logger.info('[%s] EventRegistry filter not found: %s', event_registry_address, e)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address, filter_id)
         return
     except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
