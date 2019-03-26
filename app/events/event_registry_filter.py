@@ -162,7 +162,10 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
     """ Runs in a cron job and checks for new VerityEvents """
     filter_list = database.Filters.get_list(event_registry_address)
     if not filter_list:
-        logger.info('[%s] EventRegistry empty filter list', event_registry_address)
+        sleep_minutes = 5
+        logger.info('[%s] EventRegistry empty filter list. Sleeping %d minutes',
+                    event_registry_address, sleep_minutes)
+        common.pause_job(scheduler, 'event_registry_filter', minutes=sleep_minutes)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address)
         return
     filter_id = filter_list[0]['filter_id']
