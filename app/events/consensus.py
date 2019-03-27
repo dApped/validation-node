@@ -78,7 +78,10 @@ def schedule_event_data_to_blockchain_job(event, consensus_votes_by_users):
     w3 = provider.EthProvider(node_key_store).web3_provider()
     # developer might initialize event and set rewards later. We fetch them just in time
     ether_balance, token_balance = event.instance(w3, event_id).functions.getBalance().call()
-    logger.info('[%s] Contract balance: %d WEI, %d VTY', event_id, ether_balance, token_balance)
+    node_rewards_pool_eth = event.instance(w3, event_id).functions.nodeRewardsBalance().call()
+    ether_balance -= node_rewards_pool_eth
+    logger.info('[%s] User Rewards: %d ETH WEI, %d VTY WEI, Node Rewards Pool: %d ETH WEI',
+                event_id, ether_balance, token_balance, node_rewards_pool_eth)
 
     if not consensus_votes_by_users:
         user_ids_rewards, rewards_dict = rewards.calculate_non_consensus_rewards(event)
