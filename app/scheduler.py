@@ -64,7 +64,7 @@ def init(w3):
     scheduler.add_job(
         verity_event_filters.filter_events,
         'interval',
-        seconds=10,
+        seconds=20,
         args=[scheduler, w3, verity_event_formatters],
         id='filter_events'
     )
@@ -72,7 +72,7 @@ def init(w3):
     scheduler.add_job(
         event_registry_filter.filter_event_registry,
         'interval',
-        seconds=10,
+        seconds=30,
         args=[
             scheduler, w3, event_registry_address, verity_event_abi,
             event_registry_formatters
