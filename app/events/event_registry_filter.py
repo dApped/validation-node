@@ -7,6 +7,7 @@ import requests
 import common
 from database import database
 from events import consensus, verity_event_filters
+from queue_service import transactions
 
 logger = logging.getLogger()
 
@@ -25,6 +26,13 @@ def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
     node_ids = contract_instance.functions.getEventResolvers().call()
     node_ids = set(node_ids)
     return node_id in node_ids
+
+
+def node_claim_reward(w3, event_id):
+    # TODO check if node approve rewards
+    event_instance = database.VerityEvent.instance(w3, event_id)
+    node_claim_reward_fun = event_instance.functions.nodeClaimReward()
+    transactions.queue_transaction(w3, node_claim_reward_fun, event_id=event_id)
 
 
 def call_event_contract_for_metadata(contract_instance, event_id):

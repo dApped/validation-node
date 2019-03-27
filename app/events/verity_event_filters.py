@@ -38,6 +38,7 @@ def process_state_transition(_scheduler, w3, event_id, entries):
     logger.info('[%s] Event state transition, new state: %d', event_id, event.state)
     if event.state in FINAL_STATES:
         logger.info('[%s] Event reached a final state. Removing from DB', event_id)
+        event_registry_filter.node_claim_reward(w3, event_id)
         VerityEvent.delete_all_event_data(w3, event_id)
 
 
