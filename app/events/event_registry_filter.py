@@ -29,10 +29,22 @@ def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
 
 
 def node_claim_reward(w3, event_id):
-    # TODO check if node approve rewards
+    logger.info("[%s] Claiming node rewards", event_id)
+
+    # When node starts, it checks past events for rewards
+    # those event may not exist in the DB. That is why we use is_master_node var
+    is_master_node = False
+    event = database.VerityEvent.get(event_id)
+    if event is not None:
+        is_master_node = event.is_master_node
+
     event_instance = database.VerityEvent.instance(w3, event_id)
-    node_claim_reward_fun = event_instance.functions.nodeClaimReward()
-    transactions.queue_transaction(w3, node_claim_reward_fun, event_id=event_id)
+    if is_master_node or event_instance.functions.isApproverNode().call():
+        node_claim_reward_fun = event_instance.functions.nodeClaimReward()
+        transactions.queue_transaction(w3, node_claim_reward_fun, event_id=event_id)
+        return
+    logger.info("[%s] Node did not approve rewards", event_id)
+    return
 
 
 def call_event_contract_for_metadata(contract_instance, event_id):
