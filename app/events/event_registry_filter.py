@@ -29,21 +29,18 @@ def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
 
 
 def node_claim_reward(w3, event_id):
-    logger.info("[%s] Claiming node rewards", event_id)
-
-    # When node starts, it checks past events for rewards
-    # those event may not exist in the DB. That is why we use is_master_node var
-    is_master_node = False
-    event = database.VerityEvent.get(event_id)
-    if event is not None:
-        is_master_node = event.is_master_node
-
     event_instance = database.VerityEvent.instance(w3, event_id)
-    if is_master_node or event_instance.functions.isApproverNode().call():
+    try:
+        node_can_claim_reward = event_instance.functions.nodeCanClaimReward().call()
+    except Exception as e:
+        logger.info(e)
+        return
+    if node_can_claim_reward:
+        logger.info("[%s] Claiming node rewards", event_id)
         node_claim_reward_fun = event_instance.functions.nodeClaimReward()
         transactions.queue_transaction(w3, node_claim_reward_fun, event_id=event_id)
         return
-    logger.info("[%s] Node did not approve rewards", event_id)
+    logger.info("[%s] Node does not fullfill conditions to claim reward", event_id)
     return
 
 
@@ -133,8 +130,10 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
         return
 
     logger.info('[%s] Initializing event', event_id)
-    contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
-    event = call_event_contract_for_metadata(contract_instance, event_id)
+    event_instance = w3.eth.contract(address=event_id, abi=contract_abi)
+    node_claim_reward(w3, event_id)
+
+    event = call_event_contract_for_metadata(event_instance, event_id)
     if not event:
         logger.info('[%s] Cannot initialize event. Skipping it', event_id)
         return
@@ -143,7 +142,7 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
     event_metadata = event.metadata()
     event_metadata.contract_block_number = contract_block_number
     event_metadata.previous_consensus_answers = common.consensus_answers_from_contract(
-        contract_instance)
+        event_instance)
     event_metadata.update()
     verity_event_filters.init_event_filters(w3, contract_abi, event.event_id)
     schedule_post_application_end_time_job(scheduler, w3, event_id, event.application_end_time)
