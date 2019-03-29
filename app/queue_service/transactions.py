@@ -6,6 +6,7 @@ import requests
 import web3
 from web3.gas_strategies.time_based import fast_gas_price_strategy
 
+from database import database
 from key_store import node_key_store
 from queue_service.queue_service import QUEUE_IN, RESULTS_DICT, Job
 
@@ -53,9 +54,21 @@ def _next_nonce(w3, account_address, event_id, max_retries=3):
     return None
 
 
-def _execute_transaction(w3, contract_function, event_id, max_retries=3):
-    account = node_key_store.account_dict()
+def _should_execute_transaction(w3, contract_function, event_id):
+    if contract_function.fn_name in {'approveRewards', 'rejectRewards'}:
+        # avoid sending last approve or reject transaction that always fails
+        event_instance = database.VerityEvent.instance(w3, event_id)
+        if event_instance.functions.validationState().call() != 1:
+            logger.info('[%s] Event is not in validating state. Skipping transaction', event_id)
+            return False
+    return True
 
+
+def _execute_transaction(w3, contract_function, event_id, max_retries=3):
+    if not _should_execute_transaction(w3, contract_function, event_id):
+        return None
+
+    account = node_key_store.account_dict()
     for retry in range(max_retries):
         next_nonce = _next_nonce(w3, account['address'], event_id, max_retries=max_retries)
         if next_nonce is None:
