@@ -30,12 +30,12 @@ Currently, only whitelisted validation nodes can be included in the network.
 
 ## Roadmap
  - Node economics
-    - Node reward pool
+    - Node reward pool (Done)
     - Node minimum reward
     - Node task tiers and dynamic reward calculation
  - Reputation
     - Calculating reputation
-    - Returning  stakes to Validation Nodes reward pool 
+    - Returning stakes to Validation Nodes reward pool 
     - Airdropping confiscated stakes among Data providers
  - Continuous voting
 
