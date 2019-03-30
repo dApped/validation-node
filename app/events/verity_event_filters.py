@@ -55,6 +55,10 @@ def process_validation_start(scheduler, w3, event_id, entries):
     if event is None:
         logger.info('[%s] Event does not exist', event_id)
         return
+    event_instance = database.VerityEvent.instance(w3, event_id)
+    if event_instance.functions.validationState().call() != 1:
+        logger.info('[%s] Event is not in validating state', event_id)
+        return
 
     validation_round = entry['args']['validationRound']
     event.rewards_validation_round = validation_round
