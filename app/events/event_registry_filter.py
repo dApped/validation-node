@@ -115,7 +115,7 @@ def schedule_post_application_end_time_job(scheduler, w3, event_id, application_
         'date',
         run_date=job_datetime,
         replace_existing=True,
-        args=[w3, event_id],
+        args=[scheduler, w3, event_id],
         id=job_id)
     logger.info('[%s] Scheduled post_application_end_time_job at %s', event_id, job_datetime)
 
@@ -144,7 +144,7 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
     event_metadata.previous_consensus_answers = common.consensus_answers_from_contract(
         event_instance)
     event_metadata.update()
-    verity_event_filters.init_event_filters(w3, contract_abi, event.event_id)
+    verity_event_filters.init_event_filters(scheduler, w3, contract_abi, event.event_id)
     schedule_post_application_end_time_job(scheduler, w3, event_id, event.application_end_time)
     schedule_consensus_not_reached_job(scheduler, event_id, event.event_end_time)
     logger.info('[%s] Event initialized', event_id)

@@ -62,7 +62,7 @@ def process_validation_start(scheduler, w3, event_id, entries):
 
     logger.info('[%s] Validation round %d started', event_id, validation_round)
     if not scheduler:
-        logger.warning('[%s] Scheduler is not set', event_id)
+        logger.info('[%s] Scheduler is not set in process_validation_start', event_id)
         return
     if not event.is_master_node:
         scheduler.add_job(
@@ -86,7 +86,7 @@ def process_validation_restart(scheduler, w3, event_id, entries):
     event.update()
 
     if not scheduler:
-        logger.warning('[%s] Scheduler is not set', event_id)
+        logger.info('[%s] Scheduler is not set in process_validation_restart', event_id)
         return
     # if node is master node, set consensus rewards
     if is_master_node:
@@ -163,13 +163,13 @@ def should_apply_filter(filter_name, event_id):
     return False
 
 
-def init_event_filters(w3, contract_abi, event_id):
+def init_event_filters(scheduler, w3, contract_abi, event_id):
     contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
     for filter_name, filter_func in EVENT_FILTERS.items():
-        init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
+        init_event_filter(scheduler, w3, filter_name, filter_func, contract_instance, event_id)
 
 
-def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id):
+def init_event_filter(scheduler, w3, filter_name, filter_func, contract_instance, event_id):
     logger.info('[%s] Initializing %s filter', event_id, filter_name)
     event = database.VerityEvent.get(event_id)
     if event is None:
@@ -182,15 +182,13 @@ def init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
     logger.info('[%s] Requesting all entries for %s from %d block', event_id, filter_name,
                 contract_block_number)
     entries = filter_.get_all_entries()
-    if filter_name in {
-            DISPUTE_TRIGGERED_FILTER, VALIDATION_STARTED_FILTER, VALIDATION_RESTART_FILTER
-    } or not entries:
+    if filter_name in {DISPUTE_TRIGGERED_FILTER, VALIDATION_RESTART_FILTER} or not entries:
         logger.info('[%s] No entries for filter %s', event_id, filter_name)
         return
-    filter_func(None, w3, event_id, entries)
+    filter_func(scheduler, w3, event_id, entries)
 
 
-def recover_filter(w3, event_id, filter_name, filter_func, filter_id=None):
+def recover_filter(scheduler, w3, event_id, filter_name, filter_func, filter_id=None):
     try:
         event = database.VerityEvent.get(event_id)
         if event is None or event.state in FINAL_STATES:
@@ -202,7 +200,7 @@ def recover_filter(w3, event_id, filter_name, filter_func, filter_id=None):
             database.Filters.delete_filter(event_id, filter_id, filter_name)
         contract_abi = common.verity_event_contract_abi()
         contract_instance = w3.eth.contract(address=event_id, abi=contract_abi)
-        init_event_filter(w3, filter_name, filter_func, contract_instance, event_id)
+        init_event_filter(scheduler, w3, filter_name, filter_func, contract_instance, event_id)
     except Exception as e:
         logger.info('[%s] Exception %s with recovering %s filter', event_id, e.__class__.__name__,
                     filter_name)
@@ -210,14 +208,14 @@ def recover_filter(w3, event_id, filter_name, filter_func, filter_id=None):
     return True
 
 
-def recover_all_filters(w3, event_id, filter_list=None):
+def recover_all_filters(scheduler, w3, event_id, filter_list=None):
     if filter_list:
         filter_ids = [filter_dict['filter_id'] for filter_dict in filter_list]
         database.Filters.uninstall(w3, filter_ids)
     database.Filters.delete(event_id)
 
     for filter_name, filter_func in EVENT_FILTERS.items():
-        success = recover_filter(w3, event_id, filter_name, filter_func)
+        success = recover_filter(scheduler, w3, event_id, filter_name, filter_func)
         if not success:
             return False
     return True
@@ -241,7 +239,7 @@ def filter_events(scheduler, w3, formatters):
         if len(filter_list) != len(EVENT_FILTERS):
             logger.info('[%s] There are only %d/%d filters. Reinitialize them', event_id,
                         len(filter_list), len(EVENT_FILTERS))
-            success = recover_all_filters(w3, event_id, filter_list)
+            success = recover_all_filters(scheduler, w3, event_id, filter_list)
             if not success:
                 schedule_post_unexpected_exception_job(
                     scheduler, w3, event_id, event_metadata, filter_list=None)
@@ -262,18 +260,18 @@ def proccess_filters_for_event(scheduler, w3, formatters, event_id, filter_list,
             entries = filter_.get_new_entries()
         except ValueError:
             logger.info('[%s] Event %s filter not found', event_id, filter_name)
-            recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
+            recover_filter(scheduler, w3, event_id, filter_name, filter_func, filter_id=filter_id)
             continue
         except NonEmptyPaddingBytes as e:
             logger.info('[%s] NonEmptyPaddingBytes error with %s filter', event_id, filter_name)
-            recover_filter(w3, event_id, filter_name, filter_func, filter_id=filter_id)
+            recover_filter(scheduler, w3, event_id, filter_name, filter_func, filter_id=filter_id)
             continue
         except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
             sleep_minutes = 5
             logger.info('[%s] %s with %s filter. Sleeping %d minutes', event_id,
                         e.__class__.__name__, filter_name, sleep_minutes)
             common.pause_job(scheduler, 'filter_events', minutes=sleep_minutes)
-            recover_all_filters(w3, event_id, filter_list)
+            recover_all_filters(scheduler, w3, event_id, filter_list)
             return
         except Exception:
             if not event_metadata.filters_exception_reported:
@@ -299,23 +297,23 @@ def schedule_post_unexpected_exception_job(scheduler, w3, event_id, event_metada
         post_unexpected_exception_job,
         'date',
         run_date=job_datetime,
-        args=[w3, event_id, filter_list])
+        args=[scheduler, w3, event_id, filter_list])
 
 
-def post_unexpected_exception_job(w3, event_id, filter_list):
+def post_unexpected_exception_job(scheduler, w3, event_id, filter_list):
     logger.info('[%s] Running post_unexpected_exception_job', event_id)
     event = database.VerityEvent.get(event_id)
     if event is None:
         logger.info('[%s] Event is not in the database', event_id)
         return
-    recover_all_filters(w3, event_id, filter_list)
+    recover_all_filters(scheduler, w3, event_id, filter_list)
     event_metadata = event.metadata()
     event_metadata.should_run_filters = True
     event_metadata.update()
     logger.info('[%s] Finished post_unexpected_exception_job', event_id)
 
 
-def post_application_end_time_job(w3, event_id):
+def post_application_end_time_job(scheduler, w3, event_id):
     """ Triggers state change on the event contract and reinializes join event filter """
     logger.info('[%s] Running post_application_end_time_job', event_id)
     event = database.VerityEvent.get(event_id)
@@ -337,6 +335,6 @@ def post_application_end_time_job(w3, event_id):
         if filter_name != JOIN_EVENT_FILTER:
             continue
         filter_func = EVENT_FILTERS[filter_name]
-        recover_filter(w3, event_id, filter_name, filter_func, filter_id)
+        recover_filter(scheduler, w3, event_id, filter_name, filter_func, filter_id)
         break
     logger.info('[%s] Finished post_application_end_time_job', event_id)

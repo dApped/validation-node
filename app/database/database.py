@@ -344,7 +344,7 @@ class Rewards(BaseEvent):
     @classmethod
     def transform_dict_to_lists(cls, rewards):
         if rewards is None:
-            logger.error('Transform_dict_to_lists called with None')
+            logger.info('transform_dict_to_lists called with None')
             return [], [], []
         user_ids = list(rewards.keys())
         eth_rewards, token_rewards = [], []
