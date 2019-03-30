@@ -55,11 +55,13 @@ def _next_nonce(w3, account_address, event_id, max_retries=3):
 
 
 def _should_execute_transaction(w3, contract_function, event_id):
-    if contract_function.fn_name in {'approveRewards', 'rejectRewards'}:
+    function_name = contract_function.fn_name
+    if function_name in {'approveRewards', 'rejectRewards'}:
         # avoid sending last approve or reject transaction that always fails
         event_instance = database.VerityEvent.instance(w3, event_id)
         if event_instance.functions.validationState().call() != 1:
-            logger.info('[%s] Event is not in validating state. Skipping transaction', event_id)
+            logger.info('[%s] Event is not in validating state. Skipping %s', event_id,
+                        function_name)
             return False
     return True
 
