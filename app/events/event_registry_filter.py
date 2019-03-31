@@ -14,11 +14,12 @@ logger = logging.getLogger()
 NEW_VERITY_EVENT = 'NewVerityEvent'
 
 
-def process_new_verity_events(scheduler, w3, event_contract_abi, entries):
+def process_new_verity_events(scheduler, w3, event_contract_abi, entries, should_log):
     for entry in entries:
         contract_block_number = entry['blockNumber']
         event_address = entry['args']['eventAddress']
-        init_event(scheduler, w3, event_contract_abi, event_address, contract_block_number)
+        init_event(scheduler, w3, event_contract_abi, event_address, contract_block_number,
+                   should_log)
 
 
 def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
@@ -28,7 +29,7 @@ def is_node_registered_on_event(w3, contract_abi, node_id, event_id):
     return node_id in node_ids
 
 
-def node_claim_reward(w3, event_id):
+def node_claim_reward(w3, event_id, should_log):
     event_instance = database.VerityEvent.instance(w3, event_id)
     try:
         node_can_claim_reward = event_instance.functions.nodeCanClaimReward().call()
@@ -40,22 +41,26 @@ def node_claim_reward(w3, event_id):
         node_claim_reward_fun = event_instance.functions.nodeClaimReward()
         transactions.queue_transaction(w3, node_claim_reward_fun, event_id=event_id)
         return
-    logger.info("[%s] Node does not fullfill conditions to claim reward", event_id)
+    if should_log:
+        logger.info("[%s] Node does not fulfill conditions to claim reward", event_id)
     return
 
 
-def call_event_contract_for_metadata(contract_instance, event_id):
+def call_event_contract_for_metadata(contract_instance, event_id, should_log):
     try:
         state = contract_instance.functions.getState().call()
         if state > 2:
-            logger.info('[%s] Event with state: %d. It is not in waiting|application|running state',
-                        event_id, state)
+            if should_log:
+                logger.info(
+                    '[%s] Event with state: %d. It is not in waiting|application|running state',
+                    event_id, state)
             return None
 
         (application_start_time, application_end_time, event_start_time, event_end_time,
          leftovers_recoverable_after) = contract_instance.functions.getEventTimes().call()
         if event_end_time < int(time.time()):
-            logger.info('[%s] Event end time in the past: %d', event_id, event_end_time)
+            if should_log:
+                logger.info('[%s] Event end time in the past: %d', event_id, event_end_time)
             return None
 
         owner = contract_instance.functions.owner().call()
@@ -89,13 +94,8 @@ def schedule_consensus_not_reached_job(scheduler, event_id, event_end_time):
     event_end_datetime = datetime.fromtimestamp(event_end_time, timezone.utc)
     job_datetime = event_end_datetime + timedelta(minutes=1)
     job_id = database.VerityEvent.consensus_not_reached_job_id(event_id)
-    scheduler.add_job(
-        consensus.process_consensus_not_reached,
-        'date',
-        run_date=job_datetime,
-        replace_existing=True,
-        args=[event_id],
-        id=job_id)
+    scheduler.add_job(consensus.process_consensus_not_reached, 'date', run_date=job_datetime,
+                      replace_existing=True, args=[event_id], id=job_id)
     logger.info('[%s] Scheduled process_consensus_not_reached_job at %s', event_id, job_datetime)
 
 
@@ -110,32 +110,32 @@ def schedule_post_application_end_time_job(scheduler, w3, event_id, application_
     logger.info('[%s] Scheduling post_application_end_time_job', event_id)
     application_end_datetime = datetime.fromtimestamp(application_end_time, timezone.utc)
     job_datetime = application_end_datetime + timedelta(minutes=1)
-    scheduler.add_job(
-        verity_event_filters.post_application_end_time_job,
-        'date',
-        run_date=job_datetime,
-        replace_existing=True,
-        args=[scheduler, w3, event_id],
-        id=job_id)
+    scheduler.add_job(verity_event_filters.post_application_end_time_job, 'date',
+                      run_date=job_datetime, replace_existing=True, args=[scheduler, w3,
+                                                                          event_id], id=job_id)
     logger.info('[%s] Scheduled post_application_end_time_job at %s', event_id, job_datetime)
 
 
-def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
+def init_event(scheduler, w3, contract_abi, event_id, contract_block_number, should_log):
     node_id = common.node_id()
     if not is_node_registered_on_event(w3, contract_abi, node_id, event_id):
-        logger.info('[%s] Node %s is not included in the event', event_id, node_id)
+        if should_log:
+            logger.info('[%s] Node %s is not included in the event', event_id, node_id)
         return
     if database.VerityEvent.get(event_id) is not None:
-        logger.info('[%s] Event already exists in the database. Skipping it', event_id)
+        if should_log:
+            logger.info('[%s] Event already exists in the database. Skipping it', event_id)
         return
 
-    logger.info('[%s] Initializing event', event_id)
+    if should_log:
+        logger.info('[%s] Initializing event', event_id)
     event_instance = w3.eth.contract(address=event_id, abi=contract_abi)
-    node_claim_reward(w3, event_id)
+    node_claim_reward(w3, event_id, should_log)
 
-    event = call_event_contract_for_metadata(event_instance, event_id)
+    event = call_event_contract_for_metadata(event_instance, event_id, should_log)
     if not event:
-        logger.info('[%s] Cannot initialize event. Skipping it', event_id)
+        if should_log:
+            logger.info('[%s] Cannot initialize event. Skipping it', event_id)
         return
 
     event.create()
@@ -147,24 +147,24 @@ def init_event(scheduler, w3, contract_abi, event_id, contract_block_number):
     verity_event_filters.init_event_filters(scheduler, w3, contract_abi, event.event_id)
     schedule_post_application_end_time_job(scheduler, w3, event_id, event.application_end_time)
     schedule_consensus_not_reached_job(scheduler, event_id, event.event_end_time)
-    logger.info('[%s] Event initialized', event_id)
+    if should_log:
+        logger.info('[%s] Event initialized', event_id)
 
 
 def init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_abi,
-                               event_registry_address):
+                               event_registry_address, should_log=True):
     contract_instance = w3.eth.contract(address=event_registry_address, abi=event_registry_abi)
     from_block = contract_instance.functions.creationBlock().call()
-    filter_ = contract_instance.events[NEW_VERITY_EVENT].createFilter(
-        fromBlock=from_block, toBlock='latest')
+    filter_ = contract_instance.events[NEW_VERITY_EVENT].createFilter(fromBlock=from_block,
+                                                                      toBlock='latest')
     database.Filters.create(event_registry_address, filter_.filter_id, NEW_VERITY_EVENT)
     logger.info('[%s] Requesting all entries for %s from EventRegistry with filter_id: %s',
                 event_registry_address, NEW_VERITY_EVENT, filter_.filter_id)
     entries = filter_.get_all_entries()
-    process_new_verity_events(scheduler, w3, verity_event_abi, entries)
+    process_new_verity_events(scheduler, w3, verity_event_abi, entries, should_log)
 
 
 def recover_filter(scheduler, w3, verity_event_abi, event_registry_address, filter_id=None):
-    logger.info('Recovering EventRegistry')
     filter_list = None
     if filter_id is not None:
         filter_list = [filter_id]
@@ -172,13 +172,14 @@ def recover_filter(scheduler, w3, verity_event_abi, event_registry_address, filt
         database.Filters.delete_and_uninstall_filters(w3, event_registry_address, filter_list)
         event_registry_abi = common.event_registry_contract_abi()
         init_event_registry_filter(scheduler, w3, event_registry_abi, verity_event_abi,
-                                   event_registry_address)
+                                   event_registry_address, should_log=False)
     except Exception as e:
         logger.info('Unexpected exception during EventRegistry recovery: %s', e)
 
 
-def filter_event_registry(scheduler, w3, event_registry_address, verity_event_abi, formatters):
-    """ Runs in a cron job and checks for new VerityEvents """
+def filter_event_registry(scheduler, w3, event_registry_address, verity_event_abi, formatters,
+                          should_log=True):
+    """ Runs in a cron job and checks for new Verity Events """
     filter_list = database.Filters.get_list(event_registry_address)
     if not filter_list:
         sleep_minutes = 5
@@ -213,4 +214,4 @@ def filter_event_registry(scheduler, w3, event_registry_address, verity_event_ab
         common.pause_job(scheduler, 'event_registry_filter', minutes=sleep_minutes)
         recover_filter(scheduler, w3, verity_event_abi, event_registry_address, filter_id)
         return
-    process_new_verity_events(scheduler, w3, verity_event_abi, entries)
+    process_new_verity_events(scheduler, w3, verity_event_abi, entries, should_log)
