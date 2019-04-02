@@ -301,7 +301,7 @@ def proccess_filters_for_event(scheduler, w3, formatters, event_id, filter_list,
             return
         if not entries:
             continue
-        filter_func(scheduler, w3, event_id, entries)
+        filter_func(scheduler, w3, event_id, entries, should_log=True)
 
 
 def schedule_post_unexpected_exception_job(scheduler, w3, event_id, event_metadata, filter_list):
