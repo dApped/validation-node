@@ -34,7 +34,8 @@ def node_claim_reward(w3, event_id, should_log):
     try:
         node_can_claim_reward = event_instance.functions.nodeCanClaimReward().call()
     except Exception as e:
-        logger.info(e)
+        if should_log:
+            logger.info(e)
         return
     if node_can_claim_reward:
         logger.info("[%s] Claiming node rewards", event_id)
