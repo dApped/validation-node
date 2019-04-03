@@ -44,7 +44,7 @@ def process_state_transition(_scheduler, w3, event_id, entries, should_log):
         VerityEvent.delete_all_event_data(w3, event_id)
 
 
-def process_event_failed(_scheduler, w3, event_id, entries, _should_log):
+def process_event_failed(_scheduler, w3, event_id, entries, should_log):
     entry = entries[-1]
     description = entry['args']['description']
     logger.info('[%s] Event failed: %s. Removing from DB', event_id, description)
@@ -76,7 +76,7 @@ def process_validation_start(scheduler, w3, event_id, entries, should_log):
                           args=[w3, event_id, validation_round])
 
 
-def process_validation_restart(scheduler, w3, event_id, entries, _should_log):
+def process_validation_restart(scheduler, w3, event_id, entries, should_log):
     entry = entries[-1]
     event = database.VerityEvent.get(event_id)
     if event is None:
