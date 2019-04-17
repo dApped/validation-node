@@ -193,7 +193,7 @@ def init_event_filter(scheduler, w3, filter_name, filter_func, contract_instance
         logger.info('[%s] Requesting all entries for %s from %d block', event_id, filter_name,
                     contract_block_number)
     entries = filter_.get_all_entries()
-    if filter_name in {VALIDATION_RESTART_FILTER} or not entries:
+    if filter_name in {VALIDATION_RESTART_FILTER, DISPUTE_TRIGGERED_FILTER} or not entries:
         if should_log:
             logger.info('[%s] No entries for filter %s', event_id, filter_name)
         return
