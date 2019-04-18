@@ -21,6 +21,7 @@ def _raw_transaction(w3, contract_function, account, gas_price, nonce, event_id)
     transaction = {
         'from': account['address'],
         'nonce': nonce,
+        'gas': 4000000,  # this will be overriden by estimateGas
     }
     gas = _estimate_gas_limit(contract_function)
     transaction['gasPrice'] = gas_price
