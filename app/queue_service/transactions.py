@@ -89,12 +89,14 @@ def _execute_transaction(w3, contract_function, event_id, max_retries=3):
         except web3.utils.threads.Timeout as e:
             logger.info('[%s] Replacing transaction with increased gas price. Retry %d/%d: %s',
                         event_id, retry + 1, max_retries, e)
+            time.sleep(60 * 1)
         except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
             logger.info('[%s] Transaction %s exception. Sleeping 1 minute then retry it', event_id,
                         e.__class__.__name__)
             time.sleep(60 * 1)
         except Exception:
             logger.exception('New transaction with new nonce. Retry: %d/%d', retry + 1, max_retries)
+            time.sleep(60 * 1)
     return None
 
 
