@@ -35,11 +35,7 @@ def _raw_transaction(w3, contract_function, account, gas_price, nonce, event_id)
 
 
 def _estimate_gas_limit(contract_function):
-    try:
-        return int(GAS_LIMIT_FACTOR * contract_function.estimateGas())
-    except Exception as e:
-        logger.exception(e)
-        return 1000000
+    return 4000000
 
 
 def _estimate_gas_price(w3, wei_addition=0):
